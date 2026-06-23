@@ -265,120 +265,114 @@ const productosFiltrados = productos.filter(
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
-        <h2 className="text-xl font-semibold mb-6">
-  {editandoId
-    ? "Editar Producto"
-    : "Nuevo Producto"}
-</h2>
+      <div className="form-card mb-8">
+        <h2 className="section-title">
+          {editandoId ? "Editar Producto" : "Nuevo Producto"}
+        </h2>
 
-        <div className="grid grid-cols-2 gap-6">
-
-          <div className="border rounded-lg p-3 bg-slate-100 text-slate-600">
-            Código Sistema: Automático
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="soft-panel p-4">
+            Código Sistema: <strong>Automático</strong>
           </div>
 
-          <input
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Nombre"
-            className="border rounded-lg p-3 text-black"
-          />
+          <div className="space-y-3">
+            <label className="field-title">Nombre</label>
+            <input
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Nombre"
+              className="w-full"
+            />
+          </div>
 
-          <input
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            placeholder="Descripción"
-            className="border rounded-lg p-3 text-black"
-          />
+          <div className="space-y-3">
+            <label className="field-title">Descripción</label>
+            <input
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              placeholder="Descripción"
+              className="w-full"
+            />
+          </div>
 
-          <select
-            value={categoriaId}
-            onChange={(e) => setCategoriaId(e.target.value)}
-            className="border rounded-lg p-3 text-black"
-          >
-            <option value="">
-              Seleccione Categoría
-            </option>
+          <div className="space-y-3">
+            <label className="field-title">Categoría</label>
+            <select
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
+              className="w-full"
+            >
+              <option value="">Seleccione Categoría</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+              ))}
+            </select>
+          </div>
 
-            {categorias.map((categoria) => (
-              <option
-                key={categoria.id}
-                value={categoria.id}
-              >
-                {categoria.nombre}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-3">
+            <label className="field-title">Unidad</label>
+            <select
+              value={unidadMedidaId}
+              onChange={(e) => setUnidadMedidaId(e.target.value)}
+              className="w-full"
+            >
+              <option value="">Seleccione Unidad</option>
+              {unidades.map((unidad) => (
+                <option key={unidad.id} value={unidad.id}>{unidad.codigo} - {unidad.nombre}</option>
+              ))}
+            </select>
+          </div>
 
-          <select
-            value={unidadMedidaId}
-            onChange={(e) =>
-              setUnidadMedidaId(e.target.value)
-            }
-            className="border rounded-lg p-3 text-black"
-          >
-            <option value="">
-              Seleccione Unidad
-            </option>
+          <div className="space-y-3">
+            <label className="field-title">Stock Actual</label>
+            <input
+              value={stockActual}
+              onChange={(e) => setStockActual(e.target.value)}
+              placeholder="Stock Actual"
+              className="w-full"
+            />
+          </div>
 
-            {unidades.map((unidad) => (
-              <option
-                key={unidad.id}
-                value={unidad.id}
-              >
-                {unidad.codigo} - {unidad.nombre}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-3">
+            <label className="field-title">Stock Mínimo</label>
+            <input
+              value={stockMinimo}
+              onChange={(e) => setStockMinimo(e.target.value)}
+              placeholder="Stock Mínimo"
+              className="w-full"
+            />
+          </div>
 
-          <input
-            value={stockActual}
-            onChange={(e) =>
-              setStockActual(e.target.value)
-            }
-            placeholder="Stock Actual"
-            className="border rounded-lg p-3 text-black"
-          />
+          <div className="space-y-3">
+            <label className="field-title">Costo</label>
+            <input
+              value={costo}
+              onChange={(e) => setCosto(e.target.value)}
+              placeholder="Costo"
+              className="w-full"
+            />
+          </div>
 
-          <input
-            value={stockMinimo}
-            onChange={(e) =>
-              setStockMinimo(e.target.value)
-            }
-            placeholder="Stock Mínimo"
-            className="border rounded-lg p-3 text-black"
-          />
-
-          <input
-            value={costo}
-            onChange={(e) =>
-              setCosto(e.target.value)
-            }
-            placeholder="Costo"
-            className="border rounded-lg p-3 text-black"
-          />
-
-          <input
-            value={precioVenta}
-            onChange={(e) =>
-              setPrecioVenta(e.target.value)
-            }
-            placeholder="Precio Venta"
-            className="border rounded-lg p-3 text-black"
-          />
+          <div className="space-y-3">
+            <label className="field-title">Precio Venta</label>
+            <input
+              value={precioVenta}
+              onChange={(e) => setPrecioVenta(e.target.value)}
+              placeholder="Precio Venta"
+              className="w-full"
+            />
+          </div>
         </div>
 
-        <button
-          onClick={guardarProducto}
-          className="mt-6 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl"
-        >
-        {editandoId
-  ? "Actualizar Producto"
-  : "Guardar Producto"}
-        </button>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <button onClick={guardarProducto} className="btn btn-primary">
+            {editandoId ? "Actualizar Producto" : "Guardar Producto"}
+          </button>
+          <button type="button" className="btn btn-secondary">Limpiar</button>
+        </div>
       </div>
-<div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+
+      <div className="form-card mb-6">
   <h2 className="text-xl font-semibold mb-4">
     🔍 Buscar Producto
   </h2>
@@ -393,14 +387,12 @@ const productosFiltrados = productos.filter(
     className="w-full border rounded-lg p-3 text-black"
   />
 </div>
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="table-card bg-white">
         <div className="p-6 border-b">
-          <h2 className="text-xl font-semibold">
-            Listado de Productos
-          </h2>
+          <h2 className="text-xl font-semibold">Listado de Productos</h2>
         </div>
 
-        <table className="w-full">
+        <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b">
               <th className="text-left p-4">Código Sistema</th>
@@ -426,25 +418,11 @@ const productosFiltrados = productos.filter(
                   {producto.codigoSistema}
                 </td>
 
-                <td className="p-4">
-                  {producto.nombre}
-                </td>
-
-                <td className="p-4">
-                  {producto.categoria.nombre}
-                </td>
-
-                <td className="p-4">
-                  {producto.unidadMedida.codigo}
-                </td>
-
-                <td className="p-4">
-                  {producto.stockActual}
-                </td>
-
-                <td className="p-4">
-                  S/ {producto.precioVenta}
-                </td>
+                <td className="p-4">{producto.nombre}</td>
+                <td className="p-4">{producto.categoria.nombre}</td>
+                <td className="p-4">{producto.unidadMedida.codigo}</td>
+                <td className="p-4">{producto.stockActual}</td>
+                <td className="p-4">S/ {producto.precioVenta}</td>
 
                 <td className="p-4">
                   {producto.estado ? (

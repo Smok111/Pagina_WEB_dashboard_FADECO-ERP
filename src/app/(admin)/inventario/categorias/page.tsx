@@ -139,7 +139,7 @@ export default function CategoriasPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
+      <div className="form-card mb-8">
         <h2 className="text-xl font-semibold mb-6">
           {editandoId
             ? "Editar Categoría"
@@ -151,12 +151,12 @@ export default function CategoriasPage() {
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Nombre de la categoría"
-          className="w-full border border-slate-300 rounded-lg p-3"
+          className="w-full"
         />
 
         <button
           onClick={guardarCategoria}
-          className="mt-6 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl"
+          className="btn btn-primary mt-6"
         >
           {editandoId
             ? "Actualizar Categoría"
@@ -164,7 +164,7 @@ export default function CategoriasPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="table-card overflow-hidden">
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold">
             Listado de Categorías
@@ -173,10 +173,12 @@ export default function CategoriasPage() {
 
         <table className="w-full">
           <thead>
-            <th className="text-left p-4">ID</th>
-<th className="text-left p-4">Código</th>
-<th className="text-left p-4">Nombre</th>
-<th className="text-left p-4">Acciones</th>
+            <tr>
+              <th className="text-left p-4">ID</th>
+              <th className="text-left p-4">Código</th>
+              <th className="text-left p-4">Nombre</th>
+              <th className="text-left p-4">Acciones</th>
+            </tr>
           </thead>
 
           <tbody>
@@ -210,7 +212,7 @@ export default function CategoriasPage() {
                       onClick={() =>
                         editarCategoria(categoria)
                       }
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                      className="btn btn-secondary px-3 py-1"
                     >
                       ✏️
                     </button>
@@ -219,7 +221,7 @@ export default function CategoriasPage() {
                       onClick={() =>
                         eliminarCategoria(categoria.id)
                       }
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg"
+                      className="btn btn-secondary px-3 py-1"
                     >
                       🗑️
                     </button>

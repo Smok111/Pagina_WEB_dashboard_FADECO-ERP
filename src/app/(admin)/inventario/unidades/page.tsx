@@ -174,7 +174,7 @@ export default function UnidadesPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
+      <div className="form-card mb-8">
         <h2 className="text-xl font-semibold mb-6">
           {editandoId
             ? "Editar Unidad"
@@ -194,7 +194,7 @@ export default function UnidadesPage() {
                 setCodigo(e.target.value)
               }
               placeholder="KG"
-              className="w-full border border-slate-300 rounded-lg p-3 text-black"
+              className="w-full"
             />
           </div>
 
@@ -210,7 +210,7 @@ export default function UnidadesPage() {
                 setNombre(e.target.value)
               }
               placeholder="Kilogramo"
-              className="w-full border border-slate-300 rounded-lg p-3 text-black"
+              className="w-full"
             />
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function UnidadesPage() {
         <div className="mt-6">
           <button
             onClick={guardarUnidad}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold"
+            className="btn btn-primary"
           >
             {editandoId
               ? "Actualizar Unidad"
@@ -227,7 +227,7 @@ export default function UnidadesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="table-card overflow-hidden">
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold">
             Listado de Unidades
@@ -305,7 +305,7 @@ export default function UnidadesPage() {
                       onClick={() =>
                         editarUnidad(unidad)
                       }
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                      className="btn btn-secondary px-3 py-1"
                     >
                       ✏️
                     </button>
@@ -318,7 +318,7 @@ export default function UnidadesPage() {
                             false
                           )
                         }
-                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded-lg"
+                        className="btn btn-secondary px-3 py-1"
                       >
                         🚫
                       </button>
@@ -330,7 +330,7 @@ export default function UnidadesPage() {
                             true
                           )
                         }
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
+                        className="btn btn-primary px-3 py-1"
                       >
                         ✅
                       </button>
@@ -340,7 +340,7 @@ export default function UnidadesPage() {
                       onClick={() =>
                         borrarUnidad(unidad.id)
                       }
-                      className="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded-lg"
+                      className="btn btn-secondary px-3 py-1"
                     >
                       🗑️
                     </button>

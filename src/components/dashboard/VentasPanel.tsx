@@ -7,13 +7,14 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  Filler,
   Title,
   Tooltip,
   Legend,
   type ChartOptions,
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Filler, Title, Tooltip, Legend);
 
 export default function VentasPanel({ start, end }: { start?: string; end?: string }) {
   const [loading, setLoading] = useState(true);

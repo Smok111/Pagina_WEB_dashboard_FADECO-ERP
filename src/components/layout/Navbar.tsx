@@ -14,7 +14,7 @@ export default function Navbar() {
 
                 <div className="hidden sm:flex items-center gap-3">
                     <div className="w-9 h-9">
-                        <Image src="/logo-fadeco.svg" alt="FADECO" width={36} height={36} />
+                        <img src="/logo-fadeco.png" alt="FADECO" className="h-full w-full object-contain" />
                     </div>
                     <div className="hidden md:block">
                         <h2 className="font-semibold">FADECO ERP</h2>

@@ -53,12 +53,12 @@ export default function DataTable<T extends Record<string, any>>({ columns, data
 
   return (
     <div className="card p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
           <input
             placeholder="Buscar..."
             aria-label="Buscar en tabla"
-            className="px-3 py-2 rounded-md border w-64"
+            className="px-3 py-2 rounded-2xl border border-slate-200 shadow-sm w-full min-w-[220px]"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -67,9 +67,9 @@ export default function DataTable<T extends Record<string, any>>({ columns, data
           />
 
           <button
-            className="px-3 py-2 rounded-md bg-slate-100"
+            type="button"
+            className="btn btn-secondary"
             onClick={() => {
-              // export CSV
               const rows = [columns.map((c) => c.label)];
               const all = sorted.length ? sorted : filtered;
               all.forEach((r) => rows.push(columns.map((c) => String(r[c.key] ?? ""))));
@@ -87,15 +87,15 @@ export default function DataTable<T extends Record<string, any>>({ columns, data
           </button>
         </div>
 
-        <div className="text-sm text-slate-500">{filtered.length} resultados</div>
+        <div className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600">{filtered.length} resultados</div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table ref={tableRef} className="w-full text-sm" role="table" aria-label="Datos tabulares">
+      <div className="overflow-x-auto rounded-3xl border border-slate-200 shadow-sm">
+        <table ref={tableRef} className="w-full text-sm bg-white" role="table" aria-label="Datos tabulares">
           <thead>
-            <tr className="text-left text-slate-500 text-xs">
+            <tr className="text-left text-slate-500 text-xs uppercase tracking-[0.14em] bg-slate-50">
               {columns.map((c) => (
-                <th key={String(c.key)} className="pb-2 pr-4">
+                <th key={String(c.key)} className="px-4 py-3">
                   <button
                     className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
                     onClick={(e) => {
@@ -141,9 +141,9 @@ export default function DataTable<T extends Record<string, any>>({ columns, data
 
           <tbody>
             {pageData.map((row, idx) => (
-              <tr key={idx} className="border-t">
+              <tr key={idx} className="border-t transition-colors hover:bg-slate-50">
                 {columns.map((c) => (
-                  <td key={String(c.key)} className="py-3 pr-4">
+                  <td key={String(c.key)} className="py-3 px-4 text-slate-700">
                     {String(row[c.key] ?? "")}
                   </td>
                 ))}

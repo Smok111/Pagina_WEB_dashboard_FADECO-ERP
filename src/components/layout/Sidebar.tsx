@@ -29,7 +29,7 @@ export default function Sidebar() {
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-lg fadeco-gradient flex items-center justify-center overflow-hidden">
-            <Image src="/logo-fadeco.svg" alt="FADECO" width={40} height={40} />
+            <img src="/logo-fadeco.png" alt="FADECO" className="h-full w-full object-contain" />
           </div>
 
           {!compact && (

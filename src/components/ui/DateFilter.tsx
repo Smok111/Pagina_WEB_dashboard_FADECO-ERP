@@ -7,15 +7,18 @@ export default function DateFilter({ start, end, onChange }: { start?: string; e
   const [e, setE] = useState(end ?? '');
 
   return (
-    <div className="flex items-center gap-3">
-      <label className="text-sm text-slate-600">Desde</label>
-      <input type="date" value={s} onChange={(ev) => setS(ev.target.value)} className="px-2 py-1 border rounded-md" />
+    <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-white/90 p-3 shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-slate-500">Desde</span>
+        <input type="date" value={s} onChange={(ev) => setS(ev.target.value)} className="rounded-2xl border-slate-200 bg-slate-50 px-3 py-2" />
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-slate-500">Hasta</span>
+        <input type="date" value={e} onChange={(ev) => setE(ev.target.value)} className="rounded-2xl border-slate-200 bg-slate-50 px-3 py-2" />
+      </div>
 
-      <label className="text-sm text-slate-600">Hasta</label>
-      <input type="date" value={e} onChange={(ev) => setE(ev.target.value)} className="px-2 py-1 border rounded-md" />
-
-      <button className="px-3 py-1 bg-slate-100 rounded-md" onClick={() => onChange(s || undefined, e || undefined)}>Aplicar</button>
-      <button className="px-3 py-1 text-sm text-slate-500" onClick={() => { setS(''); setE(''); onChange(undefined, undefined); }}>Limpiar</button>
+      <button type="button" className="btn btn-primary" onClick={() => onChange(s || undefined, e || undefined)}>Aplicar</button>
+      <button type="button" className="btn btn-ghost text-slate-600" onClick={() => { setS(''); setE(''); onChange(undefined, undefined); }}>Limpiar</button>
     </div>
   );
 }

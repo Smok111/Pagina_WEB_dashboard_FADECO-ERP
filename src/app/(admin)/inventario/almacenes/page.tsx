@@ -188,7 +188,7 @@ export default function AlmacenesPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
+      <div className="form-card mb-8">
         <h2 className="text-xl font-semibold mb-6">
           {editandoId
             ? "Editar Almacén"
@@ -197,9 +197,9 @@ export default function AlmacenesPage() {
 
         <div className="grid grid-cols-2 gap-6">
 
-          <div className="border rounded-lg p-3 bg-slate-100 text-slate-600">
-            Código Sistema:
-            Automático
+          <div className="soft-panel p-4 text-slate-600">
+            <div className="font-semibold">Código Sistema</div>
+            <div>Automático</div>
           </div>
 
           <input
@@ -208,7 +208,7 @@ export default function AlmacenesPage() {
               setNombre(e.target.value)
             }
             placeholder="Nombre"
-            className="border rounded-lg p-3 text-black"
+            className="w-full"
           />
 
           <input
@@ -219,7 +219,7 @@ export default function AlmacenesPage() {
               )
             }
             placeholder="Ubicación"
-            className="border rounded-lg p-3 text-black"
+            className="w-full"
           />
 
           <input
@@ -230,13 +230,13 @@ export default function AlmacenesPage() {
               )
             }
             placeholder="Responsable"
-            className="border rounded-lg p-3 text-black"
+            className="w-full"
           />
         </div>
 
         <button
           onClick={guardarAlmacen}
-          className="mt-6 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl"
+          className="btn btn-primary mt-6"
         >
           {editandoId
             ? "Actualizar Almacén"
@@ -244,7 +244,7 @@ export default function AlmacenesPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="table-card overflow-hidden">
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold">
             Listado de Almacenes
@@ -328,7 +328,7 @@ export default function AlmacenesPage() {
                           almacen
                         )
                       }
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                      className="btn btn-secondary px-3 py-1"
                     >
                       ✏️
                     </button>
@@ -340,7 +340,11 @@ export default function AlmacenesPage() {
                           almacen.estado
                         )
                       }
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg"
+                      className={
+                        almacen.estado
+                          ? "btn btn-secondary px-3 py-1"
+                          : "btn btn-primary px-3 py-1"
+                      }
                     >
                       {almacen.estado
                         ? "🚫"
@@ -353,19 +357,19 @@ export default function AlmacenesPage() {
                           almacen.id
                         )
                       }
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg"
+                      className="btn btn-secondary px-3 py-1"
                     >
                       🗑️
                     </button>
                     <button
-  onClick={() =>
-    window.location.href =
-      `/inventario/almacenes/${almacen.id}`
-  }
-  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg"
->
-  📦
-</button>
+                      onClick={() =>
+                        window.location.href =
+                          `/inventario/almacenes/${almacen.id}`
+                      }
+                      className="btn btn-primary px-3 py-1"
+                    >
+                      📦
+                    </button>
                   </td>
                 </tr>
               )

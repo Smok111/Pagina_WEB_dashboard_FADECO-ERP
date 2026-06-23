@@ -8,13 +8,14 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Filler,
   Title,
   Tooltip,
   Legend,
   type ChartOptions,
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Title, Tooltip, Legend);
 
 export default function ChartPanel({ start, end }: { start?: string; end?: string }) {
   const [loading, setLoading] = useState(true);
