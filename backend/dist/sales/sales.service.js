@@ -19,7 +19,11 @@ let SalesService = class SalesService {
     }
     async findAll() {
         return this.prisma.venta.findMany({
-            include: { cliente: true, usuario: true, detalles: { include: { producto: true } } },
+            include: {
+                cliente: true,
+                usuario: true,
+                detalles: { include: { producto: true } },
+            },
             orderBy: { fecha: 'desc' },
         });
     }
@@ -42,7 +46,9 @@ let SalesService = class SalesService {
         });
     }
     async create(data, userId = 1) {
-        const ultima = await this.prisma.venta.findFirst({ orderBy: { id: 'desc' } });
+        const ultima = await this.prisma.venta.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigoSistema = `VEN-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
         return this.prisma.$transaction(async (tx) => {
             const venta = await tx.venta.create({
@@ -82,7 +88,12 @@ let SalesService = class SalesService {
                         },
                     });
                     const stock = await tx.stockAlmacen.findUnique({
-                        where: { productoId_almacenId: { productoId: detalle.productoId, almacenId } },
+                        where: {
+                            productoId_almacenId: {
+                                productoId: detalle.productoId,
+                                almacenId,
+                            },
+                        },
                     });
                     if (stock && stock.stockActual >= detalle.cantidad) {
                         await tx.stockAlmacen.update({

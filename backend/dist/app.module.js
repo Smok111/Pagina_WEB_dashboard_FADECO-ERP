@@ -27,7 +27,18 @@ let AppModule = class AppModule {
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, roles_module_1.RolesModule, users_module_1.UsersModule, sales_module_1.SalesModule, production_module_1.ProductionModule, rrhh_module_1.RrhhModule, maintenance_module_1.MaintenanceModule, dashboard_module_1.DashboardModule, empresa_module_1.EmpresaModule],
+        imports: [
+            prisma_module_1.PrismaModule,
+            auth_module_1.AuthModule,
+            roles_module_1.RolesModule,
+            users_module_1.UsersModule,
+            sales_module_1.SalesModule,
+            production_module_1.ProductionModule,
+            rrhh_module_1.RrhhModule,
+            maintenance_module_1.MaintenanceModule,
+            dashboard_module_1.DashboardModule,
+            empresa_module_1.EmpresaModule,
+        ],
         controllers: [app_controller_1.AppController, inventory_controller_1.InventoryController, purchases_controller_1.PurchasesController],
         providers: [app_service_1.AppService],
     })

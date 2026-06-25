@@ -16,7 +16,7 @@ exports.SalesModule = SalesModule;
 exports.SalesModule = SalesModule = __decorate([
     (0, common_1.Module)({
         controllers: [sales_controller_1.SalesController],
-        providers: [sales_service_1.SalesService]
+        providers: [sales_service_1.SalesService],
     })
 ], SalesModule);
 //# sourceMappingURL=sales.module.js.map

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, Edit, Trash2, Search, Package, Upload, FileSpreadsheet, ClipboardList, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Package, Upload, FileSpreadsheet, ClipboardList, Download, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -59,11 +59,17 @@ interface Producto {
   estado: boolean;
   categoria: { nombre: string };
   unidadMedida: { codigo: string };
+  createdAt?: string;
 }
+
+type SortField = "codigoSistema" | "nombre" | "categoria" | "stockActual" | "precioVenta" | "createdAt";
+type SortOrder = "asc" | "desc";
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [sortField, setSortField] = useState<SortField>("codigoSistema");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -297,6 +303,51 @@ export default function ProductosPage() {
       p.categoria.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  const productosOrdenados = [...productosFiltrados].sort((a, b) => {
+    let valA: any = a[sortField];
+    let valB: any = b[sortField];
+
+    if (sortField === "categoria") {
+      valA = a.categoria?.nombre || "";
+      valB = b.categoria?.nombre || "";
+    }
+
+    if (valA === undefined || valA === null) valA = "";
+    if (valB === undefined || valB === null) valB = "";
+
+    if (typeof valA === "string") valA = valA.toLowerCase();
+    if (typeof valB === "string") valB = valB.toLowerCase();
+
+    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const renderSortableHeader = (field: SortField, label: string, align: "left" | "right" = "left") => {
+    return (
+      <TableHead 
+        className={`cursor-pointer select-none hover:bg-slate-100 ${align === "right" ? "text-right" : ""}`} 
+        onClick={() => {
+          if (sortField === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+          } else {
+            setSortField(field);
+            setSortOrder("asc");
+          }
+        }}
+      >
+        <div className={`flex items-center gap-1 ${align === "right" ? "justify-end" : ""}`}>
+          {label}
+          {sortField === field ? (
+            sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+          ) : (
+            <ArrowUpDown className="h-3 w-3 text-slate-300" />
+          )}
+        </div>
+      </TableHead>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -337,24 +388,25 @@ export default function ProductosPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  <TableHead>Código</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Categoría</TableHead>
+                  {renderSortableHeader("codigoSistema", "Código")}
+                  {renderSortableHeader("nombre", "Nombre")}
+                  {renderSortableHeader("categoria", "Categoría")}
                   <TableHead>Unidad</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead className="text-right">Precio</TableHead>
+                  {renderSortableHeader("stockActual", "Stock", "right")}
+                  {renderSortableHeader("precioVenta", "Precio", "right")}
+                  {renderSortableHeader("createdAt", "Fecha Creado", "right")}
                   <TableHead className="w-[100px] text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {productosFiltrados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24 text-slate-500">
+                    <TableCell colSpan={8} className="text-center h-24 text-slate-500">
                       No se encontraron productos.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  productosFiltrados.map((producto) => (
+                  productosOrdenados.map((producto) => (
                     <TableRow key={producto.id}>
                       <TableCell className="font-mono text-xs">{producto.codigoSistema}</TableCell>
                       <TableCell className="font-medium">{producto.nombre}</TableCell>
@@ -366,6 +418,9 @@ export default function ProductosPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">S/ {producto.precioVenta}</TableCell>
+                      <TableCell className="text-right text-xs text-slate-500">
+                        {producto.createdAt ? new Date(producto.createdAt).toLocaleDateString() : "-"}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
                           <Button variant="ghost" size="icon" title="Ver Kardex" className="h-8 w-8 text-emerald-600" onClick={() => abrirKardex(producto)}>

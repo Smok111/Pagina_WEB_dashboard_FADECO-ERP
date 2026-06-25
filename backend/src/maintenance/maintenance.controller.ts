@@ -6,16 +6,24 @@ export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}
 
   @Get('equipos')
-  getEquipos() { return this.maintenanceService.getEquipos(); }
+  getEquipos() {
+    return this.maintenanceService.getEquipos();
+  }
 
   @Post('equipos')
-  createEquipo(@Body() data: any) { return this.maintenanceService.createEquipo(data); }
+  createEquipo(@Body() data: any) {
+    return this.maintenanceService.createEquipo(data);
+  }
 
   @Get('mantenimientos')
-  getMantenimientos() { return this.maintenanceService.getMantenimientos(); }
+  getMantenimientos() {
+    return this.maintenanceService.getMantenimientos();
+  }
 
   @Post('mantenimientos')
-  createMantenimiento(@Body() data: any) { return this.maintenanceService.createMantenimiento(data); }
+  createMantenimiento(@Body() data: any) {
+    return this.maintenanceService.createMantenimiento(data);
+  }
 
   @Patch('mantenimientos/:id/finish')
   finishMantenimiento(@Param('id') id: string, @Body() data: any) {

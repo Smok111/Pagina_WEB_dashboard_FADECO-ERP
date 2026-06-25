@@ -14,7 +14,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         return token || req?.headers?.authorization?.replace('Bearer ', '');
       },
       ignoreExpiration: false,
-      secretOrKey: process.env.NEXTAUTH_SECRET || 'fadeco_super_secret_key_2026_xyz123', // Reusing the same secret for smooth transition
+      secretOrKey:
+        process.env.NEXTAUTH_SECRET || 'fadeco_super_secret_key_2026_xyz123', // Reusing the same secret for smooth transition
     });
   }
 

@@ -16,7 +16,7 @@ exports.ProductionModule = ProductionModule;
 exports.ProductionModule = ProductionModule = __decorate([
     (0, common_1.Module)({
         controllers: [production_controller_1.ProductionController],
-        providers: [production_service_1.ProductionService]
+        providers: [production_service_1.ProductionService],
     })
 ], ProductionModule);
 //# sourceMappingURL=production.module.js.map

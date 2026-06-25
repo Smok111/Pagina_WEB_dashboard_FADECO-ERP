@@ -18,7 +18,7 @@ exports.EmpresaModule = EmpresaModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         controllers: [empresa_controller_1.EmpresaController],
-        providers: [empresa_service_1.EmpresaService]
+        providers: [empresa_service_1.EmpresaService],
     })
 ], EmpresaModule);
 //# sourceMappingURL=empresa.module.js.map

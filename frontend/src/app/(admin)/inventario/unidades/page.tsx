@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSort } from "@/hooks/useSort";
+import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
 interface Unidad {
   id: number;
@@ -13,6 +15,8 @@ interface Unidad {
 export default function UnidadesPage() {
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [codigo, setCodigo] = useState("");
+
+  const { sortedItems: unidadesOrdenadas, sortField, sortOrder, handleSort } = useSort(unidades, "id");
   const [nombre, setNombre] = useState("");
   const [editandoId, setEditandoId] = useState<number | null>(null);
 
@@ -237,19 +241,11 @@ export default function UnidadesPage() {
         <table className="w-full">
           <thead>
             <tr className="bg-slate-50 border-b">
-              <th className="text-left p-4">ID</th>
-              <th className="text-left p-4">
-                Código Sistema
-              </th>
-              <th className="text-left p-4">
-                Código
-              </th>
-              <th className="text-left p-4">
-                Nombre
-              </th>
-              <th className="text-left p-4">
-                Estado
-              </th>
+              <SortableTableHead label="ID" field="id" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Código Sistema" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Código" field="codigo" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Nombre" field="nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Estado" field="estado" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
               <th className="text-left p-4">
                 Acciones
               </th>
@@ -257,7 +253,7 @@ export default function UnidadesPage() {
           </thead>
 
           <tbody>
-            {unidades.length === 0 ? (
+            {unidadesOrdenadas.length === 0 ? (
               <tr>
                 <td
                   colSpan={6}
@@ -267,7 +263,7 @@ export default function UnidadesPage() {
                 </td>
               </tr>
             ) : (
-              unidades.map((unidad) => (
+              unidadesOrdenadas.map((unidad) => (
                 <tr
                   key={unidad.id}
                   className="border-b hover:bg-slate-50"

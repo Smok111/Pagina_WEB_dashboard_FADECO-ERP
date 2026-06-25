@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Users, Briefcase, MapPin, Search } from "lucide-react";
+import { useSort } from "@/hooks/useSort";
 
 export default function RrhhPage() {
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
+  const { sortedItems: trabajadoresOrdenados, sortField, sortOrder, setSortField, setSortOrder } = useSort(trabajadores, "nombres", "asc");
   const [areas, setAreas] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,11 +79,29 @@ export default function RrhhPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input type="text" placeholder="Buscar por DNI o Nombre..." className="w-full bg-[#0B0F19] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:border-fuchsia-500/50" />
           </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm text-slate-400">Ordenar por:</span>
+            <select 
+              className="bg-[#0B0F19] text-white text-sm rounded-xl px-3 py-2 border border-white/10 focus:outline-none"
+              value={`${sortField}-${sortOrder}`}
+              onChange={(e) => {
+                const [f, o] = e.target.value.split('-');
+                setSortField(f);
+                setSortOrder(o as any);
+              }}
+            >
+               <option value="nombres-asc">Nombres (A-Z)</option>
+               <option value="nombres-desc">Nombres (Z-A)</option>
+               <option value="apellidos-asc">Apellidos (A-Z)</option>
+               <option value="dni-asc">DNI</option>
+               <option value="salarioBase-desc">Mayor Salario</option>
+            </select>
+          </div>
         </div>
         <div className="overflow-y-auto flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
             <div className="col-span-3 text-center text-slate-500">Cargando personal...</div>
-          ) : trabajadores.map(t => (
+          ) : trabajadoresOrdenados.map(t => (
             <div key={t.id} className="bg-[#0B0F19] p-5 rounded-2xl border border-white/5 flex items-start gap-4 hover:border-fuchsia-500/30 transition-colors">
               <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-fuchsia-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold shrink-0">
                 {t.nombres[0]}{t.apellidos[0]}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSort } from "@/hooks/useSort";
+import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
 interface Categoria {
   id: number;
@@ -11,6 +13,8 @@ interface Categoria {
 export default function CategoriasPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [nombre, setNombre] = useState("");
+
+  const { sortedItems: categoriasOrdenadas, sortField, sortOrder, handleSort } = useSort(categorias, "id");
 
   const [editandoId, setEditandoId] = useState<number | null>(null);
 
@@ -173,16 +177,16 @@ export default function CategoriasPage() {
 
         <table className="w-full">
           <thead>
-            <tr>
-              <th className="text-left p-4">ID</th>
-              <th className="text-left p-4">Código</th>
-              <th className="text-left p-4">Nombre</th>
+            <tr className="border-b">
+              <SortableTableHead label="ID" field="id" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Código" field="codigo" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Nombre" field="nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
               <th className="text-left p-4">Acciones</th>
             </tr>
           </thead>
 
           <tbody>
-            {categorias.length === 0 ? (
+            {categoriasOrdenadas.length === 0 ? (
               <tr>
                 <td
                   colSpan={4}
@@ -192,7 +196,7 @@ export default function CategoriasPage() {
                 </td>
               </tr>
             ) : (
-              categorias.map((categoria) => (
+              categoriasOrdenadas.map((categoria) => (
                 <tr
                   key={categoria.id}
                   className="border-b hover:bg-slate-50"

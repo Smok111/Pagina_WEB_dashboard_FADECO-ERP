@@ -9,9 +9,18 @@ export class UsersService {
   async findAll() {
     return this.prisma.usuario.findMany({
       select: {
-        id: true, nombres: true, apellidos: true, email: true, activo: true,
-        rolId: true, sucursalId: true, rol: true, sucursal: true, createdAt: true, updatedAt: true,
-      }
+        id: true,
+        nombres: true,
+        apellidos: true,
+        email: true,
+        activo: true,
+        rolId: true,
+        sucursalId: true,
+        rol: true,
+        sucursal: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
 
@@ -39,7 +48,7 @@ export class UsersService {
 
   async update(id: number, data: any) {
     const updateData: any = { ...data };
-    
+
     if (data.password) {
       updateData.passwordHash = await bcrypt.hash(data.password, 10);
     }

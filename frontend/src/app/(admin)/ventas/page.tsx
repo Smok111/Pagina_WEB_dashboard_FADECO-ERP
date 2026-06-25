@@ -4,11 +4,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Save, ArrowRight, Receipt, Plus, Download } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { useSort } from "@/hooks/useSort";
+import { SortableTableHead } from "@/components/ui/SortableTableHead";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 export default function VentasPage() {
   const [ventas, setVentas] = useState<any[]>([]);
+  const { sortedItems: ventasOrdenadas, sortField, sortOrder, handleSort } = useSort(ventas, "fecha", "desc");
   const [clientes, setClientes] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,11 +275,11 @@ export default function VentasPage() {
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-[#1A2235] z-10">
               <tr className="border-b border-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                <th className="px-6 py-4">Código</th>
-                <th className="px-6 py-4">Fecha</th>
-                <th className="px-6 py-4">Cliente</th>
-                <th className="px-6 py-4">Comprobante</th>
-                <th className="px-6 py-4 text-right">Total</th>
+                <SortableTableHead label="Código" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Fecha" field="fecha" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Cliente" field="cliente.nombres" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Comprobante" field="tipoDocumento" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Total" field="total" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} align="right" className="px-6 py-4" />
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm text-slate-300">
@@ -284,7 +287,7 @@ export default function VentasPage() {
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Cargando ventas...</td>
                 </tr>
-              ) : ventas.map((venta) => (
+              ) : ventasOrdenadas.map((venta) => (
                 <tr key={venta.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4 font-medium text-white">{venta.codigoSistema}</td>
                   <td className="px-6 py-4">{new Date(venta.fecha).toLocaleDateString()}</td>

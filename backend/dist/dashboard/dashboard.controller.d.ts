@@ -65,23 +65,6 @@ export declare class DashboardController {
             fechaRealizacion: Date | null;
         })[];
         movimientosRecientes: ({
-            producto: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                nombre: string;
-                descripcion: string | null;
-                codigo: string;
-                estado: boolean;
-                codigoSistema: string | null;
-                imagen: string | null;
-                categoriaId: number;
-                unidadMedidaId: number;
-                stockActual: import("@prisma/client/runtime/library").Decimal;
-                stockMinimo: import("@prisma/client/runtime/library").Decimal;
-                costo: import("@prisma/client/runtime/library").Decimal;
-                precioVenta: import("@prisma/client/runtime/library").Decimal;
-            };
             almacen: {
                 id: number;
                 createdAt: Date;
@@ -93,14 +76,31 @@ export declare class DashboardController {
                 ubicacion: string | null;
                 responsable: string | null;
             };
+            producto: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                nombre: string;
+                descripcion: string | null;
+                codigo: string;
+                estado: boolean;
+                codigoSistema: string | null;
+                stockActual: import("@prisma/client/runtime/library").Decimal;
+                imagen: string | null;
+                categoriaId: number;
+                unidadMedidaId: number;
+                stockMinimo: import("@prisma/client/runtime/library").Decimal;
+                costo: import("@prisma/client/runtime/library").Decimal;
+                precioVenta: import("@prisma/client/runtime/library").Decimal;
+            };
         } & {
             id: number;
+            productoId: number;
+            almacenId: number;
             fecha: Date;
             tipo: string;
             cantidad: import("@prisma/client/runtime/library").Decimal;
             observacion: string | null;
-            productoId: number;
-            almacenId: number;
         })[];
     }>;
 }

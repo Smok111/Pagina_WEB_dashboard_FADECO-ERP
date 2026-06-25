@@ -4,6 +4,6 @@ import { RrhhService } from './rrhh.service';
 
 @Module({
   controllers: [RrhhController],
-  providers: [RrhhService]
+  providers: [RrhhService],
 })
 export class RrhhModule {}

@@ -17,11 +17,15 @@ let RrhhService = class RrhhService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getAreas() { return this.prisma.area.findMany(); }
-    async getCargos() { return this.prisma.cargo.findMany(); }
+    async getAreas() {
+        return this.prisma.area.findMany();
+    }
+    async getCargos() {
+        return this.prisma.cargo.findMany();
+    }
     async getTrabajadores() {
         return this.prisma.trabajador.findMany({
-            include: { area: true, cargo: true }
+            include: { area: true, cargo: true },
         });
     }
     async createTrabajador(data) {
@@ -34,14 +38,18 @@ let RrhhService = class RrhhService {
                 areaId: Number(data.areaId),
                 cargoId: Number(data.cargoId),
                 salarioBase: Number(data.salarioBase),
-            }
+            },
         });
     }
     async createArea(data) {
-        return this.prisma.area.create({ data: { nombre: data.nombre, descripcion: data.descripcion } });
+        return this.prisma.area.create({
+            data: { nombre: data.nombre, descripcion: data.descripcion },
+        });
     }
     async createCargo(data) {
-        return this.prisma.cargo.create({ data: { nombre: data.nombre, descripcion: data.descripcion } });
+        return this.prisma.cargo.create({
+            data: { nombre: data.nombre, descripcion: data.descripcion },
+        });
     }
 };
 exports.RrhhService = RrhhService;

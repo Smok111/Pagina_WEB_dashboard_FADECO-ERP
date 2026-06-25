@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSort } from "@/hooks/useSort";
+import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
 interface Almacen {
   id: number;
@@ -14,6 +16,8 @@ interface Almacen {
 
 export default function AlmacenesPage() {
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
+
+  const { sortedItems: almacenesOrdenados, sortField, sortOrder, handleSort } = useSort(almacenes, "id");
 
   const [nombre, setNombre] = useState("");
   const [ubicacion, setUbicacion] = useState("");
@@ -254,25 +258,11 @@ export default function AlmacenesPage() {
         <table className="w-full">
           <thead>
             <tr className="bg-slate-50 border-b">
-              <th className="text-left p-4">
-                Código Sistema
-              </th>
-
-              <th className="text-left p-4">
-                Nombre
-              </th>
-
-              <th className="text-left p-4">
-                Ubicación
-              </th>
-
-              <th className="text-left p-4">
-                Responsable
-              </th>
-
-              <th className="text-left p-4">
-                Estado
-              </th>
+              <SortableTableHead label="Código Sistema" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Nombre" field="nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Ubicación" field="ubicacion" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Responsable" field="responsable" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+              <SortableTableHead label="Estado" field="estado" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
 
               <th className="text-left p-4">
                 Acciones
@@ -281,7 +271,7 @@ export default function AlmacenesPage() {
           </thead>
 
           <tbody>
-            {almacenes.map(
+            {almacenesOrdenados.map(
               (almacen) => (
                 <tr
                   key={almacen.id}

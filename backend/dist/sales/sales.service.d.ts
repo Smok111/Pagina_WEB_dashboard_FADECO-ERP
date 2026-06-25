@@ -15,6 +15,32 @@ export declare class SalesService {
             createdAt: Date;
             updatedAt: Date;
         };
+        detalles: ({
+            producto: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                nombre: string;
+                descripcion: string | null;
+                codigo: string;
+                estado: boolean;
+                codigoSistema: string | null;
+                stockActual: import("@prisma/client/runtime/library").Decimal;
+                imagen: string | null;
+                categoriaId: number;
+                unidadMedidaId: number;
+                stockMinimo: import("@prisma/client/runtime/library").Decimal;
+                costo: import("@prisma/client/runtime/library").Decimal;
+                precioVenta: import("@prisma/client/runtime/library").Decimal;
+            };
+        } & {
+            id: number;
+            productoId: number;
+            cantidad: import("@prisma/client/runtime/library").Decimal;
+            subtotal: import("@prisma/client/runtime/library").Decimal;
+            precioUnitario: import("@prisma/client/runtime/library").Decimal;
+            ventaId: number;
+        })[];
         cliente: {
             id: number;
             nombres: string | null;
@@ -29,32 +55,6 @@ export declare class SalesService {
             telefono: string | null;
             correo: string | null;
         };
-        detalles: ({
-            producto: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                nombre: string;
-                descripcion: string | null;
-                codigo: string;
-                estado: boolean;
-                codigoSistema: string | null;
-                imagen: string | null;
-                categoriaId: number;
-                unidadMedidaId: number;
-                stockActual: import("@prisma/client/runtime/library").Decimal;
-                stockMinimo: import("@prisma/client/runtime/library").Decimal;
-                costo: import("@prisma/client/runtime/library").Decimal;
-                precioVenta: import("@prisma/client/runtime/library").Decimal;
-            };
-        } & {
-            id: number;
-            cantidad: import("@prisma/client/runtime/library").Decimal;
-            productoId: number;
-            subtotal: import("@prisma/client/runtime/library").Decimal;
-            ventaId: number;
-            precioUnitario: import("@prisma/client/runtime/library").Decimal;
-        })[];
     } & {
         id: number;
         createdAt: Date;

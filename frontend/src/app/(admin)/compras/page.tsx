@@ -4,9 +4,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { useSort } from "@/hooks/useSort";
+import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
 export default function ComprasPage() {
   const [compras, setCompras] = useState<any[]>([]);
+
+  const { sortedItems: comprasOrdenadas, sortField, sortOrder, handleSort } = useSort(compras, "fecha", "desc");
   const [proveedores, setProveedores] = useState<any[]>([]);
   const [almacenes, setAlmacenes] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
@@ -169,12 +173,12 @@ export default function ComprasPage() {
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-[#1A2235] z-10">
               <tr className="border-b border-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                <th className="px-6 py-4">Código</th>
-                <th className="px-6 py-4">Fecha</th>
-                <th className="px-6 py-4">Proveedor</th>
-                <th className="px-6 py-4">Documento</th>
-                <th className="px-6 py-4">Estado</th>
-                <th className="px-6 py-4 text-right">Total</th>
+                <SortableTableHead label="Código" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Fecha" field="fecha" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Proveedor" field="proveedor.razonSocial" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Documento" field="tipoDocumento" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Estado" field="estado" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Total" field="total" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} align="right" className="px-6 py-4" />
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm text-slate-300">
@@ -182,7 +186,7 @@ export default function ComprasPage() {
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Cargando compras...</td>
                 </tr>
-              ) : compras.map((compra) => (
+              ) : comprasOrdenadas.map((compra) => (
                 <tr key={compra.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4 font-medium text-white">{compra.codigoSistema}</td>
                   <td className="px-6 py-4">{new Date(compra.fecha).toLocaleDateString()}</td>

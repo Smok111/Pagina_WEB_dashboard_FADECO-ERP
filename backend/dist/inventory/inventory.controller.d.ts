@@ -84,19 +84,19 @@ export declare class InventoryController {
                 codigo: string;
                 estado: boolean;
                 codigoSistema: string | null;
+                stockActual: import("@prisma/client/runtime/library").Decimal;
                 imagen: string | null;
                 categoriaId: number;
                 unidadMedidaId: number;
-                stockActual: import("@prisma/client/runtime/library").Decimal;
                 stockMinimo: import("@prisma/client/runtime/library").Decimal;
                 costo: import("@prisma/client/runtime/library").Decimal;
                 precioVenta: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: number;
-            stockActual: import("@prisma/client/runtime/library").Decimal;
             productoId: number;
             almacenId: number;
+            stockActual: import("@prisma/client/runtime/library").Decimal;
         })[];
     } & {
         id: number;
@@ -162,10 +162,10 @@ export declare class InventoryController {
         codigo: string;
         estado: boolean;
         codigoSistema: string | null;
+        stockActual: import("@prisma/client/runtime/library").Decimal;
         imagen: string | null;
         categoriaId: number;
         unidadMedidaId: number;
-        stockActual: import("@prisma/client/runtime/library").Decimal;
         stockMinimo: import("@prisma/client/runtime/library").Decimal;
         costo: import("@prisma/client/runtime/library").Decimal;
         precioVenta: import("@prisma/client/runtime/library").Decimal;
@@ -179,10 +179,10 @@ export declare class InventoryController {
         codigo: string;
         estado: boolean;
         codigoSistema: string | null;
+        stockActual: import("@prisma/client/runtime/library").Decimal;
         imagen: string | null;
         categoriaId: number;
         unidadMedidaId: number;
-        stockActual: import("@prisma/client/runtime/library").Decimal;
         stockMinimo: import("@prisma/client/runtime/library").Decimal;
         costo: import("@prisma/client/runtime/library").Decimal;
         precioVenta: import("@prisma/client/runtime/library").Decimal;
@@ -202,11 +202,11 @@ export declare class InventoryController {
             responsable: string | null;
         };
         id: number;
+        productoId: number;
+        almacenId: number;
         fecha: Date;
         tipo: string;
         observacion: string | null;
-        productoId: number;
-        almacenId: number;
     }[]>;
     importProductos(data: any[]): Promise<{
         ok: boolean;
@@ -221,10 +221,10 @@ export declare class InventoryController {
         codigo: string;
         estado: boolean;
         codigoSistema: string | null;
+        stockActual: import("@prisma/client/runtime/library").Decimal;
         imagen: string | null;
         categoriaId: number;
         unidadMedidaId: number;
-        stockActual: import("@prisma/client/runtime/library").Decimal;
         stockMinimo: import("@prisma/client/runtime/library").Decimal;
         costo: import("@prisma/client/runtime/library").Decimal;
         precioVenta: import("@prisma/client/runtime/library").Decimal;
@@ -241,10 +241,10 @@ export declare class InventoryController {
         codigo: string;
         estado: boolean;
         codigoSistema: string | null;
+        stockActual: import("@prisma/client/runtime/library").Decimal;
         imagen: string | null;
         categoriaId: number;
         unidadMedidaId: number;
-        stockActual: import("@prisma/client/runtime/library").Decimal;
         stockMinimo: import("@prisma/client/runtime/library").Decimal;
         costo: import("@prisma/client/runtime/library").Decimal;
         precioVenta: import("@prisma/client/runtime/library").Decimal;

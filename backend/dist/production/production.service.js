@@ -19,12 +19,18 @@ let ProductionService = class ProductionService {
     }
     async findAll() {
         return this.prisma.ordenProduccion.findMany({
-            include: { productoFinal: true, consumos: { include: { producto: true } }, lotes: true },
+            include: {
+                productoFinal: true,
+                consumos: { include: { producto: true } },
+                lotes: true,
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
     async create(data) {
-        const ultima = await this.prisma.ordenProduccion.findFirst({ orderBy: { id: 'desc' } });
+        const ultima = await this.prisma.ordenProduccion.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigoOP = `OP-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
         return this.prisma.ordenProduccion.create({
             data: {
@@ -62,7 +68,12 @@ let ProductionService = class ProductionService {
                 },
             });
             const stock = await tx.stockAlmacen.findUnique({
-                where: { productoId_almacenId: { productoId: consumo.productoId, almacenId: consumo.almacenId } },
+                where: {
+                    productoId_almacenId: {
+                        productoId: consumo.productoId,
+                        almacenId: consumo.almacenId,
+                    },
+                },
             });
             if (stock && stock.stockActual >= consumo.cantidad) {
                 await tx.stockAlmacen.update({
@@ -86,7 +97,7 @@ let ProductionService = class ProductionService {
                     cantidadReal: Number(data.cantidadReal),
                     fechaFin: new Date(),
                 },
-                include: { productoFinal: true }
+                include: { productoFinal: true },
             });
             const numeroLote = `LOT-${op.codigoOP}-${Date.now().toString().slice(-4)}`;
             const lote = await tx.lote.create({
@@ -110,7 +121,9 @@ let ProductionService = class ProductionService {
                 },
             });
             const stock = await tx.stockAlmacen.findUnique({
-                where: { productoId_almacenId: { productoId: op.productoFinalId, almacenId } },
+                where: {
+                    productoId_almacenId: { productoId: op.productoFinalId, almacenId },
+                },
             });
             if (stock) {
                 await tx.stockAlmacen.update({
@@ -120,7 +133,11 @@ let ProductionService = class ProductionService {
             }
             else {
                 await tx.stockAlmacen.create({
-                    data: { productoId: op.productoFinalId, almacenId, stockActual: op.cantidadReal },
+                    data: {
+                        productoId: op.productoFinalId,
+                        almacenId,
+                        stockActual: op.cantidadReal,
+                    },
                 });
             }
             await tx.producto.update({

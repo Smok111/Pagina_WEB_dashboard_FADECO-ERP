@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSort } from "@/hooks/useSort";
 
 export default function ProduccionPage() {
   const [ordenes, setOrdenes] = useState<any[]>([]);
@@ -16,6 +17,8 @@ export default function ProduccionPage() {
   const [activeOp, setActiveOp] = useState<any>(null);
   const [isConsumoOpen, setIsConsumoOpen] = useState(false);
   const [isFinishOpen, setIsFinishOpen] = useState(false);
+
+  const { sortedItems: ordenesOrdenadas, sortField, sortOrder, setSortField, setSortOrder } = useSort(ordenes, "codigoOP", "desc");
 
   // Form states
   const [productoFinalId, setProductoFinalId] = useState("");
@@ -109,6 +112,24 @@ export default function ProduccionPage() {
           </h1>
           <p className="text-slate-400">Órdenes de producción, consumos y lotes.</p>
         </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-400">Ordenar:</span>
+            <select 
+              className="bg-[#0B0F19] text-white text-sm rounded-xl px-3 py-2 border border-white/10 focus:outline-none"
+              value={`${sortField}-${sortOrder}`}
+              onChange={(e) => {
+                const [f, o] = e.target.value.split('-');
+                setSortField(f);
+                setSortOrder(o as any);
+              }}
+            >
+               <option value="codigoOP-asc">Código (Asc)</option>
+               <option value="codigoOP-desc">Código (Desc)</option>
+               <option value="productoFinal.nombre-asc">Producto (A-Z)</option>
+               <option value="fechaFin-desc">Más Recientes</option>
+            </select>
+          </div>
         <button
           onClick={() => setIsNewOpOpen(true)}
           className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-orange-500/25"
@@ -116,6 +137,7 @@ export default function ProduccionPage() {
           <Plus size={18} />
           Nueva OP
         </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
@@ -129,7 +151,7 @@ export default function ProduccionPage() {
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {ordenes.filter(o => o.estado === 'PENDIENTE').map(op => (
+            {ordenesOrdenadas.filter(o => o.estado === 'PENDIENTE').map(op => (
               <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-white/5 hover:border-slate-500/50 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-slate-400">{op.codigoOP}</span>
@@ -154,7 +176,7 @@ export default function ProduccionPage() {
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {ordenes.filter(o => o.estado === 'EN_PROCESO').map(op => (
+            {ordenesOrdenadas.filter(o => o.estado === 'EN_PROCESO').map(op => (
               <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-orange-500/20 hover:border-orange-500/50 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-orange-400">{op.codigoOP}</span>
@@ -195,7 +217,7 @@ export default function ProduccionPage() {
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {ordenes.filter(o => o.estado === 'FINALIZADA').map(op => (
+            {ordenesOrdenadas.filter(o => o.estado === 'FINALIZADA').map(op => (
               <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-emerald-500/20 opacity-80">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-emerald-400">{op.codigoOP}</span>

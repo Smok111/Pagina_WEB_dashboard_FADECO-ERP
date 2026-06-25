@@ -37,21 +37,21 @@ export declare class PurchasesController {
                 codigo: string;
                 estado: boolean;
                 codigoSistema: string | null;
+                stockActual: import("@prisma/client/runtime/library").Decimal;
                 imagen: string | null;
                 categoriaId: number;
                 unidadMedidaId: number;
-                stockActual: import("@prisma/client/runtime/library").Decimal;
                 stockMinimo: import("@prisma/client/runtime/library").Decimal;
                 costo: import("@prisma/client/runtime/library").Decimal;
                 precioVenta: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: number;
-            cantidad: import("@prisma/client/runtime/library").Decimal;
             productoId: number;
+            cantidad: import("@prisma/client/runtime/library").Decimal;
             subtotal: import("@prisma/client/runtime/library").Decimal;
-            precioUnitario: import("@prisma/client/runtime/library").Decimal;
             compraId: number;
+            precioUnitario: import("@prisma/client/runtime/library").Decimal;
         })[];
     } & {
         id: number;
@@ -59,9 +59,9 @@ export declare class PurchasesController {
         updatedAt: Date;
         estado: string;
         codigoSistema: string | null;
+        almacenId: number;
         fecha: Date;
         observacion: string | null;
-        almacenId: number;
         tipoDocumento: string;
         numeroDocumento: string;
         archivoAdjunto: string | null;

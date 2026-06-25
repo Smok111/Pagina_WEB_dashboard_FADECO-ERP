@@ -24,7 +24,9 @@ let InventoryController = class InventoryController {
         return this.prisma.categoria.findMany({ orderBy: { nombre: 'asc' } });
     }
     async createCategoria(data) {
-        const ultimo = await this.prisma.categoria.findFirst({ orderBy: { id: 'desc' } });
+        const ultimo = await this.prisma.categoria.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigo = data.codigo || `CAT-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
         return this.prisma.categoria.create({
             data: {
@@ -79,7 +81,9 @@ let InventoryController = class InventoryController {
         });
     }
     async createAlmacen(data) {
-        const ultimo = await this.prisma.almacen.findFirst({ orderBy: { id: 'desc' } });
+        const ultimo = await this.prisma.almacen.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigo = data.codigo || `ALM-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
         return this.prisma.almacen.create({
             data: { codigo, nombre: data.nombre, ubicacion: data.ubicacion },
@@ -88,7 +92,11 @@ let InventoryController = class InventoryController {
     async updateAlmacen(data) {
         return this.prisma.almacen.update({
             where: { id: Number(data.id) },
-            data: { codigo: data.codigo, nombre: data.nombre, ubicacion: data.ubicacion },
+            data: {
+                codigo: data.codigo,
+                nombre: data.nombre,
+                ubicacion: data.ubicacion,
+            },
         });
     }
     async deleteAlmacen(body) {
@@ -102,7 +110,9 @@ let InventoryController = class InventoryController {
         });
     }
     async createProducto(data) {
-        const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
+        const ultimo = await this.prisma.producto.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigoSistema = `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
         return this.prisma.producto.create({
             data: {
@@ -124,10 +134,10 @@ let InventoryController = class InventoryController {
         const movimientos = await this.prisma.movimientoInventario.findMany({
             where: { productoId: Number(id) },
             orderBy: { fecha: 'asc' },
-            include: { almacen: true }
+            include: { almacen: true },
         });
         let saldo = 0;
-        const kardex = movimientos.map(m => {
+        const kardex = movimientos.map((m) => {
             const cant = Number(m.cantidad);
             if (m.tipo === 'INGRESO')
                 saldo += cant;
@@ -136,13 +146,15 @@ let InventoryController = class InventoryController {
             return {
                 ...m,
                 cantidad: cant,
-                saldo
+                saldo,
             };
         });
         return kardex.reverse();
     }
     async importProductos(data) {
-        const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
+        const ultimo = await this.prisma.producto.findFirst({
+            orderBy: { id: 'desc' },
+        });
         let lastId = ultimo?.id || 0;
         const firstCat = await this.prisma.categoria.findFirst();
         const firstUni = await this.prisma.unidadMedida.findFirst();

@@ -8,7 +8,11 @@ export class PurchasesController {
   @Get()
   async getPurchases() {
     return this.prisma.compra.findMany({
-      include: { proveedor: true, almacen: true, detalles: { include: { producto: true } } },
+      include: {
+        proveedor: true,
+        almacen: true,
+        detalles: { include: { producto: true } },
+      },
       orderBy: { fecha: 'desc' },
     });
   }
@@ -20,7 +24,9 @@ export class PurchasesController {
 
   @Post('proveedores')
   async createProveedor(@Body() data: any) {
-    const ultima = await this.prisma.proveedor.findFirst({ orderBy: { id: 'desc' } });
+    const ultima = await this.prisma.proveedor.findFirst({
+      orderBy: { id: 'desc' },
+    });
     const codigoSistema = `PROV-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
 
     return this.prisma.proveedor.create({
@@ -39,7 +45,9 @@ export class PurchasesController {
 
   @Post()
   async createPurchase(@Body() data: any) {
-    const ultima = await this.prisma.compra.findFirst({ orderBy: { id: 'desc' } });
+    const ultima = await this.prisma.compra.findFirst({
+      orderBy: { id: 'desc' },
+    });
     const codigoSistema = `COM-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
 
     return this.prisma.$transaction(async (tx: any) => {
@@ -81,7 +89,12 @@ export class PurchasesController {
           });
 
           const stock = await tx.stockAlmacen.findUnique({
-            where: { productoId_almacenId: { productoId: detalle.productoId, almacenId: compra.almacenId } },
+            where: {
+              productoId_almacenId: {
+                productoId: detalle.productoId,
+                almacenId: compra.almacenId,
+              },
+            },
           });
 
           if (stock) {
@@ -91,7 +104,11 @@ export class PurchasesController {
             });
           } else {
             await tx.stockAlmacen.create({
-              data: { productoId: detalle.productoId, almacenId: compra.almacenId, stockActual: detalle.cantidad },
+              data: {
+                productoId: detalle.productoId,
+                almacenId: compra.almacenId,
+                stockActual: detalle.cantidad,
+              },
             });
           }
 

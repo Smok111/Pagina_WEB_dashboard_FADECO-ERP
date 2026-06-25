@@ -3,19 +3,6 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     findAll(): Promise<{
-        sucursal: {
-            id: number;
-            activo: boolean;
-            nombre: string;
-            direccion: string | null;
-            telefono: string | null;
-            empresaId: number;
-        };
-        rol: {
-            id: number;
-            nombre: string;
-            descripcion: string | null;
-        };
         id: number;
         email: string;
         nombres: string;
@@ -25,8 +12,11 @@ export declare class UsersController {
         sucursalId: number;
         createdAt: Date;
         updatedAt: Date;
-    }[]>;
-    findOne(id: string): Promise<({
+        rol: {
+            id: number;
+            nombre: string;
+            descripcion: string | null;
+        };
         sucursal: {
             id: number;
             activo: boolean;
@@ -35,10 +25,20 @@ export declare class UsersController {
             telefono: string | null;
             empresaId: number;
         };
+    }[]>;
+    findOne(id: string): Promise<({
         rol: {
             id: number;
             nombre: string;
             descripcion: string | null;
+        };
+        sucursal: {
+            id: number;
+            activo: boolean;
+            nombre: string;
+            direccion: string | null;
+            telefono: string | null;
+            empresaId: number;
         };
     } & {
         id: number;

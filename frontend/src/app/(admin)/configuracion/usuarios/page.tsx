@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, Search, Users, X, Save, Mail, Briefcase, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSort } from "@/hooks/useSort";
+import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
 interface Usuario {
   id: number;
@@ -19,6 +21,7 @@ interface Usuario {
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const { sortedItems: usuariosOrdenados, sortField, sortOrder, handleSort } = useSort(usuarios, "nombres", "asc");
   const [roles, setRoles] = useState<{ id: number; nombre: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -143,10 +146,10 @@ export default function UsuariosPage() {
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-[#1A2235] z-10">
               <tr className="border-b border-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                <th className="px-6 py-4">Usuario</th>
-                <th className="px-6 py-4">Rol</th>
-                <th className="px-6 py-4">Sucursal</th>
-                <th className="px-6 py-4">Estado</th>
+                <SortableTableHead label="Usuario" field="nombres" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Rol" field="rol.nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Sucursal" field="sucursal.nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Estado" field="activo" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
@@ -157,7 +160,7 @@ export default function UsuariosPage() {
                     Cargando usuarios...
                   </td>
                 </tr>
-              ) : usuarios.map((user) => (
+              ) : usuariosOrdenados.map((user) => (
                 <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">

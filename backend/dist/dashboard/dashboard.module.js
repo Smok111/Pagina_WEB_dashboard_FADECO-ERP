@@ -16,7 +16,7 @@ exports.DashboardModule = DashboardModule;
 exports.DashboardModule = DashboardModule = __decorate([
     (0, common_1.Module)({
         controllers: [dashboard_controller_1.DashboardController],
-        providers: [dashboard_service_1.DashboardService]
+        providers: [dashboard_service_1.DashboardService],
     })
 ], DashboardModule);
 //# sourceMappingURL=dashboard.module.js.map

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('api/inventory')
@@ -14,9 +23,12 @@ export class InventoryController {
   @Post('categorias')
   async createCategoria(@Body() data: any) {
     // Generar un código basado en el ID si no envían código
-    const ultimo = await this.prisma.categoria.findFirst({ orderBy: { id: 'desc' } });
-    const codigo = data.codigo || `CAT-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
-    
+    const ultimo = await this.prisma.categoria.findFirst({
+      orderBy: { id: 'desc' },
+    });
+    const codigo =
+      data.codigo || `CAT-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
+
     return this.prisma.categoria.create({
       data: {
         codigo,
@@ -90,8 +102,11 @@ export class InventoryController {
 
   @Post('almacenes')
   async createAlmacen(@Body() data: any) {
-    const ultimo = await this.prisma.almacen.findFirst({ orderBy: { id: 'desc' } });
-    const codigo = data.codigo || `ALM-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
+    const ultimo = await this.prisma.almacen.findFirst({
+      orderBy: { id: 'desc' },
+    });
+    const codigo =
+      data.codigo || `ALM-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
     return this.prisma.almacen.create({
       data: { codigo, nombre: data.nombre, ubicacion: data.ubicacion },
     });
@@ -101,7 +116,11 @@ export class InventoryController {
   async updateAlmacen(@Body() data: any) {
     return this.prisma.almacen.update({
       where: { id: Number(data.id) },
-      data: { codigo: data.codigo, nombre: data.nombre, ubicacion: data.ubicacion },
+      data: {
+        codigo: data.codigo,
+        nombre: data.nombre,
+        ubicacion: data.ubicacion,
+      },
     });
   }
 
@@ -122,7 +141,9 @@ export class InventoryController {
 
   @Post('productos')
   async createProducto(@Body() data: any) {
-    const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
+    const ultimo = await this.prisma.producto.findFirst({
+      orderBy: { id: 'desc' },
+    });
     const codigoSistema = `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
     return this.prisma.producto.create({
       data: {
@@ -146,18 +167,18 @@ export class InventoryController {
     const movimientos = await this.prisma.movimientoInventario.findMany({
       where: { productoId: Number(id) },
       orderBy: { fecha: 'asc' },
-      include: { almacen: true }
+      include: { almacen: true },
     });
 
     let saldo = 0;
-    const kardex = movimientos.map(m => {
+    const kardex = movimientos.map((m) => {
       const cant = Number(m.cantidad);
       if (m.tipo === 'INGRESO') saldo += cant;
       if (m.tipo === 'SALIDA') saldo -= cant;
       return {
         ...m,
         cantidad: cant,
-        saldo
+        saldo,
       };
     });
 
@@ -166,7 +187,9 @@ export class InventoryController {
 
   @Post('productos/import')
   async importProductos(@Body() data: any[]) {
-    const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
+    const ultimo = await this.prisma.producto.findFirst({
+      orderBy: { id: 'desc' },
+    });
     let lastId = ultimo?.id || 0;
 
     const firstCat = await this.prisma.categoria.findFirst();

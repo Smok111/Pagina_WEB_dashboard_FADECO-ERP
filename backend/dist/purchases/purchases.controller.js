@@ -22,7 +22,11 @@ let PurchasesController = class PurchasesController {
     }
     async getPurchases() {
         return this.prisma.compra.findMany({
-            include: { proveedor: true, almacen: true, detalles: { include: { producto: true } } },
+            include: {
+                proveedor: true,
+                almacen: true,
+                detalles: { include: { producto: true } },
+            },
             orderBy: { fecha: 'desc' },
         });
     }
@@ -30,7 +34,9 @@ let PurchasesController = class PurchasesController {
         return this.prisma.proveedor.findMany();
     }
     async createProveedor(data) {
-        const ultima = await this.prisma.proveedor.findFirst({ orderBy: { id: 'desc' } });
+        const ultima = await this.prisma.proveedor.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigoSistema = `PROV-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
         return this.prisma.proveedor.create({
             data: {
@@ -46,7 +52,9 @@ let PurchasesController = class PurchasesController {
         });
     }
     async createPurchase(data) {
-        const ultima = await this.prisma.compra.findFirst({ orderBy: { id: 'desc' } });
+        const ultima = await this.prisma.compra.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigoSistema = `COM-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
         return this.prisma.$transaction(async (tx) => {
             const compra = await tx.compra.create({
@@ -85,7 +93,12 @@ let PurchasesController = class PurchasesController {
                         },
                     });
                     const stock = await tx.stockAlmacen.findUnique({
-                        where: { productoId_almacenId: { productoId: detalle.productoId, almacenId: compra.almacenId } },
+                        where: {
+                            productoId_almacenId: {
+                                productoId: detalle.productoId,
+                                almacenId: compra.almacenId,
+                            },
+                        },
                     });
                     if (stock) {
                         await tx.stockAlmacen.update({
@@ -95,7 +108,11 @@ let PurchasesController = class PurchasesController {
                     }
                     else {
                         await tx.stockAlmacen.create({
-                            data: { productoId: detalle.productoId, almacenId: compra.almacenId, stockActual: detalle.cantidad },
+                            data: {
+                                productoId: detalle.productoId,
+                                almacenId: compra.almacenId,
+                                stockActual: detalle.cantidad,
+                            },
                         });
                     }
                     await tx.producto.update({

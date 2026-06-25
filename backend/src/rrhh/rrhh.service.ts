@@ -5,12 +5,16 @@ import { PrismaService } from '../prisma/prisma.service';
 export class RrhhService {
   constructor(private prisma: PrismaService) {}
 
-  async getAreas() { return this.prisma.area.findMany(); }
-  async getCargos() { return this.prisma.cargo.findMany(); }
-  
+  async getAreas() {
+    return this.prisma.area.findMany();
+  }
+  async getCargos() {
+    return this.prisma.cargo.findMany();
+  }
+
   async getTrabajadores() {
     return this.prisma.trabajador.findMany({
-      include: { area: true, cargo: true }
+      include: { area: true, cargo: true },
     });
   }
 
@@ -24,15 +28,19 @@ export class RrhhService {
         areaId: Number(data.areaId),
         cargoId: Number(data.cargoId),
         salarioBase: Number(data.salarioBase),
-      }
+      },
     });
   }
 
   async createArea(data: any) {
-    return this.prisma.area.create({ data: { nombre: data.nombre, descripcion: data.descripcion } });
+    return this.prisma.area.create({
+      data: { nombre: data.nombre, descripcion: data.descripcion },
+    });
   }
 
   async createCargo(data: any) {
-    return this.prisma.cargo.create({ data: { nombre: data.nombre, descripcion: data.descripcion } });
+    return this.prisma.cargo.create({
+      data: { nombre: data.nombre, descripcion: data.descripcion },
+    });
   }
 }

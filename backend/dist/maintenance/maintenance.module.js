@@ -16,7 +16,7 @@ exports.MaintenanceModule = MaintenanceModule;
 exports.MaintenanceModule = MaintenanceModule = __decorate([
     (0, common_1.Module)({
         controllers: [maintenance_controller_1.MaintenanceController],
-        providers: [maintenance_service_1.MaintenanceService]
+        providers: [maintenance_service_1.MaintenanceService],
     })
 ], MaintenanceModule);
 //# sourceMappingURL=maintenance.module.js.map

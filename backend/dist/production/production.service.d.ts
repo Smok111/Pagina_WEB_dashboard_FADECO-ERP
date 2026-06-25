@@ -24,19 +24,19 @@ export declare class ProductionService {
                 codigo: string;
                 estado: boolean;
                 codigoSistema: string | null;
+                stockActual: import("@prisma/client/runtime/library").Decimal;
                 imagen: string | null;
                 categoriaId: number;
                 unidadMedidaId: number;
-                stockActual: import("@prisma/client/runtime/library").Decimal;
                 stockMinimo: import("@prisma/client/runtime/library").Decimal;
                 costo: import("@prisma/client/runtime/library").Decimal;
                 precioVenta: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: number;
-            cantidad: import("@prisma/client/runtime/library").Decimal;
             productoId: number;
             almacenId: number;
+            cantidad: import("@prisma/client/runtime/library").Decimal;
             ordenProduccionId: number;
             fechaConsumo: Date;
         })[];
@@ -49,10 +49,10 @@ export declare class ProductionService {
             codigo: string;
             estado: boolean;
             codigoSistema: string | null;
+            stockActual: import("@prisma/client/runtime/library").Decimal;
             imagen: string | null;
             categoriaId: number;
             unidadMedidaId: number;
-            stockActual: import("@prisma/client/runtime/library").Decimal;
             stockMinimo: import("@prisma/client/runtime/library").Decimal;
             costo: import("@prisma/client/runtime/library").Decimal;
             precioVenta: import("@prisma/client/runtime/library").Decimal;

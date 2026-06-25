@@ -19,24 +19,28 @@ let MaintenanceService = class MaintenanceService {
     }
     async getEquipos() {
         return this.prisma.equipo.findMany({
-            include: { mantenimientos: { orderBy: { fechaProgramada: 'desc' }, take: 1 } }
+            include: {
+                mantenimientos: { orderBy: { fechaProgramada: 'desc' }, take: 1 },
+            },
         });
     }
     async createEquipo(data) {
-        const ultimo = await this.prisma.equipo.findFirst({ orderBy: { id: 'desc' } });
+        const ultimo = await this.prisma.equipo.findFirst({
+            orderBy: { id: 'desc' },
+        });
         const codigo = data.codigo || `EQP-${String((ultimo?.id || 0) + 1).padStart(4, '0')}`;
         return this.prisma.equipo.create({
             data: {
                 codigo,
                 nombre: data.nombre,
                 ubicacion: data.ubicacion,
-            }
+            },
         });
     }
     async getMantenimientos() {
         return this.prisma.mantenimientoEquipo.findMany({
             include: { equipo: true },
-            orderBy: { fechaProgramada: 'desc' }
+            orderBy: { fechaProgramada: 'desc' },
         });
     }
     async createMantenimiento(data) {
@@ -46,8 +50,8 @@ let MaintenanceService = class MaintenanceService {
                 tipo: data.tipo,
                 fechaProgramada: new Date(data.fechaProgramada),
                 detalles: data.detalles,
-                estado: 'PROGRAMADO'
-            }
+                estado: 'PROGRAMADO',
+            },
         });
     }
     async finishMantenimiento(id, data) {
@@ -59,11 +63,11 @@ let MaintenanceService = class MaintenanceService {
                     fechaRealizacion: new Date(),
                     costo: Number(data.costo || 0),
                     detalles: data.detalles || undefined,
-                }
+                },
             });
             await tx.equipo.update({
                 where: { id: mant.equipoId },
-                data: { estado: 'OPERATIVO' }
+                data: { estado: 'OPERATIVO' },
             });
             return mant;
         });

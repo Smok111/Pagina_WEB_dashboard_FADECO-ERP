@@ -20,10 +20,18 @@ let MaintenanceController = class MaintenanceController {
     constructor(maintenanceService) {
         this.maintenanceService = maintenanceService;
     }
-    getEquipos() { return this.maintenanceService.getEquipos(); }
-    createEquipo(data) { return this.maintenanceService.createEquipo(data); }
-    getMantenimientos() { return this.maintenanceService.getMantenimientos(); }
-    createMantenimiento(data) { return this.maintenanceService.createMantenimiento(data); }
+    getEquipos() {
+        return this.maintenanceService.getEquipos();
+    }
+    createEquipo(data) {
+        return this.maintenanceService.createEquipo(data);
+    }
+    getMantenimientos() {
+        return this.maintenanceService.getMantenimientos();
+    }
+    createMantenimiento(data) {
+        return this.maintenanceService.createMantenimiento(data);
+    }
     finishMantenimiento(id, data) {
         return this.maintenanceService.finishMantenimiento(+id, data);
     }

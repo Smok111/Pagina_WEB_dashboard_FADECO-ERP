@@ -20,12 +20,24 @@ let RrhhController = class RrhhController {
     constructor(rrhhService) {
         this.rrhhService = rrhhService;
     }
-    getAreas() { return this.rrhhService.getAreas(); }
-    getCargos() { return this.rrhhService.getCargos(); }
-    getTrabajadores() { return this.rrhhService.getTrabajadores(); }
-    createTrabajador(data) { return this.rrhhService.createTrabajador(data); }
-    createArea(data) { return this.rrhhService.createArea(data); }
-    createCargo(data) { return this.rrhhService.createCargo(data); }
+    getAreas() {
+        return this.rrhhService.getAreas();
+    }
+    getCargos() {
+        return this.rrhhService.getCargos();
+    }
+    getTrabajadores() {
+        return this.rrhhService.getTrabajadores();
+    }
+    createTrabajador(data) {
+        return this.rrhhService.createTrabajador(data);
+    }
+    createArea(data) {
+        return this.rrhhService.createArea(data);
+    }
+    createCargo(data) {
+        return this.rrhhService.createCargo(data);
+    }
 };
 exports.RrhhController = RrhhController;
 __decorate([

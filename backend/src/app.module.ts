@@ -15,7 +15,18 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { EmpresaModule } from './empresa/empresa.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, RolesModule, UsersModule, SalesModule, ProductionModule, RrhhModule, MaintenanceModule, DashboardModule, EmpresaModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    RolesModule,
+    UsersModule,
+    SalesModule,
+    ProductionModule,
+    RrhhModule,
+    MaintenanceModule,
+    DashboardModule,
+    EmpresaModule,
+  ],
   controllers: [AppController, InventoryController, PurchasesController],
   providers: [AppService],
 })

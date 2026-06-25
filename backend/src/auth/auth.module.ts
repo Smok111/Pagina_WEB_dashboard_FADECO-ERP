@@ -9,7 +9,8 @@ import { JwtStrategy } from './jwt.strategy';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.NEXTAUTH_SECRET || 'fadeco_super_secret_key_2026_xyz123',
+      secret:
+        process.env.NEXTAUTH_SECRET || 'fadeco_super_secret_key_2026_xyz123',
       signOptions: { expiresIn: '30d' },
     }),
   ],

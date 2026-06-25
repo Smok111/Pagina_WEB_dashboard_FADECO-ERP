@@ -16,7 +16,7 @@ exports.RrhhModule = RrhhModule;
 exports.RrhhModule = RrhhModule = __decorate([
     (0, common_1.Module)({
         controllers: [rrhh_controller_1.RrhhController],
-        providers: [rrhh_service_1.RrhhService]
+        providers: [rrhh_service_1.RrhhService],
     })
 ], RrhhModule);
 //# sourceMappingURL=rrhh.module.js.map
