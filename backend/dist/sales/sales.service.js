@@ -26,6 +26,21 @@ let SalesService = class SalesService {
     async getClientes() {
         return this.prisma.cliente.findMany();
     }
+    async createCliente(data) {
+        return this.prisma.cliente.create({
+            data: {
+                tipoDocumento: data.tipoDocumento || 'DNI',
+                numeroDocumento: data.numeroDocumento,
+                nombres: data.nombres,
+                apellidos: data.apellidos,
+                razonSocial: data.razonSocial,
+                direccion: data.direccion,
+                telefono: data.telefono,
+                correo: data.correo,
+                estado: true,
+            },
+        });
+    }
     async create(data, userId = 1) {
         const ultima = await this.prisma.venta.findFirst({ orderBy: { id: 'desc' } });
         const codigoSistema = `VEN-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;

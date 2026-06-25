@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 export default function ComprasPage() {
   const [compras, setCompras] = useState<any[]>([]);
@@ -12,6 +12,15 @@ export default function ComprasPage() {
   const [productos, setProductos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNewProviderModalOpen, setIsNewProviderModalOpen] = useState(false);
+  const [newProvider, setNewProvider] = useState({
+    ruc: "",
+    razonSocial: "",
+    direccion: "",
+    telefono: "",
+    correo: "",
+    contacto: ""
+  });
 
   // Form State
   const [proveedorId, setProveedorId] = useState("");
@@ -19,6 +28,7 @@ export default function ComprasPage() {
   const [tipoDocumento, setTipoDocumento] = useState("FACTURA");
   const [numeroDocumento, setNumeroDocumento] = useState("");
   const [cart, setCart] = useState<any[]>([]);
+  const [isSearchingProvider, setIsSearchingProvider] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -40,6 +50,49 @@ export default function ComprasPage() {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateProvider = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/purchases/proveedores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProvider)
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setProveedores([...proveedores, created]);
+        setProveedorId(String(created.id));
+        setIsNewProviderModalOpen(false);
+        setNewProvider({ ruc: "", razonSocial: "", direccion: "", telefono: "", correo: "", contacto: "" });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const buscarProveedorPorRuc = async () => {
+    if (!newProvider.ruc) return;
+    
+    setIsSearchingProvider(true);
+    try {
+      const res = await fetch(`/api-apis-net-pe/ruc?numero=${newProvider.ruc}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNewProvider({
+          ...newProvider,
+          razonSocial: data.nombre || "",
+          direccion: data.direccion || "",
+        });
+      } else {
+        alert("No se encontraron resultados para el RUC ingresado.");
+      }
+    } catch (error) {
+      console.error("Error buscando RUC:", error);
+    } finally {
+      setIsSearchingProvider(false);
     }
   };
 
@@ -144,7 +197,7 @@ export default function ComprasPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right font-medium text-white">
-                    S/ {Number(compra.total).toFixed(2)}
+                    {formatCurrency(compra.total)}
                   </td>
                 </tr>
               ))}
@@ -174,7 +227,12 @@ export default function ComprasPage() {
               <form onSubmit={handleSubmit} className="p-6">
                 <div className="grid grid-cols-2 gap-6 mb-8">
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Proveedor</label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-slate-400">Proveedor</label>
+                      <button type="button" onClick={() => setIsNewProviderModalOpen(true)} className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1">
+                        <Plus size={12}/> Nuevo Proveedor
+                      </button>
+                    </div>
                     <select required value={proveedorId} onChange={e => setProveedorId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50">
                       <option value="" disabled>Seleccione un proveedor...</option>
                       {proveedores.map(p => <option key={p.id} value={p.id}>{p.razonSocial}</option>)}
@@ -233,7 +291,7 @@ export default function ComprasPage() {
                             <input type="number" min="0" step="0.01" value={item.precioUnitario} onChange={e => updateCartItem(index, 'precioUnitario', Number(e.target.value))} className="w-full bg-transparent border-b border-white/20 focus:border-blue-500 outline-none py-1" />
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-white">
-                            {(item.cantidad * item.precioUnitario).toFixed(2)}
+                            {formatCurrency(item.cantidad * item.precioUnitario).replace('S/ ', '')}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button type="button" onClick={() => setCart(cart.filter((_, i) => i !== index))} className="text-red-400 hover:text-red-300"><X size={16}/></button>
@@ -250,15 +308,15 @@ export default function ComprasPage() {
                   <div className="w-1/3 bg-[#0B0F19] rounded-xl p-5 border border-white/5 space-y-3">
                     <div className="flex justify-between text-slate-400">
                       <span>Subtotal</span>
-                      <span>S/ {subtotal.toFixed(2)}</span>
+                      <span>{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-slate-400">
                       <span>IGV (18%)</span>
-                      <span>S/ {igv.toFixed(2)}</span>
+                      <span>{formatCurrency(igv)}</span>
                     </div>
                     <div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-white/10">
                       <span>Total</span>
-                      <span>S/ {total.toFixed(2)}</span>
+                      <span>{formatCurrency(total)}</span>
                     </div>
                   </div>
                 </div>
@@ -269,6 +327,71 @@ export default function ComprasPage() {
                   </button>
                   <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/25">
                     <Save size={18} /> Procesar Compra e Ingresar a Almacén
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isNewProviderModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg my-8 overflow-hidden shadow-2xl relative"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#1A2235]">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Plus className="text-blue-500" /> Nuevo Proveedor
+                </h3>
+                <button onClick={() => setIsNewProviderModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateProvider} className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">RUC *</label>
+                    <div className="flex gap-2">
+                      <input type="text" required value={newProvider.ruc} onChange={e => setNewProvider({...newProvider, ruc: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+                      <button type="button" onClick={buscarProveedorPorRuc} disabled={isSearchingProvider} className="bg-[#0B0F19] border border-white/10 rounded-xl px-3 text-blue-400 hover:bg-blue-500/10 transition-colors disabled:opacity-50 flex items-center justify-center shrink-0">
+                        {isSearchingProvider ? <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div> : <Search size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">Razón Social *</label>
+                    <input type="text" required value={newProvider.razonSocial} onChange={e => setNewProvider({...newProvider, razonSocial: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">Dirección</label>
+                    <input type="text" value={newProvider.direccion} onChange={e => setNewProvider({...newProvider, direccion: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">Teléfono</label>
+                    <input type="text" value={newProvider.telefono} onChange={e => setNewProvider({...newProvider, telefono: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">Correo</label>
+                    <input type="email" value={newProvider.correo} onChange={e => setNewProvider({...newProvider, correo: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">Contacto Principal</label>
+                    <input type="text" value={newProvider.contacto} onChange={e => setNewProvider({...newProvider, contacto: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50" />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                  <button type="button" onClick={() => setIsNewProviderModalOpen(false)} className="px-5 py-2.5 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/25 text-sm">
+                    <Save size={16} /> Guardar Proveedor
                   </button>
                 </div>
               </form>

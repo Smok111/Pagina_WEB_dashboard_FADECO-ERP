@@ -15,6 +15,11 @@ export class SalesController {
     return this.salesService.getClientes();
   }
 
+  @Post('clientes')
+  createCliente(@Body() data: any) {
+    return this.salesService.createCliente(data);
+  }
+
   @Post()
   create(@Body() data: any, @Req() req: any) {
     const userId = req.user?.id || 1;

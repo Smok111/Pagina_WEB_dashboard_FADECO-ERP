@@ -18,6 +18,25 @@ export class PurchasesController {
     return this.prisma.proveedor.findMany();
   }
 
+  @Post('proveedores')
+  async createProveedor(@Body() data: any) {
+    const ultima = await this.prisma.proveedor.findFirst({ orderBy: { id: 'desc' } });
+    const codigoSistema = `PROV-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
+
+    return this.prisma.proveedor.create({
+      data: {
+        codigoSistema,
+        ruc: data.ruc,
+        razonSocial: data.razonSocial,
+        direccion: data.direccion,
+        telefono: data.telefono,
+        correo: data.correo,
+        contacto: data.contacto,
+        activo: true,
+      },
+    });
+  }
+
   @Post()
   async createPurchase(@Body() data: any) {
     const ultima = await this.prisma.compra.findFirst({ orderBy: { id: 'desc' } });

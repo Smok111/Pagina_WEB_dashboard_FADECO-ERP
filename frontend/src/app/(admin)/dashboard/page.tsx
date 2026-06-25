@@ -5,13 +5,13 @@ import {
   TrendingUp, TrendingDown, Factory, AlertCircle, Wrench, 
   PackageOpen, Activity, FileText, Box, Users, Download
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar 
 } from "recharts";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import { motion } from "framer-motion";
 import { useTranslations } from "@/providers/AccessibilityProvider";
 
@@ -127,7 +127,7 @@ export default function DashboardPage() {
             {t("Ingresos (7 días)")}
           </h3>
           <p className="text-3xl font-black text-slate-800 mb-4 tracking-tight">
-            S/ {metrics.ingresosTotales?.toFixed(2) || "0.00"}
+            {formatCurrency(metrics.ingresosTotales || 0)}
           </p>
           <div className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
             <TrendingUp size={14} className="mr-1" />
@@ -141,7 +141,7 @@ export default function DashboardPage() {
             {t("Egresos (7 días)")}
           </h3>
           <p className="text-3xl font-black text-slate-800 mb-4 tracking-tight">
-            S/ {metrics.gastosTotales?.toFixed(2) || "0.00"}
+            {formatCurrency(metrics.gastosTotales || 0)}
           </p>
           <div className="flex items-center text-xs font-semibold text-red-600 bg-red-50 w-fit px-2 py-1 rounded-md">
             <TrendingDown size={14} className="mr-1" />
@@ -156,7 +156,7 @@ export default function DashboardPage() {
             {t("Valor del Inventario")}
           </h3>
           <p className="text-3xl font-black text-slate-800 mb-4 tracking-tight">
-            S/ {metrics.valorInventario?.toFixed(2) || "0.00"}
+            {formatCurrency(metrics.valorInventario || 0)}
           </p>
           <div className="flex items-center text-xs font-semibold text-indigo-600 bg-indigo-50 w-fit px-2 py-1 rounded-md">
             <Box size={14} className="mr-1" />
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `S/${value}`} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(value)} />
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <RechartsTooltip 
                   contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}

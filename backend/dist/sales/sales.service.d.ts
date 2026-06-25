@@ -86,5 +86,19 @@ export declare class SalesService {
         telefono: string | null;
         correo: string | null;
     }[]>;
+    createCliente(data: any): Promise<{
+        id: number;
+        nombres: string | null;
+        apellidos: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        estado: boolean;
+        tipoDocumento: string;
+        numeroDocumento: string;
+        razonSocial: string | null;
+        direccion: string | null;
+        telefono: string | null;
+        correo: string | null;
+    }>;
     create(data: any, userId?: number): Promise<any>;
 }

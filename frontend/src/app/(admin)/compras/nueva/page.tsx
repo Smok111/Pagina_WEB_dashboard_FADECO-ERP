@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save, X } from "lucide-react";
+import { Plus, Trash2, Save, X, Search } from "lucide-react";
+import { cn, formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,18 @@ export default function NuevaCompraPage() {
   const [cantidad, setCantidad] = useState(1);
   const [precioUnitario, setPrecioUnitario] = useState(0);
 
+  // New Provider State
+  const [isNewProviderModalOpen, setIsNewProviderModalOpen] = useState(false);
+  const [newProvider, setNewProvider] = useState({
+    ruc: "",
+    razonSocial: "",
+    direccion: "",
+    telefono: "",
+    correo: "",
+    contacto: ""
+  });
+  const [isSearchingProvider, setIsSearchingProvider] = useState(false);
+
   // Loaders
   useEffect(() => {
     async function loadData() {
@@ -79,7 +92,7 @@ export default function NuevaCompraPage() {
         const [almacenesRes, productosRes, proveedoresRes] = await Promise.all([
           fetch("/api/inventory/almacenes"),
           fetch("/api/inventory/productos"),
-          fetch("/api/core/proveedores").catch(() => null), // If this doesn't exist yet, we'll mock or handle gracefully
+          fetch("/api/purchases/proveedores").catch(() => null),
         ]);
         
         if (almacenesRes.ok) setAlmacenes(await almacenesRes.json());
@@ -99,6 +112,50 @@ export default function NuevaCompraPage() {
     }
     loadData();
   }, []);
+
+  const handleCreateProvider = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/purchases/proveedores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProvider)
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setProveedores([...proveedores, created]);
+        setProveedorId(String(created.id));
+        setIsNewProviderModalOpen(false);
+        setNewProvider({ ruc: "", razonSocial: "", direccion: "", telefono: "", correo: "", contacto: "" });
+        toast.success("Proveedor creado exitosamente");
+      }
+    } catch (err) {
+      toast.error("Error al crear proveedor");
+    }
+  };
+
+  const buscarProveedorPorRuc = async () => {
+    if (!newProvider.ruc) return;
+    
+    setIsSearchingProvider(true);
+    try {
+      const res = await fetch(`/api-apis-net-pe/ruc?numero=${newProvider.ruc}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNewProvider({
+          ...newProvider,
+          razonSocial: data.nombre || "",
+          direccion: data.direccion || "",
+        });
+      } else {
+        toast.error("No se encontraron resultados para el RUC ingresado.");
+      }
+    } catch (error) {
+      console.error("Error buscando RUC:", error);
+    } finally {
+      setIsSearchingProvider(false);
+    }
+  };
 
   const handleAddDetalle = () => {
     if (!selectedProducto || cantidad <= 0 || precioUnitario <= 0) {
@@ -202,7 +259,12 @@ export default function NuevaCompraPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Proveedor *</Label>
+                <div className="flex justify-between items-center">
+                  <Label>Proveedor *</Label>
+                  <button type="button" onClick={() => setIsNewProviderModalOpen(true)} className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1">
+                    <Plus size={12}/> Nuevo Proveedor
+                  </button>
+                </div>
                 <Select value={proveedorId} onValueChange={(val) => setProveedorId(val || "")}>
                   <SelectTrigger><SelectValue placeholder="Seleccione Proveedor" /></SelectTrigger>
                   <SelectContent>
@@ -313,8 +375,8 @@ export default function NuevaCompraPage() {
                         <TableRow key={d.productoId}>
                           <TableCell className="font-medium">{d.productoNombre}</TableCell>
                           <TableCell className="text-right">{d.cantidad}</TableCell>
-                          <TableCell className="text-right">S/ {d.precioUnitario.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">S/ {d.subtotal.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(d.precioUnitario)}</TableCell>
+                          <TableCell className="text-right font-medium">{formatCurrency(d.subtotal)}</TableCell>
                           <TableCell>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:bg-red-50" onClick={() => removeDetalle(d.productoId)}>
                               <Trash2 className="h-4 w-4" />
@@ -339,20 +401,78 @@ export default function NuevaCompraPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center text-sm text-slate-600">
                 <span>Subtotal</span>
-                <span className="font-medium text-slate-900">S/ {calcSubtotal.toFixed(2)}</span>
+                <span className="font-medium text-slate-900">{formatCurrency(calcSubtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-sm text-slate-600">
                 <span>IGV (18%) {tipoDocumento !== "FACTURA" && "(N/A)"}</span>
-                <span className="font-medium text-slate-900">S/ {igv.toFixed(2)}</span>
+                <span className="font-medium text-slate-900">{formatCurrency(igv)}</span>
               </div>
               <div className="pt-4 border-t flex justify-between items-center">
                 <span className="text-base font-semibold text-slate-900">Total General</span>
-                <span className="text-xl font-bold text-slate-900">S/ {total.toFixed(2)}</span>
+                <span className="text-xl font-bold text-slate-900">{formatCurrency(total)}</span>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {isNewProviderModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl relative">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Plus className="text-blue-500" /> Nuevo Proveedor
+              </h3>
+              <button onClick={() => setIsNewProviderModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProvider} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="mb-1.5 block">RUC *</Label>
+                  <div className="flex gap-2">
+                    <Input required value={newProvider.ruc} onChange={e => setNewProvider({...newProvider, ruc: e.target.value})} />
+                    <Button type="button" variant="outline" size="icon" onClick={buscarProveedorPorRuc} disabled={isSearchingProvider} className="shrink-0">
+                      {isSearchingProvider ? <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div> : <Search size={18} />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <Label className="mb-1.5 block">Razón Social *</Label>
+                  <Input required value={newProvider.razonSocial} onChange={e => setNewProvider({...newProvider, razonSocial: e.target.value})} />
+                </div>
+                <div className="col-span-2">
+                  <Label className="mb-1.5 block">Dirección</Label>
+                  <Input value={newProvider.direccion} onChange={e => setNewProvider({...newProvider, direccion: e.target.value})} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">Teléfono</Label>
+                  <Input value={newProvider.telefono} onChange={e => setNewProvider({...newProvider, telefono: e.target.value})} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">Correo</Label>
+                  <Input type="email" value={newProvider.correo} onChange={e => setNewProvider({...newProvider, correo: e.target.value})} />
+                </div>
+                <div className="col-span-2">
+                  <Label className="mb-1.5 block">Contacto Principal</Label>
+                  <Input value={newProvider.contacto} onChange={e => setNewProvider({...newProvider, contacto: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-4">
+                <Button type="button" variant="outline" onClick={() => setIsNewProviderModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  <Save className="h-4 w-4 mr-2" /> Guardar Proveedor
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

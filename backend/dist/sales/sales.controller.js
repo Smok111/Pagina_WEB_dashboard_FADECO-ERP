@@ -26,6 +26,9 @@ let SalesController = class SalesController {
     getClientes() {
         return this.salesService.getClientes();
     }
+    createCliente(data) {
+        return this.salesService.createCliente(data);
+    }
     create(data, req) {
         const userId = req.user?.id || 1;
         return this.salesService.create(data, userId);
@@ -44,6 +47,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SalesController.prototype, "getClientes", null);
+__decorate([
+    (0, common_1.Post)('clientes'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SalesController.prototype, "createCliente", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

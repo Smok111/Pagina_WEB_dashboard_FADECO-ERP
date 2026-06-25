@@ -29,6 +29,22 @@ let PurchasesController = class PurchasesController {
     async getProveedores() {
         return this.prisma.proveedor.findMany();
     }
+    async createProveedor(data) {
+        const ultima = await this.prisma.proveedor.findFirst({ orderBy: { id: 'desc' } });
+        const codigoSistema = `PROV-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
+        return this.prisma.proveedor.create({
+            data: {
+                codigoSistema,
+                ruc: data.ruc,
+                razonSocial: data.razonSocial,
+                direccion: data.direccion,
+                telefono: data.telefono,
+                correo: data.correo,
+                contacto: data.contacto,
+                activo: true,
+            },
+        });
+    }
     async createPurchase(data) {
         const ultima = await this.prisma.compra.findFirst({ orderBy: { id: 'desc' } });
         const codigoSistema = `COM-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
@@ -105,6 +121,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PurchasesController.prototype, "getProveedores", null);
+__decorate([
+    (0, common_1.Post)('proveedores'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PurchasesController.prototype, "createProveedor", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

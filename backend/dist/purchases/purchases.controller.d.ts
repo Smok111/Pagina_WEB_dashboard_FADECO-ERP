@@ -83,5 +83,18 @@ export declare class PurchasesController {
         correo: string | null;
         contacto: string | null;
     }[]>;
+    createProveedor(data: any): Promise<{
+        id: number;
+        activo: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        codigoSistema: string | null;
+        ruc: string;
+        razonSocial: string;
+        direccion: string | null;
+        telefono: string | null;
+        correo: string | null;
+        contacto: string | null;
+    }>;
     createPurchase(data: any): Promise<any>;
 }
