@@ -1,0 +1,468 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Empresa {
+  id          Int      @id @default(autoincrement())
+  razonSocial String
+  ruc         String   @unique
+  direccion   String?
+  telefono    String?
+  correo      String?
+  moneda      String   @default("PEN")
+  igv         Decimal  @default(18.0)
+  logo        String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sucursales Sucursal[]
+}
+
+model Sucursal {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  direccion String?
+  telefono  String?
+  activo    Boolean @default(true)
+
+  empresaId Int
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
+
+  usuarios Usuario[]
+}
+
+model Rol {
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique
+  descripcion String?
+
+  usuarios Usuario[]
+}
+
+model Usuario {
+  id           Int    @id @default(autoincrement())
+  nombres      String
+  apellidos    String
+  email        String @unique
+  passwordHash String
+
+  activo Boolean @default(true)
+
+  rolId Int
+  rol   Rol @relation(fields: [rolId], references: [id])
+
+  sucursalId Int
+  sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+
+  ventas          Venta[]
+  lotes           Lote[]
+  movimientosCaja MovimientoCaja[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Auditoria {
+  id Int @id @default(autoincrement())
+
+  usuarioId Int?
+  accion    String
+  modulo    String
+
+  descripcion String?
+
+  fecha DateTime @default(now())
+  ip    String?
+}
+
+model Categoria {
+  id Int @id @default(autoincrement())
+
+  codigo String @unique
+
+  nombre      String  @unique
+  descripcion String?
+  estado      Boolean @default(true)
+
+  productos Producto[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UnidadMedida {
+  id Int @id @default(autoincrement())
+
+  codigoSistema String? @unique
+
+  codigo String @unique
+  nombre String
+
+  estado Boolean @default(true)
+
+  productos Producto[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Producto {
+  id Int @id @default(autoincrement())
+
+  codigoSistema String? @unique
+  codigo        String  @unique
+  nombre        String
+  descripcion   String?
+  imagen        String?
+
+  categoriaId Int
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+
+  unidadMedidaId Int
+  unidadMedida   UnidadMedida @relation(fields: [unidadMedidaId], references: [id])
+
+  stockActual Decimal @default(0)
+  stockMinimo Decimal @default(0)
+
+  costo       Decimal @default(0)
+  precioVenta Decimal @default(0)
+
+  estado Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  StockAlmacen         StockAlmacen[]
+  MovimientoInventario MovimientoInventario[]
+
+  detallesCompra       DetalleCompra[]
+  detallesVenta        DetalleVenta[]
+  ordenesProduccion    OrdenProduccion[]
+  consumosMateriaPrima ConsumoMateriaPrima[] @relation("MateriaPrima")
+}
+
+model Almacen {
+  id Int @id @default(autoincrement())
+
+  codigoSistema String? @unique
+  codigo        String  @unique
+  nombre        String
+
+  ubicacion   String?
+  responsable String?
+
+  estado Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stocks      StockAlmacen[]
+  movimientos MovimientoInventario[]
+
+  compras  Compra[]
+  consumos ConsumoMateriaPrima[]
+}
+
+model StockAlmacen {
+  id Int @id @default(autoincrement())
+
+  productoId Int
+  almacenId  Int
+
+  stockActual Decimal @default(0)
+
+  producto Producto @relation(fields: [productoId], references: [id])
+  almacen  Almacen  @relation(fields: [almacenId], references: [id])
+
+  @@unique([productoId, almacenId])
+}
+
+model MovimientoInventario {
+  id Int @id @default(autoincrement())
+
+  fecha DateTime @default(now())
+  tipo  String // INGRESO, SALIDA, TRANSFERENCIA
+
+  cantidad Decimal
+
+  observacion String?
+
+  productoId Int
+  almacenId  Int
+
+  producto Producto @relation(fields: [productoId], references: [id])
+  almacen  Almacen  @relation(fields: [almacenId], references: [id])
+}
+
+model Proveedor {
+  id Int @id @default(autoincrement())
+
+  codigoSistema String? @unique
+  ruc           String  @unique
+  razonSocial   String
+
+  direccion String?
+  telefono  String?
+  correo    String?
+  contacto  String?
+
+  activo Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  compras Compra[]
+}
+
+model Compra {
+  id Int @id @default(autoincrement())
+
+  codigoSistema String?  @unique
+  fecha         DateTime @default(now())
+
+  tipoDocumento   String // BOLETA, FACTURA, GUIA, PROFORMA
+  numeroDocumento String
+
+  estado String @default("PENDIENTE") // PENDIENTE, APROBADA, RECIBIDA, ANULADA
+
+  observacion    String?
+  archivoAdjunto String? // PDF, XML, Imagen
+
+  subtotal Decimal @default(0)
+  igv      Decimal @default(0)
+  total    Decimal @default(0)
+
+  proveedorId Int
+  proveedor   Proveedor @relation(fields: [proveedorId], references: [id])
+
+  almacenId Int
+  almacen   Almacen @relation(fields: [almacenId], references: [id])
+
+  detalles DetalleCompra[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DetalleCompra {
+  id Int @id @default(autoincrement())
+
+  compraId Int
+  compra   Compra @relation(fields: [compraId], references: [id])
+
+  productoId Int
+  producto   Producto @relation(fields: [productoId], references: [id])
+
+  cantidad       Decimal
+  precioUnitario Decimal
+  subtotal       Decimal
+}
+
+// --- MÓDULO VENTAS ---
+model Cliente {
+  id              Int      @id @default(autoincrement())
+  tipoDocumento   String // DNI, RUC
+  numeroDocumento String   @unique
+  nombres         String?
+  apellidos       String?
+  razonSocial     String?
+  direccion       String?
+  telefono        String?
+  correo          String?
+  estado          Boolean  @default(true)
+  ventas          Venta[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Venta {
+  id              Int      @id @default(autoincrement())
+  codigoSistema   String?  @unique
+  fecha           DateTime @default(now())
+  tipoDocumento   String // BOLETA, FACTURA, NOTA_VENTA
+  numeroDocumento String
+  estado          String   @default("COMPLETADA") // PENDIENTE, COMPLETADA, ANULADA
+  observacion     String?
+  archivoAdjunto  String?
+
+  subtotal Decimal @default(0)
+  igv      Decimal @default(0)
+  total    Decimal @default(0)
+
+  clienteId Int
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  usuarioId Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  detalles  DetalleVenta[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model DetalleVenta {
+  id             Int      @id @default(autoincrement())
+  ventaId        Int
+  venta          Venta    @relation(fields: [ventaId], references: [id])
+  productoId     Int
+  producto       Producto @relation(fields: [productoId], references: [id])
+  cantidad       Decimal
+  precioUnitario Decimal
+  subtotal       Decimal
+}
+
+// --- MÓDULO PRODUCCIÓN ---
+model OrdenProduccion {
+  id               Int       @id @default(autoincrement())
+  codigoOP         String    @unique
+  productoFinalId  Int
+  productoFinal    Producto  @relation(fields: [productoFinalId], references: [id])
+  cantidadEsperada Decimal
+  cantidadReal     Decimal?
+  fechaInicio      DateTime
+  fechaFin         DateTime?
+  estado           String    @default("PENDIENTE") // PENDIENTE, EN_PROCESO, FINALIZADA
+
+  consumos  ConsumoMateriaPrima[]
+  lotes     Lote[]
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+}
+
+model ConsumoMateriaPrima {
+  id                Int             @id @default(autoincrement())
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  productoId        Int // Materia prima
+  producto          Producto        @relation("MateriaPrima", fields: [productoId], references: [id])
+  cantidad          Decimal
+  almacenId         Int // De dónde se descontó
+  almacen           Almacen         @relation(fields: [almacenId], references: [id])
+  fechaConsumo      DateTime        @default(now())
+}
+
+model Lote {
+  id                Int             @id @default(autoincrement())
+  numeroLote        String          @unique
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  fechaFabricacion  DateTime
+  fechaVencimiento  DateTime
+  responsableId     Int
+  responsable       Usuario         @relation(fields: [responsableId], references: [id])
+  estado            String          @default("ACTIVO") // ACTIVO, VENCIDO, CUARENTENA
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+// --- MÓDULO MANTENIMIENTO ---
+model Equipo {
+  id             Int                   @id @default(autoincrement())
+  codigo         String                @unique
+  nombre         String
+  ubicacion      String?
+  estado         String                @default("OPERATIVO") // OPERATIVO, EN_MANTENIMIENTO, INACTIVO
+  mantenimientos MantenimientoEquipo[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+}
+
+model MantenimientoEquipo {
+  id               Int       @id @default(autoincrement())
+  equipoId         Int
+  equipo           Equipo    @relation(fields: [equipoId], references: [id])
+  tipo             String // CORRECTIVO, PREVENTIVO, PREDICTIVO
+  fechaProgramada  DateTime
+  fechaRealizacion DateTime?
+  costo            Decimal   @default(0)
+  detalles         String?
+  archivoAdjunto   String?
+  estado           String    @default("PROGRAMADO") // PROGRAMADO, EN_CURSO, COMPLETADO
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// --- MÓDULO RRHH ---
+model Area {
+  id           Int          @id @default(autoincrement())
+  nombre       String       @unique
+  descripcion  String?
+  trabajadores Trabajador[]
+}
+
+model Cargo {
+  id           Int          @id @default(autoincrement())
+  nombre       String       @unique
+  descripcion  String?
+  trabajadores Trabajador[]
+}
+
+model Trabajador {
+  id           Int          @id @default(autoincrement())
+  dni          String       @unique
+  nombres      String
+  apellidos    String
+  fechaIngreso DateTime
+  areaId       Int
+  area         Area         @relation(fields: [areaId], references: [id])
+  cargoId      Int
+  cargo        Cargo        @relation(fields: [cargoId], references: [id])
+  salarioBase  Decimal      @default(0)
+  estado       String       @default("ACTIVO")
+  asistencias  Asistencia[]
+  vacaciones   Vacaciones[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Asistencia {
+  id              Int        @id @default(autoincrement())
+  trabajadorId    Int
+  trabajador      Trabajador @relation(fields: [trabajadorId], references: [id])
+  fecha           DateTime   @default(now()) @db.Date
+  entrada         DateTime?
+  salida          DateTime?
+  horasTrabajadas Decimal?
+}
+
+model Vacaciones {
+  id           Int        @id @default(autoincrement())
+  trabajadorId Int
+  trabajador   Trabajador @relation(fields: [trabajadorId], references: [id])
+  fechaInicio  DateTime
+  fechaFin     DateTime
+  diasTomados  Int
+  estado       String     @default("APROBADO")
+}
+
+// --- MÓDULO CAJA Y BANCOS ---
+model Caja {
+  id          Int              @id @default(autoincrement())
+  nombre      String           @unique
+  saldo       Decimal          @default(0)
+  tipo        String // PRINCIPAL, CHICA, BANCO
+  moneda      String           @default("PEN")
+  movimientos MovimientoCaja[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model MovimientoCaja {
+  id          Int      @id @default(autoincrement())
+  cajaId      Int
+  caja        Caja     @relation(fields: [cajaId], references: [id])
+  tipo        String // INGRESO, EGRESO
+  monto       Decimal
+  concepto    String
+  fecha       DateTime @default(now())
+  usuarioId   Int
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  comprobante String?
+}
