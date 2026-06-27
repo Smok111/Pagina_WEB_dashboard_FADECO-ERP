@@ -7,7 +7,8 @@ export class EmpresaController {
 
   @Get()
   async getEmpresa() {
-    return this.empresaService.getEmpresa();
+    const empresa = await this.empresaService.getEmpresa();
+    return empresa || {};
   }
 
   @Put()

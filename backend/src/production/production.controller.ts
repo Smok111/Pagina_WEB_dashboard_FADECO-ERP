@@ -11,13 +11,30 @@ export class ProductionController {
   }
 
   @Post()
-  create(@Body() data: any) {
-    return this.productionService.create(data);
+  create(@Body() data: any, @Req() req: any) {
+    const userId = req.user?.id || 1;
+    return this.productionService.create(data, userId);
   }
 
   @Patch(':id/start')
-  start(@Param('id') id: string) {
-    return this.productionService.start(+id);
+  start(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user?.id || 1;
+    return this.productionService.start(+id, userId);
+  }
+
+  @Post(':id/assign-workers')
+  assignWorkers(@Param('id') id: string, @Body() data: any) {
+    return this.productionService.assignWorkers(+id, data);
+  }
+
+  @Post(':id/quality')
+  addQualityControl(@Param('id') id: string, @Body() data: any) {
+    return this.productionService.addQualityControl(+id, data);
+  }
+
+  @Post(':id/issues')
+  addIssue(@Param('id') id: string, @Body() data: any) {
+    return this.productionService.addIssue(+id, data);
   }
 
   @Post(':id/consumos')

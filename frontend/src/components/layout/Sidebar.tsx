@@ -132,7 +132,7 @@ export default function Sidebar() {
                 </p>
               )}
               <ul className="space-y-1">
-                {group.items.filter(item => !item.roles || item.roles.includes((session?.user as any)?.role || "ADMIN")).map((item) => {
+                {group.items.filter(item => !item.roles || item.roles.includes((session?.user as any)?.role || "ADMIN") || (session?.user as any)?.role === "ADMINISTRADOR" || (session?.user as any)?.role === "SUPERADMIN").map((item) => {
                   const isActive = pathname === item.ruta || pathname.startsWith(`${item.ruta}/`);
                   const Icon = item.icono;
 

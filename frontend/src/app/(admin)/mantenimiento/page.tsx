@@ -61,10 +61,10 @@ export default function MaintenancePage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
             <Wrench className="text-cyan-500" /> Mantenimiento de Equipos
           </h1>
-          <p className="text-slate-400">Gestión de maquinaria y órdenes de mantenimiento</p>
+          <p className="text-slate-600">Gestión de maquinaria y órdenes de mantenimiento</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}

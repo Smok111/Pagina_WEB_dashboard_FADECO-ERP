@@ -20,6 +20,7 @@ export class DashboardService {
       mantenimientosPendientes,
       movimientosRecientes,
       detallesVenta,
+      kardex,
     ] = await Promise.all([
       this.prisma.venta.findMany({
         where: { estado: 'COMPLETADA', fecha: { gte: fechaInicio } },
@@ -60,6 +61,10 @@ export class DashboardService {
       }),
       this.prisma.detalleVenta.findMany({
         include: { producto: true },
+      }),
+      this.prisma.kardexProduccion.findMany({
+        where: { fecha: { gte: fechaInicio } },
+        include: { trabajador: true }
       }),
     ]);
 
@@ -187,6 +192,33 @@ export class DashboardService {
       })
       .sort((a, b) => b.value - a.value);
 
+    // 8. KPIs Producción (NUEVO)
+    const produccionDia = kardex
+      .filter((k) => new Date(k.fecha).toDateString() === new Date().toDateString())
+      .reduce((sum, k) => sum + Number(k.cantidadFabricada), 0);
+      
+    const produccionSemanal = kardex.reduce((sum, k) => sum + Number(k.cantidadFabricada), 0);
+
+    const eficienciaPorTrabajador = Array.from(
+      kardex.reduce((acc, k) => {
+        const key = `${k.trabajador.nombres} ${k.trabajador.apellidos}`;
+        const prev = acc.get(key) || { fabricada: 0, horas: 0 };
+        acc.set(key, { 
+          fabricada: prev.fabricada + Number(k.cantidadFabricada), 
+          horas: prev.horas + Number(k.horasTrabajadas || 0) 
+        });
+        return acc;
+      }, new Map<string, {fabricada: number, horas: number}>()).entries()
+    ).map(([name, data]) => ({
+      name,
+      eficiencia: data.horas > 0 ? (data.fabricada / data.horas).toFixed(2) : 0
+    }));
+
+    const opsFinalizadas = ops.filter((o) => o.estado === 'FINALIZADA' && o.fechaFin);
+    const tiempoPromedioHrs = opsFinalizadas.length > 0 
+      ? opsFinalizadas.reduce((sum, op) => sum + (new Date(op.fechaFin!).getTime() - new Date(op.fechaInicio).getTime()) / (1000 * 60 * 60), 0) / opsFinalizadas.length
+      : 0;
+
     return {
       ingresosTotales,
       gastosTotales,
@@ -201,6 +233,10 @@ export class DashboardService {
       alertasStock: productosBajoStock,
       mantenimientosPendientes,
       movimientosRecientes,
+      produccionDia,
+      produccionSemanal,
+      eficienciaPorTrabajador,
+      tiempoPromedioHrs: tiempoPromedioHrs.toFixed(2),
     };
   }
 }

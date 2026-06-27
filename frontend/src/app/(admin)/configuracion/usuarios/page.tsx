@@ -116,10 +116,10 @@ export default function UsuariosPage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-            <Users className="text-red-500" /> Usuarios
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
+            <Users className="text-indigo-500" /> Usuarios
           </h1>
-          <p className="text-slate-400">Gestiona los usuarios y sus credenciales</p>
+          <p className="text-slate-600">Gestiona los usuarios y sus credenciales</p>
         </div>
         <button
           onClick={() => openModal()}

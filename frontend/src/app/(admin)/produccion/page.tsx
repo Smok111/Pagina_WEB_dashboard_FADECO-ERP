@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle } from "lucide-react";
+import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 
@@ -10,6 +10,7 @@ export default function ProduccionPage() {
   const [ordenes, setOrdenes] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
   const [almacenes, setAlmacenes] = useState<any[]>([]);
+  const [trabajadores, setTrabajadores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -17,6 +18,7 @@ export default function ProduccionPage() {
   const [activeOp, setActiveOp] = useState<any>(null);
   const [isConsumoOpen, setIsConsumoOpen] = useState(false);
   const [isFinishOpen, setIsFinishOpen] = useState(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
 
   const { sortedItems: ordenesOrdenadas, sortField, sortOrder, setSortField, setSortOrder } = useSort(ordenes, "codigoOP", "desc");
 
@@ -24,10 +26,16 @@ export default function ProduccionPage() {
   const [productoFinalId, setProductoFinalId] = useState("");
   const [cantidadEsperada, setCantidadEsperada] = useState(1);
   const [cantidadReal, setCantidadReal] = useState(1);
+  const [destino, setDestino] = useState("STOCK");
 
   // Consumo form
   const [insumoId, setInsumoId] = useState("");
   const [cantidadInsumo, setCantidadInsumo] = useState(1);
+  
+  // Asignar & Finalizar extra
+  const [selectedTrabajadores, setSelectedTrabajadores] = useState<number[]>([]);
+  const [horasTrabajadas, setHorasTrabajadas] = useState(8);
+  const [observaciones, setObservaciones] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -35,14 +43,16 @@ export default function ProduccionPage() {
 
   const fetchData = async () => {
     try {
-      const [resOP, resProd, resAlm] = await Promise.all([
+      const [resOP, resProd, resAlm, resTrab] = await Promise.all([
         fetch("/api/production"),
         fetch("/api/inventory/productos"),
-        fetch("/api/inventory/almacenes")
+        fetch("/api/inventory/almacenes"),
+        fetch("/api/rrhh/trabajadores")
       ]);
       if (resOP.ok) setOrdenes(await resOP.json());
       if (resProd.ok) setProductos(await resProd.json());
       if (resAlm.ok) setAlmacenes(await resAlm.json());
+      if (resTrab.ok) setTrabajadores(await resTrab.json());
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -55,7 +65,7 @@ export default function ProduccionPage() {
     const res = await fetch("/api/production", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productoFinalId, cantidadEsperada }),
+      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino }),
     });
     if (res.ok) {
       setIsNewOpOpen(false);
@@ -67,6 +77,20 @@ export default function ProduccionPage() {
   const handleStartOP = async (id: number) => {
     const res = await fetch(`/api/production/${id}/start`, { method: "PATCH" });
     if (res.ok) fetchData();
+  };
+
+  const handleAssignWorkers = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeOp) return;
+    const res = await fetch(`/api/production/${activeOp.id}/assign-workers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trabajadorIds: selectedTrabajadores }),
+    });
+    if (res.ok) {
+      setIsAssignOpen(false);
+      fetchData();
+    }
   };
 
   const handleAddConsumo = async (e: React.FormEvent) => {
@@ -95,7 +119,7 @@ export default function ProduccionPage() {
     const res = await fetch(`/api/production/${activeOp.id}/finish`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cantidadReal }),
+      body: JSON.stringify({ cantidadReal, horasTrabajadas, observaciones }),
     });
     if (res.ok) {
       setIsFinishOpen(false);
@@ -107,14 +131,14 @@ export default function ProduccionPage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
             <Settings className="text-orange-500" /> Control de Producción
           </h1>
-          <p className="text-slate-400">Órdenes de producción, consumos y lotes.</p>
+          <p className="text-slate-600">Órdenes de producción, consumos y lotes.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">Ordenar:</span>
+            <span className="text-sm text-slate-600">Ordenar:</span>
             <select 
               className="bg-[#0B0F19] text-white text-sm rounded-xl px-3 py-2 border border-white/10 focus:outline-none"
               value={`${sortField}-${sortOrder}`}
@@ -155,12 +179,22 @@ export default function ProduccionPage() {
               <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-white/5 hover:border-slate-500/50 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-slate-400">{op.codigoOP}</span>
-                  <button onClick={() => handleStartOP(op.id)} className="text-orange-400 hover:text-orange-300 bg-orange-500/10 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors">
-                    <Play size={12} /> Iniciar
-                  </button>
+                  <div className="flex gap-1">
+                    <button onClick={() => { setActiveOp(op); setSelectedTrabajadores(op.trabajadores?.map((t: any) => t.trabajadorId) || []); setIsAssignOpen(true); }} className="text-blue-400 hover:text-blue-300 bg-blue-500/10 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 tooltip-trigger" title="Asignar Operarios">
+                      <Users size={12} />
+                    </button>
+                    <button onClick={() => handleStartOP(op.id)} className="text-orange-400 hover:text-orange-300 bg-orange-500/10 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors">
+                      <Play size={12} /> Iniciar
+                    </button>
+                  </div>
                 </div>
                 <h4 className="text-white font-medium mb-1">{op.productoFinal.nombre}</h4>
                 <p className="text-sm text-slate-400 flex items-center gap-2"><Package size={14}/> Esperado: {Number(op.cantidadEsperada)}</p>
+                {op.trabajadores?.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-white/5 text-xs text-blue-400 flex items-center gap-1">
+                    <Users size={12}/> {op.trabajadores.length} operarios
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -201,6 +235,11 @@ export default function ProduccionPage() {
                       </div>
                     ))}
                   </div>
+                  {op.trabajadores?.length > 0 && (
+                    <div className="mt-2 text-xs text-blue-400 flex items-center gap-1">
+                      <Users size={12}/> {op.trabajadores.map((t:any) => t.trabajador.nombres.split(' ')[0]).join(', ')}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -249,6 +288,13 @@ export default function ProduccionPage() {
                   <select required value={productoFinalId} onChange={e => setProductoFinalId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
                     <option value="" disabled>Seleccione producto final...</option>
                     {productos.map(p => <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>)}
+                  </select>
+                </div>
+                <div className="mb-5">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Destino de Producción</label>
+                  <select required value={destino} onChange={e => setDestino(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
+                    <option value="STOCK">Stock Interno</option>
+                    <option value="PEDIDO_CLIENTE">Pedido de Cliente</option>
                   </select>
                 </div>
                 <div className="mb-8">
@@ -318,9 +364,19 @@ export default function ProduccionPage() {
                   <p className="text-slate-400 text-sm mt-2">Confirma la cantidad real fabricada de <strong>{activeOp.productoFinal.nombre}</strong>. Se le asignará un Lote y aumentará tu inventario.</p>
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Cantidad Real Fabricada</label>
                   <input type="number" min="0.01" step="0.01" required value={cantidadReal} onChange={e => setCantidadReal(Number(e.target.value))} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-emerald-500/50" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-5">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Horas Trabajadas (Total)</label>
+                    <input type="number" min="0.5" step="0.5" required value={horasTrabajadas} onChange={e => setHorasTrabajadas(Number(e.target.value))} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Observaciones Calidad</label>
+                    <input type="text" value={observaciones} onChange={e => setObservaciones(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50" placeholder="Todo OK..." />
+                  </div>
                 </div>
                 
                 <div className="flex justify-end gap-3">

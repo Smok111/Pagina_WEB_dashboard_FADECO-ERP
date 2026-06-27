@@ -61,9 +61,11 @@ model Usuario {
   sucursalId Int
   sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
 
-  ventas          Venta[]
-  lotes           Lote[]
-  movimientosCaja MovimientoCaja[]
+  ventas            Venta[]
+  lotes             Lote[]
+  movimientosCaja   MovimientoCaja[]
+  estadosProduccion EstadoProduccion[]
+  trabajador        Trabajador?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -146,6 +148,7 @@ model Producto {
   detallesVenta        DetalleVenta[]
   ordenesProduccion    OrdenProduccion[]
   consumosMateriaPrima ConsumoMateriaPrima[] @relation("MateriaPrima")
+  kardexProduccion     KardexProduccion[]
 }
 
 model Almacen {
@@ -303,6 +306,7 @@ model Venta {
   usuario   Usuario @relation(fields: [usuarioId], references: [id])
 
   detalles  DetalleVenta[]
+  ordenesProduccion OrdenProduccion[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 }
@@ -326,12 +330,30 @@ model OrdenProduccion {
   productoFinal    Producto  @relation(fields: [productoFinalId], references: [id])
   cantidadEsperada Decimal
   cantidadReal     Decimal?
+  cantidadPendiente Decimal? @default(0)
   fechaInicio      DateTime
   fechaFin         DateTime?
   estado           String    @default("PENDIENTE") // PENDIENTE, EN_PROCESO, FINALIZADA
+  destino          String?   @default("STOCK")
+  ventaId          Int?
+  venta            Venta?    @relation(fields: [ventaId], references: [id])
+  observaciones    String?
+
+  areaProduccionId Int?
+  areaProduccion   AreaProduccion? @relation(fields: [areaProduccionId], references: [id])
+
+  responsableId    Int?
+  responsable      Trabajador? @relation(fields: [responsableId], references: [id])
 
   consumos  ConsumoMateriaPrima[]
   lotes     Lote[]
+  
+  trabajadores     OrdenProduccionTrabajador[]
+  kardex           KardexProduccion[]
+  historialEstados EstadoProduccion[]
+  controlesCalidad ControlCalidad[]
+  incidencias      IncidenciaProduccion[]
+
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
 }
@@ -406,9 +428,13 @@ model Cargo {
 
 model Trabajador {
   id           Int          @id @default(autoincrement())
+  codigoInterno String?     @unique
   dni          String       @unique
   nombres      String
   apellidos    String
+  telefono     String?
+  correo       String?
+  direccion    String?
   fechaIngreso DateTime
   areaId       Int
   area         Area         @relation(fields: [areaId], references: [id])
@@ -416,8 +442,21 @@ model Trabajador {
   cargo        Cargo        @relation(fields: [cargoId], references: [id])
   salarioBase  Decimal      @default(0)
   estado       String       @default("ACTIVO")
+  
+  usuarioId    Int?         @unique
+  usuario      Usuario?     @relation(fields: [usuarioId], references: [id])
+
+  areaProduccionId Int?
+  areaProduccion   AreaProduccion? @relation(fields: [areaProduccionId], references: [id])
+
   asistencias  Asistencia[]
   vacaciones   Vacaciones[]
+  ordenesResponsable OrdenProduccion[]
+  ordenesAsignadas   OrdenProduccionTrabajador[]
+  kardex             KardexProduccion[]
+  controlesCalidad   ControlCalidad[]
+  incidencias        IncidenciaProduccion[]
+
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -465,4 +504,99 @@ model MovimientoCaja {
   usuarioId   Int
   usuario     Usuario  @relation(fields: [usuarioId], references: [id])
   comprobante String?
+}
+
+// --- NUEVOS MODELOS PRODUCCIÓN / RRHH ---
+model AreaProduccion {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  estado      Boolean  @default(true)
+  
+  trabajadores Trabajador[]
+  ordenes      OrdenProduccion[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OrdenProduccionTrabajador {
+  ordenProduccionId Int
+  trabajadorId      Int
+
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  trabajador        Trabajador      @relation(fields: [trabajadorId], references: [id])
+
+  asignadoEn        DateTime @default(now())
+
+  @@id([ordenProduccionId, trabajadorId])
+}
+
+model KardexProduccion {
+  id                Int      @id @default(autoincrement())
+  fecha             DateTime @default(now()) @db.Date
+  
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  
+  productoId        Int
+  producto          Producto @relation(fields: [productoId], references: [id])
+  
+  trabajadorId      Int
+  trabajador        Trabajador @relation(fields: [trabajadorId], references: [id])
+  
+  cantidadProgramada Decimal
+  cantidadFabricada  Decimal
+  horasTrabajadas    Decimal?
+  
+  observaciones      String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model EstadoProduccion {
+  id                Int      @id @default(autoincrement())
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  
+  estadoAnterior    String?
+  estadoNuevo       String
+  
+  usuarioId         Int
+  usuario           Usuario @relation(fields: [usuarioId], references: [id])
+  
+  fecha             DateTime @default(now())
+}
+
+model ControlCalidad {
+  id                Int      @id @default(autoincrement())
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  
+  resultado         String // APROBADO, OBSERVADO, RECHAZADO
+  observaciones     String?
+  
+  inspectorId       Int
+  inspector         Trabajador @relation(fields: [inspectorId], references: [id])
+  
+  fecha             DateTime @default(now())
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model IncidenciaProduccion {
+  id                Int      @id @default(autoincrement())
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  
+  trabajadorId      Int
+  trabajador        Trabajador @relation(fields: [trabajadorId], references: [id])
+  
+  descripcion       String
+  fecha             DateTime @default(now())
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

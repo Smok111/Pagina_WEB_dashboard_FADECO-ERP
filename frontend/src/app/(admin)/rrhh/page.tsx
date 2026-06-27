@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Users, Briefcase, MapPin, Search } from "lucide-react";
+import { Plus, X, Users, Briefcase, MapPin, Search, Trash2 } from "lucide-react";
 import { useSort } from "@/hooks/useSort";
 
 export default function RrhhPage() {
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
   const { sortedItems: trabajadoresOrdenados, sortField, sortOrder, setSortField, setSortOrder } = useSort(trabajadores, "nombres", "asc");
   const [areas, setAreas] = useState<any[]>([]);
+  const [areasProduccion, setAreasProduccion] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,10 +17,44 @@ export default function RrhhPage() {
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [dni, setDni] = useState("");
+  const [codigoInterno, setCodigoInterno] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [direccion, setDireccion] = useState("");
   const [areaId, setAreaId] = useState("");
   const [cargoId, setCargoId] = useState("");
+  const [areaProduccionId, setAreaProduccionId] = useState("");
   const [fechaIngreso, setFechaIngreso] = useState("");
   const [salarioBase, setSalarioBase] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/rrhh/trabajadores/import", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Se importaron ${data.imported} trabajadores exitosamente.`);
+        fetchData();
+      } else {
+        alert("Error al importar trabajadores");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error al importar trabajadores");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -27,14 +62,16 @@ export default function RrhhPage() {
 
   const fetchData = async () => {
     try {
-      const [resT, resA, resC] = await Promise.all([
+      const [resT, resA, resC, resAP] = await Promise.all([
         fetch("/api/rrhh/trabajadores"),
         fetch("/api/rrhh/areas"),
-        fetch("/api/rrhh/cargos")
+        fetch("/api/rrhh/cargos"),
+        fetch("/api/rrhh/areas-produccion")
       ]);
       if (resT.ok) setTrabajadores(await resT.json());
       if (resA.ok) setAreas(await resA.json());
       if (resC.ok) setCargos(await resC.json());
+      if (resAP.ok) setAreasProduccion(await resAP.json());
     } catch (error) {
       console.error(error);
     } finally {
@@ -47,10 +84,20 @@ export default function RrhhPage() {
     const res = await fetch("/api/rrhh/trabajadores", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombres, apellidos, dni, areaId, cargoId, fechaIngreso, salarioBase }),
+      body: JSON.stringify({ nombres, apellidos, dni, codigoInterno, telefono, correo, direccion, areaId, cargoId, areaProduccionId, fechaIngreso, salarioBase }),
     });
     if (res.ok) {
       setIsModalOpen(false);
+      fetchData();
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("¿Está seguro de eliminar este trabajador?")) return;
+    const res = await fetch(`/api/rrhh/trabajadores/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
       fetchData();
     }
   };
@@ -59,18 +106,27 @@ export default function RrhhPage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
             <Users className="text-fuchsia-500" /> Recursos Humanos
           </h1>
-          <p className="text-slate-400">Directorio de personal de planta y administración</p>
+          <p className="text-slate-600">Directorio de personal de planta y administración</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-fuchsia-500/25"
-        >
-          <Plus size={18} />
-          Nuevo Trabajador
-        </button>
+        <div className="flex gap-3">
+          <input type="file" accept=".xlsx, .xls, .csv" className="hidden" ref={fileInputRef} onChange={handleImportExcel} />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
+          >
+            Importar Excel
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-fuchsia-500/25"
+          >
+            <Plus size={18} />
+            Nuevo Trabajador
+          </button>
+        </div>
       </div>
 
       <div className="bg-[#1A2235] rounded-2xl border border-white/5 overflow-hidden shadow-xl flex-1 flex flex-col">
@@ -108,14 +164,21 @@ export default function RrhhPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-bold truncate">{t.nombres} {t.apellidos}</h3>
-                <p className="text-slate-400 text-sm mb-3">DNI: {t.dni}</p>
+                <p className="text-slate-400 text-sm mb-3">DNI: {t.dni} {t.codigoInterno && `| Cod: ${t.codigoInterno}`}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-300 mb-1">
-                  <MapPin size={14} className="text-fuchsia-400"/> {t.area?.nombre}
+                  <MapPin size={14} className="text-fuchsia-400"/> {t.area?.nombre} {t.areaProduccion && `(${t.areaProduccion.nombre})`}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-300">
                   <Briefcase size={14} className="text-fuchsia-400"/> {t.cargo?.nombre}
                 </div>
               </div>
+              <button 
+                onClick={() => handleDelete(t.id)} 
+                className="text-slate-500 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors shrink-0"
+                title="Eliminar"
+              >
+                <Trash2 size={18} />
+              </button>
             </div>
           ))}
         </div>
@@ -144,14 +207,41 @@ export default function RrhhPage() {
                     <input type="text" required value={dni} onChange={e => setDni(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Código Interno</label>
+                    <input type="text" value={codigoInterno} onChange={e => setCodigoInterno(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Teléfono</label>
+                    <input type="text" value={telefono} onChange={e => setTelefono(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Correo</label>
+                    <input type="email" value={correo} onChange={e => setCorreo(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Dirección</label>
+                    <input type="text" value={direccion} onChange={e => setDireccion(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-slate-400 mb-2">Fecha de Ingreso</label>
                     <input type="date" required value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Área</label>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Salario Base (S/)</label>
+                    <input type="number" step="0.01" required value={salarioBase} onChange={e => setSalarioBase(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Área Administrativa</label>
                     <select required value={areaId} onChange={e => setAreaId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50">
                       <option value="" disabled>Seleccionar área...</option>
                       {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Área Producción (Opcional)</label>
+                    <select value={areaProduccionId} onChange={e => setAreaProduccionId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50">
+                      <option value="">No aplica...</option>
+                      {areasProduccion.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
                     </select>
                   </div>
                   <div>
@@ -160,10 +250,6 @@ export default function RrhhPage() {
                       <option value="" disabled>Seleccionar cargo...</option>
                       {cargos.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                     </select>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Salario Base (S/)</label>
-                    <input type="number" step="0.01" required value={salarioBase} onChange={e => setSalarioBase(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50" />
                   </div>
                 </div>
                 

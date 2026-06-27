@@ -154,10 +154,10 @@ export default function ComprasPage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
             <ShoppingCart className="text-blue-500" /> Compras
           </h1>
-          <p className="text-slate-400">Gestiona las compras e ingresos a almacén</p>
+          <p className="text-slate-600">Gestiona las compras e ingresos a almacén</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
