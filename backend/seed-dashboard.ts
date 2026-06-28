@@ -107,6 +107,7 @@ async function main() {
   });
 
   // 7. Área de Producción y Cargo
+  const area = await prisma.area.upsert({ where: { nombre: 'Producción' }, update: {}, create: { nombre: 'Producción' }});
   const areaConcreto = await prisma.areaProduccion.upsert({ where: { nombre: 'Concreto' }, update: {}, create: { nombre: 'Concreto' }});
   const cargoOp = await prisma.cargo.upsert({ where: { nombre: 'Operario' }, update: {}, create: { nombre: 'Operario' }});
 
@@ -120,7 +121,7 @@ async function main() {
       apellidos: 'Perez',
       codigoInterno: 'OP-001',
       cargoId: cargoOp.id,
-      areaId: areaConcreto.id,
+      areaId: area.id,
       areaProduccionId: areaConcreto.id,
       fechaIngreso: new Date()
     }

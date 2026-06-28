@@ -47,7 +47,7 @@ interface Unidad {
 
 interface Producto {
   id: number;
-  codigoSistema: string;
+  codigo: string;
   nombre: string;
   descripcion?: string;
   categoriaId: number;
@@ -62,13 +62,13 @@ interface Producto {
   createdAt?: string;
 }
 
-type SortField = "codigoSistema" | "nombre" | "categoria" | "stockActual" | "precioVenta" | "createdAt";
+type SortField = "codigo" | "nombre" | "categoria" | "stockActual" | "precioVenta" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [busqueda, setBusqueda] = useState("");
-  const [sortField, setSortField] = useState<SortField>("codigoSistema");
+  const [sortField, setSortField] = useState<SortField>("codigo");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [unidades, setUnidades] = useState<Unidad[]>([]);
@@ -273,7 +273,7 @@ export default function ProductosPage() {
     const doc = new jsPDF();
     doc.text(`Reporte de Kardex - ${kardexProducto.nombre}`, 14, 20);
     doc.setFontSize(10);
-    doc.text(`Código: ${kardexProducto.codigoSistema} | Stock Actual: ${kardexProducto.stockActual}`, 14, 28);
+    doc.text(`Código: ${kardexProducto.codigo} | Stock Actual: ${kardexProducto.stockActual}`, 14, 28);
 
     const tableColumn = ["Fecha", "Almacén", "Tipo", "Observación", "Cantidad", "Saldo"];
     const tableRows = kardexData.map(m => [
@@ -293,14 +293,14 @@ export default function ProductosPage() {
       headStyles: { fillColor: [15, 23, 42] }
     });
 
-    doc.save(`Kardex_${kardexProducto.codigoSistema}.pdf`);
+    doc.save(`Kardex_${kardexProducto.codigo}.pdf`);
   };
 
   const productosFiltrados = productos.filter(
     (p) =>
-      p.codigoSistema.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.categoria.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      p.codigo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      p.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      p.categoria?.nombre?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const productosOrdenados = [...productosFiltrados].sort((a, b) => {
@@ -388,7 +388,7 @@ export default function ProductosPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  {renderSortableHeader("codigoSistema", "Código")}
+                  {renderSortableHeader("codigo", "Código")}
                   {renderSortableHeader("nombre", "Nombre")}
                   {renderSortableHeader("categoria", "Categoría")}
                   <TableHead>Unidad</TableHead>
@@ -408,7 +408,7 @@ export default function ProductosPage() {
                 ) : (
                   productosOrdenados.map((producto) => (
                     <TableRow key={producto.id}>
-                      <TableCell className="font-mono text-xs">{producto.codigoSistema}</TableCell>
+                      <TableCell className="font-mono text-xs">{producto.codigo}</TableCell>
                       <TableCell className="font-medium">{producto.nombre}</TableCell>
                       <TableCell>{producto.categoria.nombre}</TableCell>
                       <TableCell>{producto.unidadMedida.codigo}</TableCell>
@@ -566,7 +566,7 @@ export default function ProductosPage() {
               </Button>
             </div>
             <DialogDescription>
-              Historial de movimientos para: <strong className="text-slate-800">{kardexProducto?.nombre}</strong> (Cód: {kardexProducto?.codigoSistema})
+              Historial de movimientos para: <strong className="text-slate-800">{kardexProducto?.nombre}</strong> (Cód: {kardexProducto?.codigo})
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
