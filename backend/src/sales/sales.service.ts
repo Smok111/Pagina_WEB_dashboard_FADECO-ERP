@@ -42,13 +42,31 @@ export class SalesService {
     });
     const codigoSistema = `VEN-${String((ultima?.id || 0) + 1).padStart(6, '0')}`;
 
+    const tipoDoc = data.tipoDocumento || 'BOLETA';
+    
+    const ultimaDoc = await this.prisma.venta.findFirst({
+      where: { tipoDocumento: tipoDoc },
+      orderBy: { id: 'desc' },
+    });
+    
+    let correlativo = 1;
+    if (ultimaDoc && ultimaDoc.numeroDocumento) {
+       const parts = ultimaDoc.numeroDocumento.split('-');
+       const numStr = parts.length > 1 ? parts[1] : parts[0];
+       const parsed = parseInt(numStr, 10);
+       if (!isNaN(parsed)) correlativo = parsed + 1;
+    }
+    
+    const prefijo = tipoDoc === 'FACTURA' ? 'F001' : tipoDoc === 'BOLETA' ? 'B001' : 'P001';
+    const numeroDocGenerado = `${prefijo}-${String(correlativo).padStart(6, '0')}`;
+
     return this.prisma.$transaction(async (tx: any) => {
       const venta = await tx.venta.create({
         data: {
           codigoSistema,
           fecha: new Date(data.fecha || new Date()),
-          tipoDocumento: data.tipoDocumento || 'BOLETA',
-          numeroDocumento: data.numeroDocumento || '0001',
+          tipoDocumento: tipoDoc,
+          numeroDocumento: data.numeroDocumento && data.numeroDocumento !== '0001' && data.numeroDocumento !== '' ? data.numeroDocumento : numeroDocGenerado,
           estado: data.estado || 'COMPLETADA',
           observacion: data.observacion,
           clienteId: Number(data.clienteId),

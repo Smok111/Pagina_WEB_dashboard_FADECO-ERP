@@ -363,7 +363,7 @@ export default function VentasPage() {
                         <option value="FACTURA">Factura</option>
                         <option value="PROFORMA">Proforma (Sin descontar stock)</option>
                       </select>
-                      <input type="text" required value={numeroDocumento} onChange={e => setNumeroDocumento(e.target.value)} placeholder="0001" className="w-1/2 bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" />
+                      <input type="text" value={numeroDocumento} onChange={e => setNumeroDocumento(e.target.value)} placeholder="(Autogenerado)" className="w-1/2 bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50" title="Dejar en blanco para autogenerar" />
                     </div>
                   </div>
                 </div>
