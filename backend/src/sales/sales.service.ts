@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -61,6 +61,20 @@ export class SalesService {
     const numeroDocGenerado = `${prefijo}-${String(correlativo).padStart(6, '0')}`;
 
     return this.prisma.$transaction(async (tx: any) => {
+      const estadoVenta = data.estado || 'COMPLETADA';
+      
+      if (estadoVenta === 'COMPLETADA') {
+        for (const detalle of data.detalles) {
+          const prod = await tx.producto.findUnique({ where: { id: Number(detalle.productoId) } });
+          if (!prod) {
+            throw new BadRequestException(`Producto no encontrado.`);
+          }
+          if (prod.stockActual < Number(detalle.cantidad)) {
+            throw new BadRequestException(`Stock insuficiente para: ${prod.nombre}. Disponible: ${prod.stockActual}`);
+          }
+        }
+      }
+
       const venta = await tx.venta.create({
         data: {
           codigoSistema,

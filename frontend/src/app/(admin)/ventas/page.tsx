@@ -248,6 +248,9 @@ export default function VentasPage() {
         setCart([]);
         setNumeroDocumento("");
         fetchData();
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message || 'No se pudo completar la venta'}`);
       }
     } catch (error) {
       console.error("Error saving sale:", error);
