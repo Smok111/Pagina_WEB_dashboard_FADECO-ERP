@@ -67,4 +67,20 @@ export class MaintenanceService {
       return mant;
     });
   }
+
+  async deleteEquipo(id: number) {
+    // Delete all related mantenimientos first
+    await this.prisma.mantenimientoEquipo.deleteMany({
+      where: { equipoId: id }
+    });
+    return this.prisma.equipo.delete({
+      where: { id }
+    });
+  }
+
+  async deleteMantenimiento(id: number) {
+    return this.prisma.mantenimientoEquipo.delete({
+      where: { id }
+    });
+  }
 }
