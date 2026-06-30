@@ -70,7 +70,18 @@ export class SalesService {
 
       if (venta.estado === 'COMPLETADA') {
         for (const detalle of venta.detalles) {
-          const almacenId = 1; // Main warehouse
+          let stockRecord = await tx.stockAlmacen.findFirst({
+            where: { productoId: detalle.productoId, stockActual: { gt: 0 } },
+            orderBy: { stockActual: 'desc' }
+          });
+          
+          if (!stockRecord) {
+             stockRecord = await tx.stockAlmacen.findFirst({
+               where: { productoId: detalle.productoId }
+             });
+          }
+
+          const almacenId = stockRecord ? stockRecord.almacenId : 1;
 
           await tx.movimientoInventario.create({
             data: {
@@ -82,19 +93,18 @@ export class SalesService {
             },
           });
 
-          const stock = await tx.stockAlmacen.findUnique({
-            where: {
-              productoId_almacenId: {
+          if (stockRecord) {
+            await tx.stockAlmacen.update({
+              where: { id: stockRecord.id },
+              data: { stockActual: { decrement: detalle.cantidad } },
+            });
+          } else {
+            await tx.stockAlmacen.create({
+              data: {
                 productoId: detalle.productoId,
                 almacenId,
-              },
-            },
-          });
-
-          if (stock && stock.stockActual >= detalle.cantidad) {
-            await tx.stockAlmacen.update({
-              where: { id: stock.id },
-              data: { stockActual: { decrement: detalle.cantidad } },
+                stockActual: -detalle.cantidad,
+              }
             });
           }
 

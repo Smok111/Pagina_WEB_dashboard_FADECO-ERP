@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('api/inventory')
 export class InventoryController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // --- CATEGORÍAS ---
   @Get('categorias')
