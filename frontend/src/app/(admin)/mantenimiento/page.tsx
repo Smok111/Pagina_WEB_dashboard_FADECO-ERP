@@ -154,12 +154,12 @@ export default function MaintenancePage() {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg flex flex-col max-h-[90vh] shadow-2xl relative">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0 bg-[#1A2235] z-10 rounded-t-2xl">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><Wrench className="text-cyan-500"/> Programar Orden</h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors"><X size={20} /></button>
               </div>
-              <form onSubmit={handleSubmit} className="p-6">
+              <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
                 <div className="space-y-5 mb-6">
                   <div>
                     <div className="flex justify-between items-center mb-2">
@@ -173,7 +173,7 @@ export default function MaintenancePage() {
                       {equipos.map(eq => <option key={eq.id} value={eq.id}>{eq.codigo} - {eq.nombre}</option>)}
                     </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-sm font-medium text-slate-400 mb-2">Tipo de Mantenimiento</label>
                       <select value={tipo} onChange={e => setTipo(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50">

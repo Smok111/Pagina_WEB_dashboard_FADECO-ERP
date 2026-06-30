@@ -229,7 +229,7 @@ export default function ComprasPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
-                <div className="grid grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-sm font-medium text-slate-400">Proveedor</label>
@@ -270,7 +270,7 @@ export default function ComprasPage() {
                   </select>
                 </div>
 
-                <div className="bg-[#0B0F19] rounded-xl border border-white/5 overflow-hidden mb-8">
+                <div className="bg-[#0B0F19] rounded-xl border border-white/5 overflow-x-auto mb-8">
                   <table className="w-full text-left text-sm">
                     <thead className="border-b border-white/5 text-slate-400">
                       <tr>
@@ -306,10 +306,10 @@ export default function ComprasPage() {
                   </table>
                 </div>
 
-                <div className="flex items-start justify-between">
-                  <div className="w-1/2">
+                <div className="flex flex-col md:flex-row items-end md:items-start justify-between gap-4">
+                  <div className="hidden md:block w-1/2">
                   </div>
-                  <div className="w-1/3 bg-[#0B0F19] rounded-xl p-5 border border-white/5 space-y-3">
+                  <div className="w-full md:w-1/3 bg-[#0B0F19] rounded-xl p-5 border border-white/5 space-y-3">
                     <div className="flex justify-between text-slate-400">
                       <span>Subtotal</span>
                       <span>{formatCurrency(subtotal)}</span>
@@ -325,12 +325,12 @@ export default function ComprasPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-8 mt-8 border-t border-white/5">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-8 mt-8 border-t border-white/5">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium w-full sm:w-auto">
                     Cancelar
                   </button>
-                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/25">
-                    <Save size={18} /> Procesar Compra e Ingresar a Almacén
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/25 w-full sm:w-auto">
+                    <Save size={18} /> Procesar Compra e Ingresar
                   </button>
                 </div>
               </form>
@@ -358,7 +358,7 @@ export default function ComprasPage() {
               </div>
 
               <form onSubmit={handleCreateProvider} className="p-6 overflow-y-auto flex-1 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">RUC *</label>
                     <div className="flex gap-2">
