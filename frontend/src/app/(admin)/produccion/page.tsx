@@ -329,8 +329,8 @@ export default function ProduccionPage() {
                 <div className="mt-3 pt-3 border-t border-white/5">
                   <p className="text-xs text-slate-400 mb-2">Materias Primas Consumidas:</p>
                   <div className="space-y-1">
-                    {op.consumos.length === 0 && <span className="text-xs text-slate-500 italic">Sin consumos aún</span>}
-                    {op.consumos.map((c: any, i: number) => (
+                    {(!op.consumos || op.consumos.length === 0) && <span className="text-xs text-slate-500 italic">Sin consumos aún</span>}
+                    {op.consumos?.map((c: any, i: number) => (
                       <div key={i} className="text-xs flex justify-between">
                         <span className="text-slate-300 truncate pr-2">- {c.producto?.nombre}</span>
                         <span className="text-orange-300 font-mono">{Number(c.cantidad)}</span>
@@ -389,7 +389,7 @@ export default function ProduccionPage() {
                 <h4 className="text-white font-medium mb-1">{op.productoFinal.nombre}</h4>
                 <div className="flex justify-between mt-3 text-sm">
                   <span className="text-slate-400">Logrado: <strong className="text-emerald-400">{Number(op.cantidadReal)}</strong></span>
-                  <span className="text-emerald-400 font-mono text-xs bg-emerald-500/10 px-2 py-0.5 rounded">{op.lotes[0]?.numeroLote}</span>
+                  <span className="text-emerald-400 font-mono text-xs bg-emerald-500/10 px-2 py-0.5 rounded">{op.lotes?.[0]?.numeroLote}</span>
                 </div>
                 {op.archivos?.length > 0 && (
                   <div className="mt-3 pt-2 border-t border-white/5 text-xs text-slate-400 flex flex-col gap-2">

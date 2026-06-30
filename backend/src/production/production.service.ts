@@ -29,6 +29,7 @@ export class ProductionService {
         responsable: { select: { id: true, nombres: true, apellidos: true } },
         archivos: { select: { id: true, nombreArchivo: true, urlArchivo: true, tipoArchivo: true } },
         lotes: { select: { id: true, numeroLote: true } },
+        consumos: { include: { producto: { select: { nombre: true } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
