@@ -232,13 +232,13 @@ export default function ProduccionPage() {
     if (op.trabajadores && op.trabajadores.length > 0) {
       tableRows = op.trabajadores.map((t: any) => [
         t.trabajador?.nombres + " " + (t.trabajador?.apellidos || ''),
-        t.trabajador?.cargo?.nombre || 'Operario',
+        t.trabajador?.areaProduccion?.nombre || t.trabajador?.cargo?.nombre || 'Operario',
         (Number(op.cantidadReal) / op.trabajadores.length).toFixed(2)
       ]);
     } else if (op.responsable) {
       tableRows = [[
         op.responsable.nombres + " " + (op.responsable.apellidos || ''),
-        op.responsable.cargo?.nombre || 'Responsable / Encargado',
+        op.responsable.areaProduccion?.nombre || op.responsable.cargo?.nombre || 'Responsable / Encargado',
         Number(op.cantidadReal).toFixed(2)
       ]];
     } else {
