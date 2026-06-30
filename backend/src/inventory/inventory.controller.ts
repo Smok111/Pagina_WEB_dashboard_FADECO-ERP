@@ -108,7 +108,7 @@ export class InventoryController {
     const codigo =
       data.codigo || `ALM-${String((ultimo?.id || 0) + 1).padStart(3, '0')}`;
     return this.prisma.almacen.create({
-      data: { codigo, nombre: data.nombre, ubicacion: data.ubicacion },
+      data: { codigo, nombre: data.nombre, ubicacion: data.ubicacion, responsable: data.responsable },
     });
   }
 
@@ -120,6 +120,7 @@ export class InventoryController {
         codigo: data.codigo,
         nombre: data.nombre,
         ubicacion: data.ubicacion,
+        responsable: data.responsable,
       },
     });
   }
@@ -145,20 +146,42 @@ export class InventoryController {
       orderBy: { id: 'desc' },
     });
     const codigoSistema = `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
+    const stockActual = Number(data.stockActual || 0);
+    const almacenId = data.almacenId ? Number(data.almacenId) : null;
+
+    const productoData: any = {
+      codigoSistema,
+      codigo: codigoSistema,
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      categoriaId: Number(data.categoriaId),
+      unidadMedidaId: Number(data.unidadMedidaId),
+      stockActual: stockActual,
+      stockMinimo: Number(data.stockMinimo || 0),
+      costo: Number(data.costo || 0),
+      precioVenta: Number(data.precioVenta || 0),
+      estado: true,
+    };
+
+    if (stockActual > 0 && almacenId) {
+      productoData.StockAlmacen = {
+        create: {
+          almacenId: almacenId,
+          stockActual: stockActual
+        }
+      };
+      productoData.MovimientoInventario = {
+        create: {
+          almacenId: almacenId,
+          tipo: 'INGRESO',
+          cantidad: stockActual,
+          observacion: 'Inventario inicial'
+        }
+      };
+    }
+
     return this.prisma.producto.create({
-      data: {
-        codigoSistema,
-        codigo: codigoSistema,
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        categoriaId: Number(data.categoriaId),
-        unidadMedidaId: Number(data.unidadMedidaId),
-        stockActual: Number(data.stockActual || 0),
-        stockMinimo: Number(data.stockMinimo || 0),
-        costo: Number(data.costo || 0),
-        precioVenta: Number(data.precioVenta || 0),
-        estado: true,
-      },
+      data: productoData,
     });
   }
 
@@ -224,19 +247,43 @@ export class InventoryController {
 
   @Put('productos')
   async updateProducto(@Body() data: any) {
-    return this.prisma.producto.update({
+    const stockActual = Number(data.stockActual || 0);
+    const almacenId = data.almacenId ? Number(data.almacenId) : null;
+
+    const updated = await this.prisma.producto.update({
       where: { id: Number(data.id) },
       data: {
         nombre: data.nombre,
         descripcion: data.descripcion,
         categoriaId: Number(data.categoriaId),
         unidadMedidaId: Number(data.unidadMedidaId),
-        stockActual: Number(data.stockActual || 0),
+        stockActual: stockActual,
         stockMinimo: Number(data.stockMinimo || 0),
         costo: Number(data.costo || 0),
         precioVenta: Number(data.precioVenta || 0),
       },
     });
+
+    if (almacenId) {
+      await this.prisma.stockAlmacen.upsert({
+        where: {
+          productoId_almacenId: {
+            productoId: Number(data.id),
+            almacenId: almacenId
+          }
+        },
+        update: {
+          stockActual: stockActual
+        },
+        create: {
+          productoId: Number(data.id),
+          almacenId: almacenId,
+          stockActual: stockActual
+        }
+      });
+    }
+
+    return updated;
   }
 
   @Delete('productos')

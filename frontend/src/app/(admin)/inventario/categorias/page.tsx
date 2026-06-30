@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
-interface Categoria {
+interface Categoría {
   id: number;
   codigo: string;
   nombre: string;

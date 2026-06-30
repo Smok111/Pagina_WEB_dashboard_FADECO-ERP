@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
-interface Almacen {
+interface Almacén {
   id: number;
   codigoSistema: string;
   codigo: string;
@@ -48,7 +48,7 @@ export default function AlmacenesPage() {
     try {
       if (editandoId) {
         const response = await fetch(
-          `/api/inventory/almacenes/${editandoId}`,
+          `/api/inventory/almacenes`,
           {
             method: "PUT",
             headers: {
@@ -56,6 +56,7 @@ export default function AlmacenesPage() {
                 "application/json",
             },
             body: JSON.stringify({
+              id: editandoId,
               nombre,
               ubicacion,
               responsable,
@@ -105,7 +106,7 @@ export default function AlmacenesPage() {
   }
 
   function editarAlmacen(
-    almacen: Almacen
+    almacen: Almacén
   ) {
     setEditandoId(almacen.id);
 

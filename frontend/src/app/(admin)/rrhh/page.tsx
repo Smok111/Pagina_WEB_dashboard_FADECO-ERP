@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Users, Briefcase, MapPin, Search, Trash2 } from "lucide-react";
+import { Plus, X, Users, Briefcase, MapPin, Search, Trash2, FileSpreadsheet } from "lucide-react";
 import { useSort } from "@/hooks/useSort";
 
 export default function RrhhPage() {
@@ -12,8 +12,12 @@ export default function RrhhPage() {
   const [areasProduccion, setAreasProduccion] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [dni, setDni] = useState("");
@@ -29,12 +33,18 @@ export default function RrhhPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const procesarImportacion = async () => {
+    if (!selectedFile) return;
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", selectedFile);
 
     try {
       const res = await fetch("/api/rrhh/trabajadores/import", {
@@ -44,6 +54,8 @@ export default function RrhhPage() {
       if (res.ok) {
         const data = await res.json();
         alert(`Se importaron ${data.imported} trabajadores exitosamente.`);
+        setIsImportModalOpen(false);
+        setSelectedFile(null);
         fetchData();
       } else {
         alert("Error al importar trabajadores");
@@ -112,11 +124,11 @@ export default function RrhhPage() {
           <p className="text-slate-600">Directorio de personal de planta y administración</p>
         </div>
         <div className="flex gap-3">
-          <input type="file" accept=".xlsx, .xls, .csv" className="hidden" ref={fileInputRef} onChange={handleImportExcel} />
           <button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setIsImportModalOpen(true)}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
           >
+            <FileSpreadsheet size={18} />
             Importar Excel
           </button>
           <button
@@ -133,7 +145,13 @@ export default function RrhhPage() {
         <div className="p-4 border-b border-white/5 flex gap-4">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input type="text" placeholder="Buscar por DNI o Nombre..." className="w-full bg-[#0B0F19] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:border-fuchsia-500/50" />
+            <input 
+              type="text" 
+              placeholder="Buscar por DNI o Nombre..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#0B0F19] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:border-fuchsia-500/50" 
+            />
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <span className="text-sm text-slate-400">Ordenar por:</span>
@@ -157,7 +175,15 @@ export default function RrhhPage() {
         <div className="overflow-y-auto flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
             <div className="col-span-3 text-center text-slate-500">Cargando personal...</div>
-          ) : trabajadoresOrdenados.map(t => (
+          ) : trabajadoresOrdenados.filter(t => {
+            const search = searchTerm.toLowerCase();
+            return (
+              t.nombres.toLowerCase().includes(search) ||
+              t.apellidos.toLowerCase().includes(search) ||
+              t.dni.includes(search) ||
+              (t.codigoInterno && t.codigoInterno.toLowerCase().includes(search))
+            );
+          }).map(t => (
             <div key={t.id} className="bg-[#0B0F19] p-5 rounded-2xl border border-white/5 flex items-start gap-4 hover:border-fuchsia-500/30 transition-colors">
               <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-fuchsia-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold shrink-0">
                 {t.nombres[0]}{t.apellidos[0]}
@@ -258,6 +284,48 @@ export default function RrhhPage() {
                   <button type="submit" className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-fuchsia-500/25">Guardar Trabajador</button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {isImportModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-5 border-b border-white/5">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2"><FileSpreadsheet className="text-emerald-500"/> Importación Masiva</h3>
+                <button onClick={() => { setIsImportModalOpen(false); setSelectedFile(null); }} className="text-slate-400 hover:text-white"><X size={20} /></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="bg-[#0B0F19] p-4 rounded-xl border border-white/5 text-sm text-slate-300">
+                  <p className="font-semibold text-white mb-2">Instrucciones:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Sube un archivo `.xlsx` o `.csv`</li>
+                    <li>Las columnas recomendadas son: <strong>DNI, Nombres, Apellidos, CodigoInterno, Area, Cargo, Salario</strong></li>
+                    <li>El sistema autogenerará las áreas y cargos si no existen.</li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-400">Seleccionar archivo Excel/CSV</label>
+                  <input
+                    type="file"
+                    accept=".xlsx, .csv"
+                    onChange={handleFileSelect}
+                    ref={fileInputRef}
+                    className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fuchsia-500/50 cursor-pointer"
+                  />
+                </div>
+                
+                {selectedFile && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg flex items-center justify-between">
+                    <span className="text-emerald-400 text-sm font-medium">Archivo seleccionado: {selectedFile.name}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 p-5 border-t border-white/5">
+                <button onClick={() => { setIsImportModalOpen(false); setSelectedFile(null); }} className="px-5 py-2.5 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium">Cancelar</button>
+                <button onClick={procesarImportacion} disabled={!selectedFile} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-emerald-500/25">Importar Trabajadores</button>
+              </div>
             </motion.div>
           </div>
         )}

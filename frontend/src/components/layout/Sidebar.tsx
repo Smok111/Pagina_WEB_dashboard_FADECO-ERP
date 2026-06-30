@@ -105,7 +105,7 @@ export default function Sidebar() {
                 </motion.div>
                 <div className="whitespace-nowrap">
                   <h2 className="font-bold text-white text-base tracking-tight">FADECO ERP</h2>
-                  <p className="text-[10px] uppercase tracking-wider text-blue-400 font-bold">Enterprise</p>
+                  <p className="text-[10px] uppercase tracking-wider text-blue-400 font-bold">Sistema Empresarial</p>
                 </div>
               </motion.div>
             ) : (

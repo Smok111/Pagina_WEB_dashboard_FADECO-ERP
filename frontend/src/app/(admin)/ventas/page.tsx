@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Save, ArrowRight, Receipt, Plus, Download } from "lucide-react";
+import { Search, X, Save, ArrowRight, Receipt, Plus, Download, ExternalLink } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 export default function VentasPage() {
   const [ventas, setVentas] = useState<any[]>([]);
@@ -139,7 +139,7 @@ export default function VentasPage() {
 
     doc.setFontSize(22);
     doc.setTextColor(15, 23, 42);
-    doc.text("FADECO Enterprise", 14, 20);
+    doc.text("FADECO", 14, 20);
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
     doc.text("Proforma Comercial", 14, 26);
@@ -158,7 +158,7 @@ export default function VentasPage() {
       formatCurrency(c.subtotal)
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 60,
@@ -177,17 +177,19 @@ export default function VentasPage() {
     doc.save(`Proforma_${vData.numeroDocumento}_FADECO.pdf`);
   };
 
-  const descargarProformaAntigua = (venta: any) => {
+  const descargarComprobante = (venta: any) => {
     const doc = new jsPDF();
     const clientName = venta.cliente ? (venta.cliente.nombres || venta.cliente.razonSocial) : "Cliente Final";
+    const tituloDoc = venta.tipoDocumento === "PROFORMA" ? "Proforma Comercial" : "Comprobante de Pago";
+    const prefijo = venta.tipoDocumento === "PROFORMA" ? "Proforma" : venta.tipoDocumento;
 
     doc.setFontSize(22);
-    doc.text("FADECO Enterprise", 14, 20);
+    doc.text("FADECO", 14, 20);
     doc.setFontSize(10);
-    doc.text("Proforma Comercial", 14, 26);
+    doc.text(tituloDoc, 14, 26);
     
     doc.setFontSize(11);
-    doc.text(`Proforma: ${venta.numeroDocumento}`, 14, 40);
+    doc.text(`${prefijo}: ${venta.numeroDocumento}`, 14, 40);
     doc.text(`Fecha: ${new Date(venta.fecha).toLocaleDateString()}`, 14, 46);
     doc.text(`Cliente: ${clientName}`, 14, 52);
 
@@ -199,7 +201,7 @@ export default function VentasPage() {
       formatCurrency(d.subtotal)
     ]) || [];
 
-    (doc as any).autoTable({ head: [tableColumn], body: tableRows, startY: 60, theme: 'grid', headStyles: { fillColor: [15, 23, 42] } });
+    autoTable(doc, { head: [tableColumn], body: tableRows, startY: 60, theme: 'grid', headStyles: { fillColor: [15, 23, 42] } });
 
     const finalY = (doc as any).lastAutoTable.finalY || 60;
     doc.setFontSize(10);
@@ -209,7 +211,7 @@ export default function VentasPage() {
     doc.setFontSize(12);
     doc.text(`TOTAL: ${formatCurrency(venta.total)}`, 130, finalY + 24);
 
-    doc.save(`Proforma_${venta.numeroDocumento}_FADECO.pdf`);
+    doc.save(`${venta.tipoDocumento}_${venta.numeroDocumento}_FADECO.pdf`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -298,11 +300,20 @@ export default function VentasPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right flex justify-end items-center gap-3">
-                    {venta.tipoDocumento === 'PROFORMA' && (
-                      <button onClick={() => descargarProformaAntigua(venta)} className="text-red-400 hover:text-red-300 transition-colors" title="Descargar Proforma">
-                        <Download size={18} />
-                      </button>
+                    {venta.tipoDocumento === 'FACTURA' && (
+                      <a 
+                        href="https://api-seguridad.sunat.gob.pe/v1/clientessol/4f3b88b3-d9d6-402a-b85d-6a0bc857746a/oauth2/loginMenuSol?lang=es-PE&showDni=true&showLanguages=false&originalUrl=https://e-menu.sunat.gob.pe/cl-ti-itmenu/AutenticaMenuInternet.htm&state=rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAAAx3CAAAABAAAAADdAADZXhlcHQABnBhcmFtc3QASyomKiYvY2wtdGktaXRtZW51L01lbnVJbnRlcm5ldC5odG0mYjY0ZDI2YThiNWFmMDkxOTIzYjIzYjY0MDdhMWMxZGI0MWU3MzNhNnQABGV4ZWNweA=="
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-400 hover:text-blue-300 transition-colors" 
+                        title="Ver en SUNAT"
+                      >
+                        <ExternalLink size={18} />
+                      </a>
                     )}
+                    <button onClick={() => descargarComprobante(venta)} className="text-emerald-400 hover:text-emerald-300 transition-colors" title={`Descargar ${venta.tipoDocumento}`}>
+                      <Download size={18} />
+                    </button>
                     <span className="font-medium text-emerald-400">+ {formatCurrency(venta.total)}</span>
                   </td>
                 </tr>

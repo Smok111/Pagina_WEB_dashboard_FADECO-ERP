@@ -13,6 +13,8 @@ import { RrhhModule } from './rrhh/rrhh.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EmpresaModule } from './empresa/empresa.module';
+import { StorageModule } from './storage/storage.module';
+
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { EmpresaModule } from './empresa/empresa.module';
     MaintenanceModule,
     DashboardModule,
     EmpresaModule,
+    StorageModule,
   ],
   controllers: [AppController, InventoryController, PurchasesController],
   providers: [AppService],

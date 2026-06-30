@@ -1,12 +1,15 @@
+import { PrismaService } from '../prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RolesService } from './roles.service';
+
+const mockPrismaService = {};
 
 describe('RolesService', () => {
   let service: RolesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RolesService],
+      providers: [RolesService, { provide: PrismaService, useValue: mockPrismaService }],
     }).compile();
 
     service = module.get<RolesService>(RolesService);

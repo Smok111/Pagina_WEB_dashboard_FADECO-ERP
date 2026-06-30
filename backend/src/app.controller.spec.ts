@@ -1,6 +1,9 @@
+import { PrismaService } from 'prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
+const mockPrismaService = {};
 
 describe('AppController', () => {
   let appController: AppController;

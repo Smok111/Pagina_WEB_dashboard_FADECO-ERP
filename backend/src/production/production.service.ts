@@ -1,31 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ProductionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService
+  ) {}
 
   async findAll() {
     return this.prisma.ordenProduccion.findMany({
-      include: {
-        productoFinal: true,
-        consumos: { include: { producto: true } },
-        lotes: true,
-        trabajadores: { include: { trabajador: true } },
-        areaProduccion: true,
-        responsable: true,
-        historialEstados: true,
-        controlesCalidad: true,
-        incidencias: true,
-        kardex: true,
+      select: {
+        id: true,
+        codigoOP: true,
+        estado: true,
+        cantidadEsperada: true,
+        cantidadReal: true,
+        cantidadPendiente: true,
+        destino: true,
+        fechaInicio: true,
+        fechaFin: true,
+        observaciones: true,
+        createdAt: true,
+        productoFinal: { select: { id: true, nombre: true, codigo: true } },
+        trabajadores: { select: { trabajador: { select: { id: true, nombres: true, apellidos: true } } } },
+        areaProduccion: { select: { id: true, nombre: true } },
+        responsable: { select: { id: true, nombres: true, apellidos: true } },
+        archivos: { select: { id: true, nombreArchivo: true, urlArchivo: true, tipoArchivo: true } },
+        lotes: { select: { id: true, numeroLote: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async create(data: any, userId: number) {
-    const totalCount = await this.prisma.ordenProduccion.count();
-    const codigoOP = `OP-${new Date().getFullYear()}-${String(totalCount + 1).padStart(4, '0')}`;
+    const year = new Date().getFullYear();
+    const lastOrder = await this.prisma.ordenProduccion.findFirst({
+      where: { codigoOP: { startsWith: `OP-${year}-` } },
+      orderBy: { codigoOP: 'desc' },
+    });
+    
+    let nextNum = 1;
+    if (lastOrder) {
+      const parts = lastOrder.codigoOP.split('-');
+      if (parts.length === 3) {
+         nextNum = parseInt(parts[2], 10) + 1;
+      }
+    }
+    const codigoOP = `OP-${year}-${String(nextNum).padStart(4, '0')}`;
 
     return this.prisma.ordenProduccion.create({
       data: {
@@ -265,6 +288,70 @@ export class ProductionService {
       }
 
       return op;
+    });
+  }
+
+  async addFile(opId: number, file: Express.Multer.File) {
+    const op = await this.prisma.ordenProduccion.findUnique({ where: { id: opId } });
+    if (!op) throw new NotFoundException('Orden de producción no encontrada');
+
+    const timestamp = Date.now();
+    const filePath = `produccion/${op.codigoOP}/${timestamp}_${file.originalname.replace(/\s+/g, '_')}`;
+
+    const bucketName = process.env.SUPABASE_BUCKET_NAME || 'produccion';
+    const url = await this.storageService.uploadFile(bucketName, filePath, file);
+
+    return this.prisma.archivoProduccion.create({
+      data: {
+        ordenProduccionId: opId,
+        nombreArchivo: file.originalname,
+        urlArchivo: url,
+        tipoArchivo: file.mimetype,
+      },
+    });
+  }
+
+  async deleteFile(archivoId: number) {
+    const archivo = await this.prisma.archivoProduccion.findUnique({ where: { id: archivoId } });
+    if (!archivo) throw new NotFoundException('Archivo no encontrado');
+
+    const bucketName = process.env.SUPABASE_BUCKET_NAME || 'produccion';
+    const urlParts = archivo.urlArchivo.split(`/${bucketName}/`);
+    if (urlParts.length === 2) {
+      const path = urlParts[1];
+      try {
+        await this.storageService.deleteFile(bucketName, decodeURIComponent(path));
+      } catch (e) {
+        console.error("Supabase delete error", e);
+      }
+    }
+
+    return this.prisma.archivoProduccion.delete({ where: { id: archivoId } });
+  }
+
+  async delete(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const op = await tx.ordenProduccion.findUnique({ where: { id }, include: { archivos: true } });
+      if (!op) throw new NotFoundException('Orden de producción no encontrada');
+      
+      if (op.estado !== 'PENDIENTE') {
+        throw new Error('Solo se pueden eliminar órdenes en estado PENDIENTE');
+      }
+
+      const bucketName = process.env.SUPABASE_BUCKET_NAME || 'produccion';
+      for (const archivo of op.archivos) {
+        const urlParts = archivo.urlArchivo.split(`/${bucketName}/`);
+        if (urlParts.length === 2) {
+          try {
+             await this.storageService.deleteFile(bucketName, decodeURIComponent(urlParts[1]));
+          } catch(e) {}
+        }
+      }
+
+      await tx.archivoProduccion.deleteMany({ where: { ordenProduccionId: id } });
+      await tx.ordenProduccionTrabajador.deleteMany({ where: { ordenProduccionId: id } });
+      
+      return tx.ordenProduccion.delete({ where: { id } });
     });
   }
 }

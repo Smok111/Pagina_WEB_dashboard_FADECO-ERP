@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 
-interface Almacen {
+interface Almacén {
   id: number;
   nombre: string;
 }

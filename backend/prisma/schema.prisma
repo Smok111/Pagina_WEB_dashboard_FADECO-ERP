@@ -354,6 +354,7 @@ model OrdenProduccion {
   historialEstados EstadoProduccion[]
   controlesCalidad ControlCalidad[]
   incidencias      IncidenciaProduccion[]
+  archivos         ArchivoProduccion[]
 
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
@@ -600,4 +601,16 @@ model IncidenciaProduccion {
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+model ArchivoProduccion {
+  id                Int      @id @default(autoincrement())
+  ordenProduccionId Int
+  ordenProduccion   OrdenProduccion @relation(fields: [ordenProduccionId], references: [id])
+  
+  nombreArchivo     String
+  urlArchivo        String
+  tipoArchivo       String? // image/jpeg, application/pdf, etc.
+  
+  fechaSubida       DateTime @default(now())
 }

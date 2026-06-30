@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users } from "lucide-react";
+import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users, Upload, FileText, Trash2, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 
@@ -11,6 +11,7 @@ export default function ProduccionPage() {
   const [productos, setProductos] = useState<any[]>([]);
   const [almacenes, setAlmacenes] = useState<any[]>([]);
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
+  const [areasProduccion, setAreasProduccion] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -19,6 +20,10 @@ export default function ProduccionPage() {
   const [isConsumoOpen, setIsConsumoOpen] = useState(false);
   const [isFinishOpen, setIsFinishOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { sortedItems: ordenesOrdenadas, sortField, sortOrder, setSortField, setSortOrder } = useSort(ordenes, "codigoOP", "desc");
 
@@ -27,6 +32,8 @@ export default function ProduccionPage() {
   const [cantidadEsperada, setCantidadEsperada] = useState(1);
   const [cantidadReal, setCantidadReal] = useState(1);
   const [destino, setDestino] = useState("STOCK");
+  const [areaProduccionId, setAreaProduccionId] = useState("");
+  const [responsableId, setResponsableId] = useState("");
 
   // Consumo form
   const [insumoId, setInsumoId] = useState("");
@@ -41,18 +48,35 @@ export default function ProduccionPage() {
     fetchData();
   }, []);
 
+  // Carga solo las órdenes (rápido, para refrescar después de acciones)
+  const refreshOrdenes = async () => {
+    try {
+      const res = await fetch("/api/production");
+      if (res.ok) setOrdenes(await res.json());
+    } catch (error) {
+      console.error("Error refreshing ordenes:", error);
+    }
+  };
+
+  // Carga inicial completa
   const fetchData = async () => {
     try {
-      const [resOP, resProd, resAlm, resTrab] = await Promise.all([
-        fetch("/api/production"),
+      // Primero cargar órdenes para mostrar UI rápidamente
+      const resOP = await fetch("/api/production");
+      if (resOP.ok) setOrdenes(await resOP.json());
+      setLoading(false);
+      
+      // Datos secundarios en paralelo (no bloquean la UI)
+      const [resProd, resAlm, resTrab, resAreas] = await Promise.all([
         fetch("/api/inventory/productos"),
         fetch("/api/inventory/almacenes"),
-        fetch("/api/rrhh/trabajadores")
+        fetch("/api/rrhh/trabajadores"),
+        fetch("/api/rrhh/areas-produccion")
       ]);
-      if (resOP.ok) setOrdenes(await resOP.json());
       if (resProd.ok) setProductos(await resProd.json());
       if (resAlm.ok) setAlmacenes(await resAlm.json());
       if (resTrab.ok) setTrabajadores(await resTrab.json());
+      if (resAreas.ok) setAreasProduccion(await resAreas.json());
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -65,18 +89,20 @@ export default function ProduccionPage() {
     const res = await fetch("/api/production", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino }),
+      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino, areaProduccionId, responsableId }),
     });
     if (res.ok) {
       setIsNewOpOpen(false);
       setProductoFinalId("");
-      fetchData();
+      setAreaProduccionId("");
+      setResponsableId("");
+      refreshOrdenes();
     }
   };
 
   const handleStartOP = async (id: number) => {
     const res = await fetch(`/api/production/${id}/start`, { method: "PATCH" });
-    if (res.ok) fetchData();
+    if (res.ok) refreshOrdenes();
   };
 
   const handleAssignWorkers = async (e: React.FormEvent) => {
@@ -89,7 +115,7 @@ export default function ProduccionPage() {
     });
     if (res.ok) {
       setIsAssignOpen(false);
-      fetchData();
+      refreshOrdenes();
     }
   };
 
@@ -104,7 +130,7 @@ export default function ProduccionPage() {
     if (res.ok) {
       setInsumoId("");
       setCantidadInsumo(1);
-      fetchData();
+      refreshOrdenes();
       // Update activeOp locally to see the change without closing modal
       setActiveOp({
         ...activeOp,
@@ -123,7 +149,52 @@ export default function ProduccionPage() {
     });
     if (res.ok) {
       setIsFinishOpen(false);
-      fetchData();
+      refreshOrdenes();
+    }
+  };
+
+  const handleDeleteOP = async (id: number) => {
+    if (!confirm("¿Seguro que deseas cancelar esta Orden de Producción?")) return;
+    try {
+      const res = await fetch(`/api/production/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        refreshOrdenes();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Error al eliminar");
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteFile = async (opId: number, archivoId: number) => {
+    if (!confirm("¿Seguro que deseas eliminar este archivo?")) return;
+    try {
+      const res = await fetch(`/api/production/${opId}/archivos/${archivoId}`, { method: "DELETE" });
+      if (res.ok) refreshOrdenes();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleUploadFile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeOp || !selectedFile) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const res = await fetch(`/api/production/${activeOp.id}/archivos`, {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        setIsUploadOpen(false);
+        setSelectedFile(null);
+        refreshOrdenes();
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -180,6 +251,12 @@ export default function ProduccionPage() {
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-slate-400">{op.codigoOP}</span>
                   <div className="flex gap-1">
+                    <button onClick={() => handleDeleteOP(op.id)} className="text-red-400 hover:text-red-300 bg-red-500/10 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 tooltip-trigger" title="Cancelar Producción">
+                      <Trash2 size={12} />
+                    </button>
+                    <button onClick={() => { setActiveOp(op); setIsUploadOpen(true); }} className="text-purple-400 hover:text-purple-300 bg-purple-500/10 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 tooltip-trigger" title="Adjuntar Archivos">
+                      <Upload size={12} />
+                    </button>
                     <button onClick={() => { setActiveOp(op); setSelectedTrabajadores(op.trabajadores?.map((t: any) => t.trabajadorId) || []); setIsAssignOpen(true); }} className="text-blue-400 hover:text-blue-300 bg-blue-500/10 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 tooltip-trigger" title="Asignar Operarios">
                       <Users size={12} />
                     </button>
@@ -193,6 +270,28 @@ export default function ProduccionPage() {
                 {op.trabajadores?.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-white/5 text-xs text-blue-400 flex items-center gap-1">
                     <Users size={12}/> {op.trabajadores.length} operarios
+                  </div>
+                )}
+                {op.archivos?.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-white/5 text-xs text-slate-400 flex flex-col gap-2">
+                    {op.archivos.map((a: any) => (
+                      <div key={a.id} className="flex flex-col gap-1 bg-[#0B0F19]/50 p-2 rounded-lg border border-white/5">
+                        <div className="flex items-center justify-between">
+                          <a href={a.urlArchivo} target="_blank" rel="noreferrer" className="text-purple-400 hover:underline flex items-center gap-1 truncate w-[85%]">
+                            {a.tipoArchivo?.includes('image') ? <ImageIcon size={10}/> : <FileText size={10}/>} 
+                            <span className="truncate">{a.nombreArchivo}</span>
+                          </a>
+                          <button onClick={() => handleDeleteFile(op.id, a.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Eliminar archivo">
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        {a.tipoArchivo?.includes('image') && (
+                          <div className="mt-1 w-full flex justify-center bg-black/20 rounded">
+                            <img src={a.urlArchivo} alt={a.nombreArchivo} className="max-h-24 object-contain rounded border border-white/10" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -215,6 +314,9 @@ export default function ProduccionPage() {
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-orange-400">{op.codigoOP}</span>
                   <div className="flex gap-1">
+                    <button onClick={() => { setActiveOp(op); setIsUploadOpen(true); }} className="text-purple-400 hover:text-purple-300 bg-purple-500/10 p-1.5 rounded-lg tooltip-trigger" title="Adjuntar Archivos">
+                      <Upload size={14} />
+                    </button>
                     <button onClick={() => { setActiveOp(op); setIsConsumoOpen(true); }} className="text-blue-400 hover:text-blue-300 bg-blue-500/10 p-1.5 rounded-lg tooltip-trigger" title="Registrar Consumo">
                       <Hammer size={14} />
                     </button>
@@ -238,6 +340,28 @@ export default function ProduccionPage() {
                   {op.trabajadores?.length > 0 && (
                     <div className="mt-2 text-xs text-blue-400 flex items-center gap-1">
                       <Users size={12}/> {op.trabajadores.map((t:any) => t.trabajador.nombres.split(' ')[0]).join(', ')}
+                    </div>
+                  )}
+                  {op.archivos?.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-white/5 text-xs text-slate-400 flex flex-col gap-2">
+                      {op.archivos.map((a: any) => (
+                        <div key={a.id} className="flex flex-col gap-1 bg-[#0B0F19]/50 p-2 rounded-lg border border-white/5">
+                          <div className="flex items-center justify-between">
+                            <a href={a.urlArchivo} target="_blank" rel="noreferrer" className="text-purple-400 hover:underline flex items-center gap-1 truncate w-[85%]">
+                              {a.tipoArchivo?.includes('image') ? <ImageIcon size={10}/> : <FileText size={10}/>} 
+                              <span className="truncate">{a.nombreArchivo}</span>
+                            </a>
+                            <button onClick={() => handleDeleteFile(op.id, a.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Eliminar archivo">
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                          {a.tipoArchivo?.includes('image') && (
+                            <div className="mt-1 w-full flex justify-center bg-black/20 rounded">
+                              <img src={a.urlArchivo} alt={a.nombreArchivo} className="max-h-24 object-contain rounded border border-white/10" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -267,6 +391,28 @@ export default function ProduccionPage() {
                   <span className="text-slate-400">Logrado: <strong className="text-emerald-400">{Number(op.cantidadReal)}</strong></span>
                   <span className="text-emerald-400 font-mono text-xs bg-emerald-500/10 px-2 py-0.5 rounded">{op.lotes[0]?.numeroLote}</span>
                 </div>
+                {op.archivos?.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-white/5 text-xs text-slate-400 flex flex-col gap-2">
+                    {op.archivos.map((a: any) => (
+                      <div key={a.id} className="flex flex-col gap-1 bg-[#0B0F19]/50 p-2 rounded-lg border border-white/5">
+                        <div className="flex items-center justify-between">
+                          <a href={a.urlArchivo} target="_blank" rel="noreferrer" className="text-purple-400 hover:underline flex items-center gap-1 truncate w-[85%]">
+                            {a.tipoArchivo?.includes('image') ? <ImageIcon size={10}/> : <FileText size={10}/>} 
+                            <span className="truncate">{a.nombreArchivo}</span>
+                          </a>
+                          <button onClick={() => handleDeleteFile(op.id, a.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Eliminar archivo">
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        {a.tipoArchivo?.includes('image') && (
+                          <div className="mt-1 w-full flex justify-center bg-black/20 rounded">
+                            <img src={a.urlArchivo} alt={a.nombreArchivo} className="max-h-24 object-contain rounded border border-white/10" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -297,6 +443,24 @@ export default function ProduccionPage() {
                     <option value="PEDIDO_CLIENTE">Pedido de Cliente</option>
                   </select>
                 </div>
+                <div className="mb-5">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Área de Producción</label>
+                  <select required value={areaProduccionId} onChange={e => { setAreaProduccionId(e.target.value); setResponsableId(""); }} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
+                    <option value="" disabled>Seleccione el área...</option>
+                    {areasProduccion.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                  </select>
+                </div>
+                {areaProduccionId && (
+                  <div className="mb-5">
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Responsable / Encargado</label>
+                    <select required value={responsableId} onChange={e => setResponsableId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
+                      <option value="" disabled>Seleccione el responsable...</option>
+                      {trabajadores.filter(t => t.areaProduccionId === Number(areaProduccionId)).map(t => (
+                        <option key={t.id} value={t.id}>{t.nombres} {t.apellidos} - {t.cargo?.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="mb-8">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Cantidad Esperada a Producir</label>
                   <input type="number" min="1" required value={cantidadEsperada} onChange={e => setCantidadEsperada(Number(e.target.value))} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50" />
@@ -383,6 +547,32 @@ export default function ProduccionPage() {
                   <button type="button" onClick={() => setIsFinishOpen(false)} className="px-5 py-2.5 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium w-1/2">Cancelar</button>
                   <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-emerald-500/25 w-1/2 flex justify-center items-center gap-2">
                     <CheckCircle2 size={18}/> Finalizar
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL ADJUNTAR ARCHIVO */}
+      <AnimatePresence>
+        {isUploadOpen && activeOp && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-5 border-b border-white/5">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Upload className="text-purple-500"/> Adjuntar Archivo</h3>
+                <button onClick={() => { setIsUploadOpen(false); setSelectedFile(null); }} className="text-slate-400 hover:text-white"><X size={20} /></button>
+              </div>
+              <form onSubmit={handleUploadFile} className="p-6">
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Seleccionar Archivo (Imagen o PDF)</label>
+                  <input type="file" accept="image/*,application/pdf" required onChange={e => setSelectedFile(e.target.files?.[0] || null)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button type="button" onClick={() => { setIsUploadOpen(false); setSelectedFile(null); }} className="px-5 py-2.5 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium">Cancelar</button>
+                  <button type="submit" disabled={uploading || !selectedFile} className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-purple-500/25 flex items-center gap-2">
+                    {uploading ? <span className="animate-pulse">Subiendo...</span> : <><Upload size={18}/> Subir Archivo</>}
                   </button>
                 </div>
               </form>

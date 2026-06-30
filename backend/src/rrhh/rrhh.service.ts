@@ -14,7 +14,24 @@ export class RrhhService {
 
   async getTrabajadores() {
     return this.prisma.trabajador.findMany({
-      include: { area: true, cargo: true, areaProduccion: true, usuario: true },
+      select: {
+        id: true,
+        dni: true,
+        nombres: true,
+        apellidos: true,
+        codigoInterno: true,
+        telefono: true,
+        correo: true,
+        direccion: true,
+        fechaIngreso: true,
+        salarioBase: true,
+        areaId: true,
+        cargoId: true,
+        areaProduccionId: true,
+        area: { select: { id: true, nombre: true } },
+        cargo: { select: { id: true, nombre: true } },
+        areaProduccion: { select: { id: true, nombre: true } },
+      },
     });
   }
 

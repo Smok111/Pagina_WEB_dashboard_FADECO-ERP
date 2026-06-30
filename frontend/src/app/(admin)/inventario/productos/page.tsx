@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Plus, Edit, Trash2, Search, Package, Upload, FileSpreadsheet, ClipboardList, Download, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-interface Categoria {
+interface Categoría {
   id: number;
   nombre: string;
 }
@@ -72,6 +72,7 @@ export default function ProductosPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [unidades, setUnidades] = useState<Unidad[]>([]);
+  const [almacenes, setAlmacenes] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isKardexModalOpen, setIsKardexModalOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function ProductosPage() {
   const [descripcion, setDescripcion] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
   const [unidadMedidaId, setUnidadMedidaId] = useState("");
+  const [almacenId, setAlmacenId] = useState("");
   const [stockActual, setStockActual] = useState("0");
   const [stockMinimo, setStockMinimo] = useState("0");
   const [costo, setCosto] = useState("0");
@@ -111,6 +113,16 @@ export default function ProductosPage() {
     }
   }
 
+  async function cargarAlmacenes() {
+    try {
+      const response = await fetch("/api/inventory/almacenes");
+      const data = await response.json();
+      setAlmacenes(data);
+    } catch (e) {
+      toast.error("Error al cargar almacenes");
+    }
+  }
+
   async function cargarProductos() {
     try {
       const response = await fetch("/api/inventory/productos");
@@ -124,6 +136,7 @@ export default function ProductosPage() {
   useEffect(() => {
     cargarCategorias();
     cargarUnidades();
+    cargarAlmacenes();
     cargarProductos();
   }, []);
 
@@ -134,6 +147,7 @@ export default function ProductosPage() {
       setDescripcion(producto.descripcion || "");
       setCategoriaId(String(producto.categoriaId));
       setUnidadMedidaId(String(producto.unidadMedidaId));
+      setAlmacenId(""); // Para edición de stock se usa Movimientos
       setStockActual(String(producto.stockActual));
       setStockMinimo(String(producto.stockMinimo));
       setCosto(String(producto.costo));
@@ -144,6 +158,7 @@ export default function ProductosPage() {
       setDescripcion("");
       setCategoriaId("");
       setUnidadMedidaId("");
+      setAlmacenId("");
       setStockActual("0");
       setStockMinimo("0");
       setCosto("0");
@@ -165,6 +180,7 @@ export default function ProductosPage() {
         descripcion,
         categoriaId,
         unidadMedidaId,
+        almacenId,
         stockActual,
         stockMinimo,
         costo,
@@ -231,7 +247,7 @@ export default function ProductosPage() {
     try {
       const payload = importData.map(row => ({
         nombre: row["Nombre"] || row["nombre"] || row["NOMBRE"] || "Sin nombre",
-        descripcion: row["Descripcion"] || row["descripcion"] || row["DESCRIPCION"] || "",
+        descripcion: row["Descripción"] || row["descripcion"] || row["DESCRIPCION"] || "",
         stockActual: row["Stock"] || row["stock"] || row["STOCK"] || 0,
         stockMinimo: row["StockMinimo"] || row["stockMinimo"] || 0,
         costo: row["Costo"] || row["costo"] || row["COSTO"] || 0,
@@ -285,7 +301,7 @@ export default function ProductosPage() {
       m.saldo
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 35,
@@ -478,6 +494,18 @@ export default function ProductosPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {unidades.map(u => <SelectItem key={u.id} value={String(u.id)}>{u.nombre} ({u.codigo})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Almacén (Para Stock Inicial)</Label>
+              <Select value={almacenId} onValueChange={(val) => setAlmacenId(val || "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Opcional" />
+                </SelectTrigger>
+                <SelectContent>
+                  {almacenes.map(a => <SelectItem key={a.id} value={String(a.id)}>{a.nombre}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
