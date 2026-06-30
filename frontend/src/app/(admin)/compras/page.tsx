@@ -212,23 +212,23 @@ export default function ComprasPage() {
 
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-4xl my-8 overflow-hidden shadow-2xl relative"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl relative"
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 bg-[#1A2235] z-10">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0 bg-[#1A2235] z-10 rounded-t-2xl">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                   <PackageOpen className="text-blue-500" /> Registrar Ingreso por Compra
                 </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6">
+              <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-6 mb-8">
                   <div>
                     <div className="flex justify-between items-center mb-2">
@@ -341,23 +341,23 @@ export default function ComprasPage() {
 
       <AnimatePresence>
         {isNewProviderModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg my-8 overflow-hidden shadow-2xl relative"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg flex flex-col max-h-[90vh] shadow-2xl relative"
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#1A2235]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0 bg-[#1A2235] z-10 rounded-t-2xl">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                   <Plus className="text-blue-500" /> Nuevo Proveedor
                 </h3>
-                <button onClick={() => setIsNewProviderModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                <button type="button" onClick={() => setIsNewProviderModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleCreateProvider} className="p-6 space-y-4">
+              <form onSubmit={handleCreateProvider} className="p-6 overflow-y-auto flex-1 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">RUC *</label>
