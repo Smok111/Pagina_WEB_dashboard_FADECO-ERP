@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   description: "Sistema ERP empresarial moderno",
 };
 
+export const viewport = {
+  themeColor: "#0f172a", // Slate-900 para que la barra de titulo (PWA) combine perfectamente
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
