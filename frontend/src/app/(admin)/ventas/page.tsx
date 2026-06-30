@@ -119,11 +119,22 @@ export default function VentasPage() {
     const prod = productos.find(p => p.id === Number(productoId));
     if (!prod) return;
     
+    if (prod.stockActual <= 0) {
+      alert(`El producto ${prod.nombre} no tiene stock disponible.`);
+      return;
+    }
+    
     setCart([...cart, { productoId: prod.id, nombre: prod.nombre, cantidad: 1, precioUnitario: Number(prod.precioVenta) || 0, maxStock: prod.stockActual }]);
   };
 
   const updateCartItem = (index: number, field: string, value: number) => {
     const newCart = [...cart];
+    if (field === "cantidad") {
+      if (value > newCart[index].maxStock) {
+        alert(`Stock insuficiente. Solo hay ${newCart[index].maxStock} unidades disponibles de ${newCart[index].nombre}.`);
+        return;
+      }
+    }
     newCart[index][field] = value;
     setCart(newCart);
   };
