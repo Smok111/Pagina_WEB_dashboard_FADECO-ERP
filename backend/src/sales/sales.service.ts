@@ -63,14 +63,20 @@ export class SalesService {
     return this.prisma.$transaction(async (tx: any) => {
       const estadoVenta = data.estado || 'COMPLETADA';
       
+      // Validar stock antes de crear la venta
       if (estadoVenta === 'COMPLETADA') {
         for (const detalle of data.detalles) {
           const prod = await tx.producto.findUnique({ where: { id: Number(detalle.productoId) } });
           if (!prod) {
             throw new BadRequestException(`Producto no encontrado.`);
           }
-          if (prod.stockActual < Number(detalle.cantidad)) {
-            throw new BadRequestException(`Stock insuficiente para: ${prod.nombre}. Disponible: ${prod.stockActual}`);
+          const stockDisponible = Math.max(0, prod.stockActual);
+          if (stockDisponible < Number(detalle.cantidad)) {
+            throw new BadRequestException(
+              stockDisponible === 0
+                ? `Sin stock para: ${prod.nombre}. No se puede vender.`
+                : `Stock insuficiente para: ${prod.nombre}. Disponible: ${stockDisponible}, Solicitado: ${Number(detalle.cantidad)}`
+            );
           }
         }
       }
@@ -126,23 +132,19 @@ export class SalesService {
           });
 
           if (stockRecord) {
+            const nuevoStock = Math.max(0, stockRecord.stockActual - detalle.cantidad);
             await tx.stockAlmacen.update({
               where: { id: stockRecord.id },
-              data: { stockActual: { decrement: detalle.cantidad } },
-            });
-          } else {
-            await tx.stockAlmacen.create({
-              data: {
-                productoId: detalle.productoId,
-                almacenId,
-                stockActual: -detalle.cantidad,
-              }
+              data: { stockActual: nuevoStock },
             });
           }
 
+          // Actualizar stock del producto, nunca dejar negativo
+          const prodActual = await tx.producto.findUnique({ where: { id: detalle.productoId } });
+          const nuevoStockProd = Math.max(0, (prodActual?.stockActual || 0) - detalle.cantidad);
           await tx.producto.update({
             where: { id: detalle.productoId },
-            data: { stockActual: { decrement: detalle.cantidad } },
+            data: { stockActual: nuevoStockProd },
           });
         }
       }

@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Patch,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -94,10 +95,17 @@ export class InventoryController {
 
   @Get('almacenes/:id')
   async getAlmacen(@Param('id') id: string) {
-    return this.prisma.almacen.findUnique({
+    const almacen = await this.prisma.almacen.findUnique({
       where: { id: Number(id) },
       include: { stocks: { include: { producto: true } } },
     });
+    if (almacen && almacen.stocks) {
+      almacen.stocks = almacen.stocks.map((s: any) => ({
+        ...s,
+        stockActual: Math.max(0, s.stockActual),
+      }));
+    }
+    return almacen;
   }
 
   @Post('almacenes')
@@ -134,10 +142,11 @@ export class InventoryController {
   // --- PRODUCTOS ---
   @Get('productos')
   async getProductos() {
-    return this.prisma.producto.findMany({
+    const productos = await this.prisma.producto.findMany({
       include: { categoria: true, unidadMedida: true },
       orderBy: { nombre: 'asc' },
     });
+    return productos.map((p: any) => ({ ...p, stockActual: Math.max(0, p.stockActual) }));
   }
 
   @Post('productos')
@@ -298,5 +307,21 @@ export class InventoryController {
       where: { id: Number(id) },
       data: { estado: body.estado },
     });
+  }
+
+  // --- CORREGIR STOCKS NEGATIVOS ---
+  @Patch('fix-negative-stocks')
+  async fixNegativeStocks() {
+    // Corregir productos con stock negativo
+    await this.prisma.producto.updateMany({
+      where: { stockActual: { lt: 0 } },
+      data: { stockActual: 0 },
+    });
+    // Corregir stocks de almacén con valor negativo
+    await this.prisma.stockAlmacen.updateMany({
+      where: { stockActual: { lt: 0 } },
+      data: { stockActual: 0 },
+    });
+    return { ok: true, message: 'Stocks negativos corregidos a 0' };
   }
 }

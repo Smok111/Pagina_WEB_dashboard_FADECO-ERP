@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -138,12 +138,24 @@ export class ProductionService {
 
   async addConsumo(opId: number, data: any) {
     return this.prisma.$transaction(async (tx: any) => {
+      // Validar stock antes de consumir
+      const prod = await tx.producto.findUnique({ where: { id: Number(data.productoId) } });
+      if (!prod) throw new NotFoundException('Producto no encontrado');
+      const stockDisponible = Math.max(0, prod.stockActual);
+      if (stockDisponible < Number(data.cantidad)) {
+        throw new BadRequestException(
+          stockDisponible === 0
+            ? `Sin stock para: ${prod.nombre}. No se puede consumir.`
+            : `Stock insuficiente para: ${prod.nombre}. Disponible: ${stockDisponible}`
+        );
+      }
+
       const consumo = await tx.consumoMateriaPrima.create({
         data: {
           ordenProduccionId: opId,
           productoId: Number(data.productoId),
           cantidad: Number(data.cantidad),
-          almacenId: Number(data.almacenId || 1), // Default warehouse
+          almacenId: Number(data.almacenId || 1),
         },
       });
 
@@ -158,7 +170,7 @@ export class ProductionService {
         },
       });
 
-      // Descontar stock
+      // Descontar stock del almacén, nunca dejar negativo
       const stock = await tx.stockAlmacen.findUnique({
         where: {
           productoId_almacenId: {
@@ -168,16 +180,19 @@ export class ProductionService {
         },
       });
 
-      if (stock && stock.stockActual >= consumo.cantidad) {
+      if (stock) {
+        const nuevoStock = Math.max(0, stock.stockActual - consumo.cantidad);
         await tx.stockAlmacen.update({
           where: { id: stock.id },
-          data: { stockActual: { decrement: consumo.cantidad } },
+          data: { stockActual: nuevoStock },
         });
       }
 
+      // Actualizar stock del producto, nunca dejar negativo
+      const nuevoStockProd = Math.max(0, prod.stockActual - consumo.cantidad);
       await tx.producto.update({
         where: { id: consumo.productoId },
-        data: { stockActual: { decrement: consumo.cantidad } },
+        data: { stockActual: nuevoStockProd },
       });
 
       return consumo;
