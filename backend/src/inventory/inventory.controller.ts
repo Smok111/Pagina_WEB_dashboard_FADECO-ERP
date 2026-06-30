@@ -309,19 +309,31 @@ export class InventoryController {
     });
   }
 
-  // --- CORREGIR STOCKS NEGATIVOS ---
-  @Patch('fix-negative-stocks')
-  async fixNegativeStocks() {
-    // Corregir productos con stock negativo
-    await this.prisma.producto.updateMany({
-      where: { stockActual: { lt: 0 } },
-      data: { stockActual: 0 },
-    });
-    // Corregir stocks de almacén con valor negativo
+  // --- SINCRONIZAR STOCKS (producto = suma de almacenes) ---
+  @Patch('sync-stocks')
+  async syncStocks() {
+    // 1. Corregir stocks negativos en almacén
     await this.prisma.stockAlmacen.updateMany({
       where: { stockActual: { lt: 0 } },
       data: { stockActual: 0 },
     });
-    return { ok: true, message: 'Stocks negativos corregidos a 0' };
+
+    // 2. Recalcular producto.stockActual = SUM(stockAlmacen.stockActual)
+    const productos = await this.prisma.producto.findMany({
+      include: { StockAlmacen: true },
+    });
+
+    for (const prod of productos) {
+      const totalStock = prod.StockAlmacen.reduce(
+        (sum: number, sa: any) => sum + Math.max(0, Number(sa.stockActual)),
+        0,
+      );
+      await this.prisma.producto.update({
+        where: { id: prod.id },
+        data: { stockActual: totalStock },
+      });
+    }
+
+    return { ok: true, message: `Stocks sincronizados: ${productos.length} productos actualizados` };
   }
 }

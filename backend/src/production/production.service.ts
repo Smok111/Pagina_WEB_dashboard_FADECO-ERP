@@ -181,18 +181,24 @@ export class ProductionService {
       });
 
       if (stock) {
-        const nuevoStock = Math.max(0, stock.stockActual - consumo.cantidad);
+        const nuevoStock = Math.max(0, Number(stock.stockActual) - Number(consumo.cantidad));
         await tx.stockAlmacen.update({
           where: { id: stock.id },
           data: { stockActual: nuevoStock },
         });
       }
 
-      // Actualizar stock del producto, nunca dejar negativo
-      const nuevoStockProd = Math.max(0, prod.stockActual - consumo.cantidad);
+      // Recalcular producto.stockActual = SUM(stockAlmacen)
+      const allStocks = await tx.stockAlmacen.findMany({
+        where: { productoId: consumo.productoId },
+      });
+      const totalStock = allStocks.reduce(
+        (sum: number, s: any) => sum + Math.max(0, Number(s.stockActual)),
+        0,
+      );
       await tx.producto.update({
         where: { id: consumo.productoId },
-        data: { stockActual: nuevoStockProd },
+        data: { stockActual: totalStock },
       });
 
       return consumo;
@@ -232,10 +238,17 @@ export class ProductionService {
         });
       }
 
-      // Restaurar stock general
+      // Recalcular producto.stockActual = SUM(stockAlmacen)
+      const allStocks = await tx.stockAlmacen.findMany({
+        where: { productoId: consumo.productoId },
+      });
+      const totalStock = allStocks.reduce(
+        (sum: number, s: any) => sum + Math.max(0, Number(s.stockActual)),
+        0,
+      );
       await tx.producto.update({
         where: { id: consumo.productoId },
-        data: { stockActual: { increment: consumo.cantidad } },
+        data: { stockActual: totalStock },
       });
 
       // Eliminar el consumo

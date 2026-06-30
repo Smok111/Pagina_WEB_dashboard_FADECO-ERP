@@ -132,19 +132,24 @@ export class SalesService {
           });
 
           if (stockRecord) {
-            const nuevoStock = Math.max(0, stockRecord.stockActual - detalle.cantidad);
+            const nuevoStock = Math.max(0, Number(stockRecord.stockActual) - Number(detalle.cantidad));
             await tx.stockAlmacen.update({
               where: { id: stockRecord.id },
               data: { stockActual: nuevoStock },
             });
           }
 
-          // Actualizar stock del producto, nunca dejar negativo
-          const prodActual = await tx.producto.findUnique({ where: { id: detalle.productoId } });
-          const nuevoStockProd = Math.max(0, (prodActual?.stockActual || 0) - detalle.cantidad);
+          // Recalcular producto.stockActual = SUM(stockAlmacen)
+          const allStocks = await tx.stockAlmacen.findMany({
+            where: { productoId: detalle.productoId },
+          });
+          const totalStock = allStocks.reduce(
+            (sum: number, s: any) => sum + Math.max(0, Number(s.stockActual)),
+            0,
+          );
           await tx.producto.update({
             where: { id: detalle.productoId },
-            data: { stockActual: nuevoStockProd },
+            data: { stockActual: totalStock },
           });
         }
       }
