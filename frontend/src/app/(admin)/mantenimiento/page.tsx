@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 export default function MaintenancePage() {
   const [equipos, setEquipos] = useState<any[]>([]);
   const [mantenimientos, setMantenimientos] = useState<any[]>([]);
+  const [almacenes, setAlmacenes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,12 +25,14 @@ export default function MaintenancePage() {
 
   const fetchData = async () => {
     try {
-      const [resE, resM] = await Promise.all([
+      const [resE, resM, resA] = await Promise.all([
         fetch("/api/maintenance/equipos"),
-        fetch("/api/maintenance/mantenimientos")
+        fetch("/api/maintenance/mantenimientos"),
+        fetch("/api/inventory/almacenes")
       ]);
       if (resE.ok) setEquipos(await resE.json());
       if (resM.ok) setMantenimientos(await resM.json());
+      if (resA.ok) setAlmacenes(await resA.json());
     } catch (error) {
       console.error(error);
     } finally {
@@ -242,8 +245,11 @@ export default function MaintenancePage() {
                   <input type="text" required value={newEquipo.nombre} onChange={e => setNewEquipo({...newEquipo, nombre: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Ubicación / Área</label>
-                  <input type="text" value={newEquipo.ubicacion} onChange={e => setNewEquipo({...newEquipo, ubicacion: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500/50" />
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Ubicación / Área (Almacén)</label>
+                  <select required value={newEquipo.ubicacion} onChange={e => setNewEquipo({...newEquipo, ubicacion: e.target.value})} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500/50">
+                    <option value="" disabled>Seleccionar almacén...</option>
+                    {almacenes.map(a => <option key={a.id} value={a.nombre}>{a.nombre}</option>)}
+                  </select>
                 </div>
                 <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                   <button type="button" onClick={() => setIsNewEquipoModalOpen(false)} className="px-5 py-2.5 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">Cancelar</button>
