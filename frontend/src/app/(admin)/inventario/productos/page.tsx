@@ -34,7 +34,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-interface Categoría {
+interface Categoria {
   id: number;
   nombre: string;
 }

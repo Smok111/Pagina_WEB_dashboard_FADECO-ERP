@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
 
-interface Almacén {
+interface Almacen {
   id: number;
   codigoSistema: string;
   codigo: string;
@@ -106,7 +106,7 @@ export default function AlmacenesPage() {
   }
 
   function editarAlmacen(
-    almacen: Almacén
+    almacen: Almacen
   ) {
     setEditandoId(almacen.id);
 
