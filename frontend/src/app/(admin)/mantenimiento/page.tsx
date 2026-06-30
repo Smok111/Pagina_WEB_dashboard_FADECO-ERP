@@ -80,14 +80,32 @@ export default function MaintenancePage() {
 
   const handleDeleteEquipo = async (id: number) => {
     if (!confirm("¿Seguro que deseas eliminar este equipo? Se borrará todo su historial.")) return;
-    const res = await fetch(`/api/maintenance/equipos/${id}`, { method: "DELETE" });
-    if (res.ok) fetchData();
+    try {
+      const res = await fetch(`/api/maintenance/equipos/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const error = await res.text();
+        alert(`Error del servidor al eliminar equipo: ${res.status} - ${error}`);
+      }
+    } catch (e: any) {
+      alert(`Error de conexión: ${e.message}`);
+    }
   };
 
   const handleDeleteMantenimiento = async (id: number) => {
     if (!confirm("¿Seguro que deseas eliminar esta orden?")) return;
-    const res = await fetch(`/api/maintenance/mantenimientos/${id}`, { method: "DELETE" });
-    if (res.ok) fetchData();
+    try {
+      const res = await fetch(`/api/maintenance/mantenimientos/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const error = await res.text();
+        alert(`Error del servidor al eliminar orden: ${res.status} - ${error}`);
+      }
+    } catch (e: any) {
+      alert(`Error de conexión: ${e.message}`);
+    }
   };
 
   return (
