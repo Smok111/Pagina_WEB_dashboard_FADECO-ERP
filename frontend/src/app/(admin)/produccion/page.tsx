@@ -166,6 +166,14 @@ export default function ProduccionPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleDeleteConsumo = async (consumoId: number) => {
+    if (!confirm("¿Seguro que deseas eliminar este consumo? El stock se devolverá al almacén.")) return;
+    try {
+      const res = await fetch(`/api/production/consumos/${consumoId}`, { method: "DELETE" });
+      if (res.ok) refreshOrdenes();
+    } catch (e) { console.error(e); }
+  };
+
   const handleDeleteFile = async (opId: number, archivoId: number) => {
     if (!confirm("¿Seguro que deseas eliminar este archivo?")) return;
     try {
@@ -331,9 +339,14 @@ export default function ProduccionPage() {
                   <div className="space-y-1">
                     {(!op.consumos || op.consumos.length === 0) && <span className="text-xs text-slate-500 italic">Sin consumos aún</span>}
                     {op.consumos?.map((c: any, i: number) => (
-                      <div key={i} className="text-xs flex justify-between">
+                      <div key={i} className="text-xs flex justify-between group items-center">
                         <span className="text-slate-300 truncate pr-2">- {c.producto?.nombre}</span>
-                        <span className="text-orange-300 font-mono">{Number(c.cantidad)}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-orange-300 font-mono">{Number(c.cantidad)}</span>
+                          <button onClick={() => handleDeleteConsumo(c.id)} className="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity" title="Eliminar Consumo">
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

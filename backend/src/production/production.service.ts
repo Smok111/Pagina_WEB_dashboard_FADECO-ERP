@@ -177,6 +177,50 @@ export class ProductionService {
     });
   }
 
+  async deleteConsumo(id: number) {
+    return this.prisma.$transaction(async (tx: any) => {
+      const consumo = await tx.consumoMateriaPrima.findUnique({ where: { id } });
+      if (!consumo) throw new NotFoundException('Consumo no encontrado');
+
+      // Registrar movimiento de ingreso para deshacer el consumo
+      await tx.movimientoInventario.create({
+        data: {
+          tipo: 'INGRESO',
+          cantidad: consumo.cantidad,
+          observacion: `Reversión de consumo OP-${consumo.ordenProduccionId}`,
+          productoId: consumo.productoId,
+          almacenId: consumo.almacenId,
+        },
+      });
+
+      // Restaurar stock en almacén
+      const stock = await tx.stockAlmacen.findUnique({
+        where: {
+          productoId_almacenId: {
+            productoId: consumo.productoId,
+            almacenId: consumo.almacenId,
+          },
+        },
+      });
+
+      if (stock) {
+        await tx.stockAlmacen.update({
+          where: { id: stock.id },
+          data: { stockActual: { increment: consumo.cantidad } },
+        });
+      }
+
+      // Restaurar stock general
+      await tx.producto.update({
+        where: { id: consumo.productoId },
+        data: { stockActual: { increment: consumo.cantidad } },
+      });
+
+      // Eliminar el consumo
+      return tx.consumoMateriaPrima.delete({ where: { id } });
+    });
+  }
+
   async finish(id: number, data: any, userId: number) {
     return this.prisma.$transaction(async (tx: any) => {
       const cantidadReal = Number(data.cantidadReal);

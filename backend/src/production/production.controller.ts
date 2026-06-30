@@ -63,6 +63,11 @@ export class ProductionController {
     return this.productionService.deleteFile(+archivoId);
   }
 
+  @Delete('consumos/:consumoId')
+  async deleteConsumo(@Param('consumoId') consumoId: string) {
+    return this.productionService.deleteConsumo(+consumoId);
+  }
+
   @Delete(':id')
   async deleteOP(@Param('id') id: string) {
     return this.productionService.delete(+id);
