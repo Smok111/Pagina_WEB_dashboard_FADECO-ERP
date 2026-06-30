@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users, Upload, FileText, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users, Upload, FileText, Trash2, Image as ImageIcon, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { useSort } from "@/hooks/useSort";
 
 export default function ProduccionPage() {
@@ -206,6 +208,61 @@ export default function ProduccionPage() {
     }
   };
 
+  const descargarPDF = (op: any) => {
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(15, 23, 42);
+    doc.text("FADECO", 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Orden de Producción Finalizada", 14, 26);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`OP: ${op.codigoOP}`, 14, 40);
+    doc.text(`Fecha Inicio: ${new Date(op.fechaInicio).toLocaleDateString()}`, 14, 46);
+    doc.text(`Fecha Fin: ${new Date(op.fechaFin).toLocaleDateString()}`, 14, 52);
+    doc.text(`Producto: ${op.productoFinal?.nombre}`, 14, 58);
+    doc.text(`Cantidad Producida: ${op.cantidadReal}`, 14, 64);
+    doc.text(`Lote: ${op.lotes?.[0]?.numeroLote || 'N/A'}`, 14, 70);
+
+    const tableColumn = ["Operario", "Cargo", "Cantidad Producida"];
+    const tableRows = op.trabajadores?.map((t: any) => [
+      t.trabajador?.nombres + " " + (t.trabajador?.apellidos || ''),
+      t.trabajador?.cargo || 'Operario',
+      (Number(op.cantidadReal) / op.trabajadores.length).toFixed(2)
+    ]) || [];
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 80,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129] }
+    });
+
+    if (op.consumos && op.consumos.length > 0) {
+      const finalY = (doc as any).lastAutoTable.finalY || 80;
+      doc.text("Materia Prima Consumida:", 14, finalY + 15);
+      
+      const tableColumn2 = ["Insumo", "Cantidad"];
+      const tableRows2 = op.consumos.map((c: any) => [
+        c.producto?.nombre,
+        c.cantidad
+      ]);
+      
+      autoTable(doc, {
+        head: [tableColumn2],
+        body: tableRows2,
+        startY: finalY + 20,
+        theme: 'grid',
+        headStyles: { fillColor: [245, 158, 11] }
+      });
+    }
+
+    doc.save(`OP_${op.codigoOP}_Evidencia.pdf`);
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
@@ -396,8 +453,15 @@ export default function ProduccionPage() {
             {ordenesOrdenadas.filter(o => o.estado === 'FINALIZADA').map(op => (
               <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-emerald-500/20 opacity-80">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-mono text-emerald-400">{op.codigoOP}</span>
-                  <span className="text-[10px] text-slate-500">{new Date(op.fechaFin).toLocaleDateString()}</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-mono text-emerald-400 flex items-center gap-2">
+                      {op.codigoOP}
+                    </span>
+                    <span className="text-[10px] text-slate-500 mt-0.5">{new Date(op.fechaFin).toLocaleDateString()}</span>
+                  </div>
+                  <button onClick={() => descargarPDF(op)} className="text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/30 p-1.5 rounded-lg transition-colors" title="Descargar Evidencia en PDF">
+                    <Download size={14} />
+                  </button>
                 </div>
                 <h4 className="text-white font-medium mb-1">{op.productoFinal.nombre}</h4>
                 <div className="flex justify-between mt-3 text-sm">
