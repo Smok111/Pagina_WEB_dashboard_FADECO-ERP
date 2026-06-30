@@ -227,13 +227,23 @@ export default function ProduccionPage() {
     doc.text(`Lote: ${op.lotes?.[0]?.numeroLote || 'N/A'}`, 14, 70);
 
     const tableColumn = ["Operario", "Cargo", "Cantidad Producida"];
-    const tableRows = op.trabajadores && op.trabajadores.length > 0
-      ? op.trabajadores.map((t: any) => [
-          t.trabajador?.nombres + " " + (t.trabajador?.apellidos || ''),
-          t.trabajador?.cargo?.nombre || 'Operario',
-          (Number(op.cantidadReal) / op.trabajadores.length).toFixed(2)
-        ])
-      : [["Sin operarios asignados", "-", "-"]];
+    let tableRows: any[] = [];
+    
+    if (op.trabajadores && op.trabajadores.length > 0) {
+      tableRows = op.trabajadores.map((t: any) => [
+        t.trabajador?.nombres + " " + (t.trabajador?.apellidos || ''),
+        t.trabajador?.cargo?.nombre || 'Operario',
+        (Number(op.cantidadReal) / op.trabajadores.length).toFixed(2)
+      ]);
+    } else if (op.responsable) {
+      tableRows = [[
+        op.responsable.nombres + " " + (op.responsable.apellidos || ''),
+        'Responsable / Encargado',
+        Number(op.cantidadReal).toFixed(2)
+      ]];
+    } else {
+      tableRows = [["Sin operarios asignados", "-", "-"]];
+    }
 
     autoTable(doc, {
       head: [tableColumn],

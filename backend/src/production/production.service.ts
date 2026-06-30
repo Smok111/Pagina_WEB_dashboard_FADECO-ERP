@@ -64,6 +64,13 @@ export class ProductionService {
         areaProduccionId: data.areaProduccionId ? Number(data.areaProduccionId) : null,
         responsableId: data.responsableId ? Number(data.responsableId) : null,
         ventaId: data.ventaId ? Number(data.ventaId) : null,
+        ...(data.responsableId ? {
+          trabajadores: {
+            create: [
+              { trabajadorId: Number(data.responsableId) }
+            ]
+          }
+        } : {})
       },
     });
   }
