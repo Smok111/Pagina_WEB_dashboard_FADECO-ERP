@@ -24,7 +24,7 @@ export class ProductionService {
         observaciones: true,
         createdAt: true,
         productoFinal: { select: { id: true, nombre: true, codigo: true } },
-        trabajadores: { select: { trabajador: { select: { id: true, nombres: true, apellidos: true } } } },
+        trabajadores: { select: { trabajador: { select: { id: true, nombres: true, apellidos: true, cargo: { select: { nombre: true } } } } } },
         areaProduccion: { select: { id: true, nombre: true } },
         responsable: { select: { id: true, nombres: true, apellidos: true } },
         archivos: { select: { id: true, nombreArchivo: true, urlArchivo: true, tipoArchivo: true } },

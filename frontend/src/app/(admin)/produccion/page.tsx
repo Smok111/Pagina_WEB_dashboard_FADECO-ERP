@@ -208,7 +208,7 @@ export default function ProduccionPage() {
     }
   };
 
-  const descargarPDF = (op: any) => {
+  const descargarPDF = async (op: any) => {
     const doc = new jsPDF();
     doc.setFontSize(22);
     doc.setTextColor(15, 23, 42);
@@ -227,11 +227,13 @@ export default function ProduccionPage() {
     doc.text(`Lote: ${op.lotes?.[0]?.numeroLote || 'N/A'}`, 14, 70);
 
     const tableColumn = ["Operario", "Cargo", "Cantidad Producida"];
-    const tableRows = op.trabajadores?.map((t: any) => [
-      t.trabajador?.nombres + " " + (t.trabajador?.apellidos || ''),
-      t.trabajador?.cargo || 'Operario',
-      (Number(op.cantidadReal) / op.trabajadores.length).toFixed(2)
-    ]) || [];
+    const tableRows = op.trabajadores && op.trabajadores.length > 0
+      ? op.trabajadores.map((t: any) => [
+          t.trabajador?.nombres + " " + (t.trabajador?.apellidos || ''),
+          t.trabajador?.cargo?.nombre || 'Operario',
+          (Number(op.cantidadReal) / op.trabajadores.length).toFixed(2)
+        ])
+      : [["Sin operarios asignados", "-", "-"]];
 
     autoTable(doc, {
       head: [tableColumn],
@@ -258,6 +260,56 @@ export default function ProduccionPage() {
         theme: 'grid',
         headStyles: { fillColor: [245, 158, 11] }
       });
+    }
+
+    if (op.archivos && op.archivos.length > 0) {
+      const images = op.archivos.filter((a: any) => a.tipoArchivo?.includes('image'));
+      if (images.length > 0) {
+        for (const img of images) {
+          try {
+            doc.addPage();
+            doc.text(`Evidencia Adjunta: ${img.nombreArchivo}`, 14, 20);
+            
+            const imageElement = new Image();
+            imageElement.crossOrigin = "Anonymous";
+            imageElement.src = img.urlArchivo;
+            
+            await new Promise((resolve, reject) => {
+              imageElement.onload = resolve;
+              imageElement.onerror = reject;
+            });
+
+            const maxW = 180;
+            let imgW = imageElement.width;
+            let imgH = imageElement.height;
+            if (imgW > maxW) {
+              imgH = (imgH * maxW) / imgW;
+              imgW = maxW;
+            }
+            if (imgH > 250) {
+              imgW = (imgW * 250) / imgH;
+              imgH = 250;
+            }
+
+            doc.addImage(imageElement, 'JPEG', 15, 30, imgW, imgH);
+          } catch (e) {
+            console.error("Error loading image for PDF", e);
+          }
+        }
+      }
+
+      const pdfs = op.archivos.filter((a: any) => a.tipoArchivo?.includes('pdf'));
+      if (pdfs.length > 0) {
+        doc.addPage();
+        doc.setTextColor(15, 23, 42);
+        doc.text("Documentos Adjuntos (PDFs):", 14, 20);
+        let y = 30;
+        for (const pdf of pdfs) {
+           doc.setTextColor(59, 130, 246);
+           doc.textWithLink(pdf.nombreArchivo, 14, y, { url: pdf.urlArchivo });
+           y += 10;
+        }
+      }
     }
 
     doc.save(`OP_${op.codigoOP}_Evidencia.pdf`);
