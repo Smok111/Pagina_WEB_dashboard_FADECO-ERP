@@ -238,7 +238,7 @@ export default function ProduccionPage() {
     } else if (op.responsable) {
       tableRows = [[
         op.responsable.nombres + " " + (op.responsable.apellidos || ''),
-        'Responsable / Encargado',
+        op.responsable.cargo?.nombre || 'Responsable / Encargado',
         Number(op.cantidadReal).toFixed(2)
       ]];
     } else {
