@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Wrench, Settings2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Plus, X, Wrench, Settings2, AlertTriangle, CheckCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function MaintenancePage() {
@@ -75,6 +75,18 @@ export default function MaintenancePage() {
     if (res.ok) fetchData();
   };
 
+  const handleDeleteEquipo = async (id: number) => {
+    if (!confirm("¿Seguro que deseas eliminar este equipo? Se borrará todo su historial.")) return;
+    const res = await fetch(`/api/maintenance/equipos/${id}`, { method: "DELETE" });
+    if (res.ok) fetchData();
+  };
+
+  const handleDeleteMantenimiento = async (id: number) => {
+    if (!confirm("¿Seguro que deseas eliminar esta orden?")) return;
+    const res = await fetch(`/api/maintenance/mantenimientos/${id}`, { method: "DELETE" });
+    if (res.ok) fetchData();
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
@@ -114,6 +126,9 @@ export default function MaintenancePage() {
                   <h3 className="text-white font-medium">{eq.nombre}</h3>
                   <p className="text-sm text-slate-400">{eq.ubicacion}</p>
                 </div>
+                <button onClick={() => handleDeleteEquipo(eq.id)} className="text-red-400 hover:text-red-300 transition-colors p-2 hover:bg-red-500/10 rounded-lg">
+                  <Trash2 size={18} />
+                </button>
               </div>
             ))}
           </div>
@@ -138,9 +153,14 @@ export default function MaintenancePage() {
                     <p className="text-sm text-slate-400 line-clamp-2">{m.detalles}</p>
                     <p className="text-xs text-amber-400 mt-2 font-mono">Para: {new Date(m.fechaProgramada).toLocaleDateString()}</p>
                   </div>
-                  <button onClick={() => handleFinish(m.id)} className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 transition-colors">
-                    <CheckCircle size={16}/> Completar
-                  </button>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <button onClick={() => handleFinish(m.id)} className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1 transition-colors">
+                      <CheckCircle size={16}/> Completar
+                    </button>
+                    <button onClick={() => handleDeleteMantenimiento(m.id)} className="text-red-400 hover:text-red-300 transition-colors p-1.5 hover:bg-red-500/10 rounded-lg flex items-center justify-center gap-1 text-xs">
+                      <Trash2 size={14}/> Eliminar
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

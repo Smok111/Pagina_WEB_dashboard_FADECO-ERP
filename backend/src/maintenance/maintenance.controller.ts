@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { MaintenanceService } from './maintenance.service';
 
 @Controller('api/maintenance')
@@ -28,5 +28,15 @@ export class MaintenanceController {
   @Patch('mantenimientos/:id/finish')
   finishMantenimiento(@Param('id') id: string, @Body() data: any) {
     return this.maintenanceService.finishMantenimiento(+id, data);
+  }
+
+  @Delete('equipos/:id')
+  deleteEquipo(@Param('id') id: string) {
+    return this.maintenanceService.deleteEquipo(+id);
+  }
+
+  @Delete('mantenimientos/:id')
+  deleteMantenimiento(@Param('id') id: string) {
+    return this.maintenanceService.deleteMantenimiento(+id);
   }
 }
