@@ -213,12 +213,15 @@ export default function ProductosPage() {
         body: JSON.stringify({ id }),
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al eliminar");
+      }
 
       toast.success("Producto eliminado");
       await cargarProductos();
-    } catch (error) {
-      toast.error("No se pudo eliminar el producto");
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo eliminar el producto");
     }
   }
 

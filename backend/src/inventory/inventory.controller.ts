@@ -297,8 +297,17 @@ export class InventoryController {
 
   @Delete('productos')
   async deleteProducto(@Body() body: any) {
-    await this.prisma.producto.delete({ where: { id: Number(body.id) } });
-    return { ok: true };
+    const id = Number(body.id);
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.stockAlmacen.deleteMany({ where: { productoId: id } });
+        await tx.movimientoInventario.deleteMany({ where: { productoId: id } });
+        await tx.producto.delete({ where: { id } });
+      });
+      return { ok: true };
+    } catch (error) {
+      throw new BadRequestException('No se puede eliminar el producto porque tiene historial de ventas, compras o producción. Por favor, editelo para cambiar su estado a inactivo en lugar de eliminarlo.');
+    }
   }
 
   @Patch('productos/:id')
