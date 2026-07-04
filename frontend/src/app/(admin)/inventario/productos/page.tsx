@@ -62,7 +62,7 @@ interface Producto {
   createdAt?: string;
 }
 
-type SortField = "codigo" | "nombre" | "categoria" | "stockActual" | "precioVenta" | "createdAt";
+type SortField = "codigo" | "nombre" | "categoria" | "stockActual" | "precioVenta" | "estado" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 export default function ProductosPage() {
@@ -92,6 +92,7 @@ export default function ProductosPage() {
   const [stockMinimo, setStockMinimo] = useState("0");
   const [costo, setCosto] = useState("0");
   const [precioVenta, setPrecioVenta] = useState("0");
+  const [estado, setEstado] = useState(true);
 
   async function cargarCategorias() {
     try {
@@ -152,6 +153,7 @@ export default function ProductosPage() {
       setStockMinimo(String(producto.stockMinimo));
       setCosto(String(producto.costo));
       setPrecioVenta(String(producto.precioVenta));
+      setEstado(producto.estado);
     } else {
       setEditandoId(null);
       setNombre("");
@@ -163,6 +165,7 @@ export default function ProductosPage() {
       setStockMinimo("0");
       setCosto("0");
       setPrecioVenta("0");
+      setEstado(true);
     }
     setIsDialogOpen(true);
   }
@@ -185,6 +188,7 @@ export default function ProductosPage() {
         stockMinimo,
         costo,
         precioVenta,
+        estado,
       };
 
       const response = await fetch("/api/inventory/productos", {
@@ -212,14 +216,29 @@ export default function ProductosPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al eliminar");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Error al eliminar (puede tener historial de movimientos)");
       }
 
       toast.success("Producto eliminado");
       await cargarProductos();
     } catch (error: any) {
-      toast.error(error.message || "No se pudo eliminar el producto");
+      toast.error(error.message || "No se pudo eliminar el producto. Si tiene historial, intente cambiar su estado a Inactivo.");
+    }
+  }
+
+  async function cambiarEstado(id: number, estadoActual: boolean) {
+    try {
+      const response = await fetch(`/api/inventory/productos/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: !estadoActual }),
+      });
+      if (!response.ok) throw new Error();
+      await cargarProductos();
+      toast.success(estadoActual ? "Producto desactivado" : "Producto activado");
+    } catch (e) {
+      toast.error("Error al cambiar el estado");
     }
   }
 
@@ -411,8 +430,8 @@ export default function ProductosPage() {
                   <TableHead>Unidad</TableHead>
                   {renderSortableHeader("stockActual", "Stock", "right")}
                   {renderSortableHeader("precioVenta", "Precio", "right")}
-                  {renderSortableHeader("createdAt", "Fecha Creado", "right")}
-                  <TableHead className="w-[100px] text-center">Acciones</TableHead>
+                  {renderSortableHeader("estado", "Estado", "center")}
+                  <TableHead className="w-[150px] text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -435,18 +454,23 @@ export default function ProductosPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">S/ {producto.precioVenta}</TableCell>
-                      <TableCell className="text-right text-xs text-slate-500">
-                        {producto.createdAt ? new Date(producto.createdAt).toLocaleDateString() : "-"}
+                      <TableCell className="text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${producto.estado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {producto.estado ? "Activo" : "Inactivo"}
+                        </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" title="Ver Kardex" className="h-8 w-8 text-emerald-600" onClick={() => abrirKardex(producto)}>
                             <ClipboardList className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => abrirModal(producto)}>
+                          <Button variant="ghost" size="icon" title={producto.estado ? "Desactivar" : "Activar"} className={`h-8 w-8 ${producto.estado ? 'text-orange-500' : 'text-green-600'}`} onClick={() => cambiarEstado(producto.id, producto.estado)}>
+                            {producto.estado ? "🚫" : "✅"}
+                          </Button>
+                          <Button variant="ghost" size="icon" title="Editar" className="h-8 w-8 text-blue-600" onClick={() => abrirModal(producto)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => eliminarProducto(producto.id)}>
+                          <Button variant="ghost" size="icon" title="Eliminar" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => eliminarProducto(producto.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -530,6 +554,20 @@ export default function ProductosPage() {
               <Label>Precio de Venta (S/)</Label>
               <Input type="number" step="0.01" value={precioVenta} onChange={(e) => setPrecioVenta(e.target.value)} />
             </div>
+
+            {editandoId && (
+              <div className="space-y-2 col-span-2">
+                <Label>Estado del Producto</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <div className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out ${estado ? 'bg-green-500' : 'bg-slate-300'}`} onClick={() => setEstado(!estado)}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${estado ? 'translate-x-6' : 'translate-x-0'}`} />
+                  </div>
+                  <span className={`text-sm font-medium ${estado ? 'text-green-700' : 'text-slate-500'}`}>
+                    {estado ? "Activo (Visible en ventas)" : "Inactivo (Oculto en ventas)"}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
