@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen } from "lucide-react";
+import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen, Trash2 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
+import { toast } from "sonner";
 
 export default function ComprasPage() {
   const [compras, setCompras] = useState<any[]>([]);
@@ -150,6 +151,23 @@ export default function ComprasPage() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("¿Está seguro de anular esta compra? Se revertirá el stock ingresado al almacén.")) return;
+    try {
+      const res = await fetch(`/api/purchases/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Compra anulada correctamente. Stock revertido.");
+        fetchData();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(`Error al anular: ${errorData.message || "Error desconocido"}`);
+      }
+    } catch (error) {
+      console.error("Error deleting purchase:", error);
+      toast.error("Ocurrió un error al intentar anular la compra");
+    }
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
@@ -179,6 +197,7 @@ export default function ComprasPage() {
                 <SortableTableHead label="Documento" field="tipoDocumento" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <SortableTableHead label="Estado" field="estado" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <SortableTableHead label="Total" field="total" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} align="right" className="px-6 py-4" />
+                <th className="px-6 py-4 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm text-slate-300">
@@ -202,6 +221,11 @@ export default function ComprasPage() {
                   </td>
                   <td className="px-6 py-4 text-right font-medium text-white">
                     {formatCurrency(compra.total)}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button onClick={() => handleDelete(compra.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Anular Compra">
+                      <Trash2 size={18} />
+                    </button>
                   </td>
                 </tr>
               ))}

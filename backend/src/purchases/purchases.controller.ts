@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('api/purchases')
@@ -120,5 +120,71 @@ export class PurchasesController {
       }
       return compra;
     });
+  }
+
+  @Delete(':id')
+  async deletePurchase(@Param('id') id: string) {
+    const compraId = Number(id);
+    try {
+      return await this.prisma.$transaction(async (tx: any) => {
+        const compra = await tx.compra.findUnique({
+          where: { id: compraId },
+          include: { detalles: true },
+        });
+        if (!compra) throw new BadRequestException('Compra no encontrada');
+
+        // Si la compra ya fue recibida, revertir el stock
+        if (compra.estado === 'RECIBIDA') {
+          for (const detalle of compra.detalles) {
+            const stock = await tx.stockAlmacen.findUnique({
+              where: {
+                productoId_almacenId: {
+                  productoId: detalle.productoId,
+                  almacenId: compra.almacenId,
+                },
+              },
+            });
+
+            if (stock) {
+              const nuevoStock = Math.max(0, Number(stock.stockActual) - Number(detalle.cantidad));
+              await tx.stockAlmacen.update({
+                where: { id: stock.id },
+                data: { stockActual: nuevoStock },
+              });
+            }
+
+            // Registrar movimiento de salida por anulación
+            await tx.movimientoInventario.create({
+              data: {
+                tipo: 'SALIDA',
+                cantidad: detalle.cantidad,
+                observacion: `Anulación de compra ${compra.codigoSistema}`,
+                productoId: detalle.productoId,
+                almacenId: compra.almacenId,
+              },
+            });
+
+            // Recalcular producto.stockActual
+            const allStocks = await tx.stockAlmacen.findMany({
+              where: { productoId: detalle.productoId },
+            });
+            const totalStock = allStocks.reduce(
+              (sum: number, s: any) => sum + Math.max(0, Number(s.stockActual)),
+              0,
+            );
+            await tx.producto.update({
+              where: { id: detalle.productoId },
+              data: { stockActual: totalStock },
+            });
+          }
+        }
+
+        await tx.detalleCompra.deleteMany({ where: { compraId } });
+        await tx.compra.delete({ where: { id: compraId } });
+        return { ok: true };
+      });
+    } catch (error: any) {
+      throw new BadRequestException(error.message || 'No se pudo eliminar la compra');
+    }
   }
 }
