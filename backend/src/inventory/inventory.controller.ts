@@ -53,8 +53,12 @@ export class InventoryController {
 
   @Delete('categorias/:id')
   async deleteCategoria(@Param('id') id: string) {
-    await this.prisma.categoria.delete({ where: { id: Number(id) } });
-    return { ok: true };
+    try {
+      await this.prisma.categoria.delete({ where: { id: Number(id) } });
+      return { ok: true };
+    } catch (error: any) {
+      throw new BadRequestException('No se puede eliminar la categoría porque tiene productos asociados. Elimine o reasigne los productos primero.');
+    }
   }
 
   // --- UNIDADES MEDIDA ---
@@ -83,8 +87,12 @@ export class InventoryController {
 
   @Delete('unidades-medida/:id')
   async deleteUnidad(@Param('id') id: string) {
-    await this.prisma.unidadMedida.delete({ where: { id: Number(id) } });
-    return { ok: true };
+    try {
+      await this.prisma.unidadMedida.delete({ where: { id: Number(id) } });
+      return { ok: true };
+    } catch (error: any) {
+      throw new BadRequestException('No se puede eliminar la unidad porque tiene productos asociados. Elimine o reasigne los productos primero.');
+    }
   }
 
   // --- ALMACENES ---
@@ -135,8 +143,16 @@ export class InventoryController {
 
   @Delete('almacenes/:id')
   async deleteAlmacen(@Param('id') id: string) {
-    await this.prisma.almacen.delete({ where: { id: Number(id) } });
-    return { ok: true };
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.stockAlmacen.deleteMany({ where: { almacenId: Number(id) } });
+        await tx.movimientoInventario.deleteMany({ where: { almacenId: Number(id) } });
+        await tx.almacen.delete({ where: { id: Number(id) } });
+      });
+      return { ok: true };
+    } catch (error: any) {
+      throw new BadRequestException('No se puede eliminar el almacén porque tiene compras o consumos asociados.');
+    }
   }
 
   // --- PRODUCTOS ---
@@ -298,15 +314,55 @@ export class InventoryController {
   @Delete('productos/:id')
   async deleteProducto(@Param('id') paramId: string) {
     const id = Number(paramId);
+    if (isNaN(id)) {
+      throw new BadRequestException('ID de producto inválido');
+    }
     try {
       await this.prisma.$transaction(async (tx) => {
+        // 1. Buscar órdenes de producción vinculadas al producto
+        const ordenes = await tx.ordenProduccion.findMany({
+          where: { productoFinalId: id },
+          select: { id: true },
+        });
+        const ordenIds = ordenes.map((o) => o.id);
+
+        if (ordenIds.length > 0) {
+          // 2. Eliminar sub-relaciones de órdenes de producción
+          await tx.archivoProduccion.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.incidenciaProduccion.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.controlCalidad.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.estadoProduccion.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.kardexProduccion.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.ordenProduccionTrabajador.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.lote.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          await tx.consumoMateriaPrima.deleteMany({ where: { ordenProduccionId: { in: ordenIds } } });
+          // 3. Eliminar las órdenes de producción
+          await tx.ordenProduccion.deleteMany({ where: { productoFinalId: id } });
+        }
+
+        // 4. Eliminar consumos de materia prima donde ESTE producto fue la materia prima
+        await tx.consumoMateriaPrima.deleteMany({ where: { productoId: id } });
+
+        // 5. Eliminar kardex de producción donde este producto aparece
+        await tx.kardexProduccion.deleteMany({ where: { productoId: id } });
+
+        // 6. Eliminar detalles de compra y venta
+        await tx.detalleCompra.deleteMany({ where: { productoId: id } });
+        await tx.detalleVenta.deleteMany({ where: { productoId: id } });
+
+        // 7. Eliminar stock y movimientos de inventario
         await tx.stockAlmacen.deleteMany({ where: { productoId: id } });
         await tx.movimientoInventario.deleteMany({ where: { productoId: id } });
+
+        // 8. Finalmente, eliminar el producto
         await tx.producto.delete({ where: { id } });
       });
       return { ok: true };
-    } catch (error) {
-      throw new BadRequestException('No se puede eliminar el producto porque tiene historial de ventas, compras o producción. Por favor, editelo para cambiar su estado a inactivo en lugar de eliminarlo.');
+    } catch (error: any) {
+      console.error('Error al eliminar producto:', error?.message || error);
+      throw new BadRequestException(
+        `No se pudo eliminar el producto: ${error?.message || 'Error desconocido'}`,
+      );
     }
   }
 
