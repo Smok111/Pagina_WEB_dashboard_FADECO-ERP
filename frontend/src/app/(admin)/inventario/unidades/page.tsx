@@ -143,13 +143,9 @@ export default function UnidadesPage() {
 
     try {
       const response = await fetch(
-        `/api/inventory/unidades-medida`,
+        `/api/inventory/unidades-medida/${id}`,
         {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
         }
       );
 

@@ -51,9 +51,9 @@ export class InventoryController {
     });
   }
 
-  @Delete('categorias')
-  async deleteCategoria(@Body() body: any) {
-    await this.prisma.categoria.delete({ where: { id: Number(body.id) } });
+  @Delete('categorias/:id')
+  async deleteCategoria(@Param('id') id: string) {
+    await this.prisma.categoria.delete({ where: { id: Number(id) } });
     return { ok: true };
   }
 
@@ -81,9 +81,9 @@ export class InventoryController {
     });
   }
 
-  @Delete('unidades-medida')
-  async deleteUnidad(@Body() body: any) {
-    await this.prisma.unidadMedida.delete({ where: { id: Number(body.id) } });
+  @Delete('unidades-medida/:id')
+  async deleteUnidad(@Param('id') id: string) {
+    await this.prisma.unidadMedida.delete({ where: { id: Number(id) } });
     return { ok: true };
   }
 
@@ -94,9 +94,9 @@ export class InventoryController {
   }
 
   @Get('almacenes/:id')
-  async getAlmacen(@Param('id') id: string) {
+  async getAlmacen(@Param('id') idParam: string) {
     const almacen = await this.prisma.almacen.findUnique({
-      where: { id: Number(id) },
+      where: { id: Number(idParam) },
       include: { stocks: { include: { producto: true } } },
     });
     if (almacen && almacen.stocks) {
@@ -133,9 +133,9 @@ export class InventoryController {
     });
   }
 
-  @Delete('almacenes')
-  async deleteAlmacen(@Body() body: any) {
-    await this.prisma.almacen.delete({ where: { id: Number(body.id) } });
+  @Delete('almacenes/:id')
+  async deleteAlmacen(@Param('id') id: string) {
+    await this.prisma.almacen.delete({ where: { id: Number(id) } });
     return { ok: true };
   }
 
@@ -195,9 +195,9 @@ export class InventoryController {
   }
 
   @Get('productos/:id/kardex')
-  async getKardex(@Param('id') id: string) {
+  async getKardex(@Param('id') idParam: string) {
     const movimientos = await this.prisma.movimientoInventario.findMany({
-      where: { productoId: Number(id) },
+      where: { productoId: Number(idParam) },
       orderBy: { fecha: 'asc' },
       include: { almacen: true },
     });
@@ -295,9 +295,9 @@ export class InventoryController {
     return updated;
   }
 
-  @Delete('productos')
-  async deleteProducto(@Body() body: any) {
-    const id = Number(body.id);
+  @Delete('productos/:id')
+  async deleteProducto(@Param('id') paramId: string) {
+    const id = Number(paramId);
     try {
       await this.prisma.$transaction(async (tx) => {
         await tx.stockAlmacen.deleteMany({ where: { productoId: id } });

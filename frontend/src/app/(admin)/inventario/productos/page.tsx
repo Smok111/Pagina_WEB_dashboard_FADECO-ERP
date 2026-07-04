@@ -207,10 +207,8 @@ export default function ProductosPage() {
     if (!confirm("¿Deseas eliminar este producto de forma permanente?")) return;
 
     try {
-      const response = await fetch("/api/inventory/productos", {
+      const response = await fetch(`/api/inventory/productos/${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {

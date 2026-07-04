@@ -101,13 +101,9 @@ export default function CategoriasPage() {
 
     try {
       const response = await fetch(
-        `/api/inventory/categorias`,
+        `/api/inventory/categorias/${id}`,
         {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
         }
       );
 
