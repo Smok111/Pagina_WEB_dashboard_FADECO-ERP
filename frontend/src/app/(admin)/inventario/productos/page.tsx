@@ -430,7 +430,7 @@ export default function ProductosPage() {
                   <TableHead>Unidad</TableHead>
                   {renderSortableHeader("stockActual", "Stock", "right")}
                   {renderSortableHeader("precioVenta", "Precio", "right")}
-                  {renderSortableHeader("estado", "Estado", "center")}
+                  {renderSortableHeader("estado", "Estado")}
                   <TableHead className="w-[150px] text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
