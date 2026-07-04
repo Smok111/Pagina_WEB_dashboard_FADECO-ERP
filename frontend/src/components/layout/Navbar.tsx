@@ -54,12 +54,16 @@ export default function Navbar() {
     return { title, isLast };
   });
 
-  const fecha = new Date().toLocaleDateString("es-PE", {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const [fecha, setFecha] = useState("");
+
+  useEffect(() => {
+    setFecha(new Date().toLocaleDateString("es-PE", {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }));
+  }, []);
 
   return (
     <header className="h-[72px] bg-background/80 backdrop-blur-xl border-b border-border sticky top-0 z-40 flex items-center justify-between px-6 lg:px-10 transition-all duration-200">
