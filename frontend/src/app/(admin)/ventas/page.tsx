@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Save, ArrowRight, Receipt, Plus, Download, ExternalLink } from "lucide-react";
+import { Search, X, Save, ArrowRight, Receipt, Plus, Download, ExternalLink, Trash2 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { toast } from "sonner";
 
 export default function VentasPage() {
   const [ventas, setVentas] = useState<any[]>([]);
@@ -268,6 +269,23 @@ export default function VentasPage() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("¿Está seguro de anular esta venta? Esta acción devolverá el stock a los almacenes.")) return;
+    try {
+      const res = await fetch(`/api/sales/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Venta anulada correctamente");
+        fetchData();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(`Error al anular: ${errorData.message || "Error desconocido"}`);
+      }
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+      toast.error("Ocurrió un error al intentar anular la venta");
+    }
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8 shrink-0">
@@ -328,7 +346,10 @@ export default function VentasPage() {
                     <button onClick={() => descargarComprobante(venta)} className="text-emerald-400 hover:text-emerald-300 transition-colors" title={`Descargar ${venta.tipoDocumento}`}>
                       <Download size={18} />
                     </button>
-                    <span className="font-medium text-emerald-400">+ {formatCurrency(venta.total)}</span>
+                    <button onClick={() => handleDelete(venta.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Anular Venta">
+                      <Trash2 size={18} />
+                    </button>
+                    <span className="font-medium text-emerald-400 min-w-[80px] text-right">+ {formatCurrency(venta.total)}</span>
                   </td>
                 </tr>
               ))}

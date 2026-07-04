@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Delete, Param } from '@nestjs/common';
 import { SalesService } from './sales.service';
 
 @Controller('api/sales')
@@ -8,6 +8,11 @@ export class SalesController {
   @Get()
   findAll() {
     return this.salesService.findAll();
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.salesService.delete(Number(id));
   }
 
   @Get('clientes')

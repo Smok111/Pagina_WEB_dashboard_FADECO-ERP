@@ -156,4 +156,75 @@ export class SalesService {
       return venta;
     });
   }
+
+  async delete(id: number) {
+    return this.prisma.$transaction(async (tx: any) => {
+      const venta = await tx.venta.findUnique({
+        where: { id },
+        include: { detalles: true },
+      });
+      if (!venta) throw new BadRequestException('Venta no encontrada');
+
+      // Si la venta estaba completada, devolver el stock
+      if (venta.estado === 'COMPLETADA') {
+        for (const detalle of venta.detalles) {
+          let stockRecord = await tx.stockAlmacen.findFirst({
+            where: { productoId: detalle.productoId },
+          });
+
+          if (stockRecord) {
+            await tx.stockAlmacen.update({
+              where: { id: stockRecord.id },
+              data: { stockActual: Number(stockRecord.stockActual) + Number(detalle.cantidad) },
+            });
+          } else {
+            const almacen = await tx.almacen.findFirst();
+            if (almacen) {
+              await tx.stockAlmacen.create({
+                data: {
+                  productoId: detalle.productoId,
+                  almacenId: almacen.id,
+                  stockActual: detalle.cantidad,
+                },
+              });
+            }
+          }
+
+          // Registrar el ingreso por anulación
+          await tx.movimientoInventario.create({
+            data: {
+              tipo: 'INGRESO',
+              cantidad: detalle.cantidad,
+              observacion: `Anulación de venta ${venta.codigoSistema}`,
+              productoId: detalle.productoId,
+              almacenId: stockRecord ? stockRecord.almacenId : 1,
+            },
+          });
+
+          // Recalcular producto.stockActual
+          const allStocks = await tx.stockAlmacen.findMany({
+            where: { productoId: detalle.productoId },
+          });
+          const totalStock = allStocks.reduce(
+            (sum: number, s: any) => sum + Math.max(0, Number(s.stockActual)),
+            0,
+          );
+          await tx.producto.update({
+            where: { id: detalle.productoId },
+            data: { stockActual: totalStock },
+          });
+        }
+      }
+
+      await tx.detalleVenta.deleteMany({ where: { ventaId: id } });
+
+      await tx.ordenProduccion.updateMany({
+        where: { ventaId: id },
+        data: { ventaId: null },
+      });
+
+      await tx.venta.delete({ where: { id } });
+      return { ok: true };
+    });
+  }
 }
