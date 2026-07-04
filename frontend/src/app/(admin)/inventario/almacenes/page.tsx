@@ -161,9 +161,13 @@ export default function AlmacenesPage() {
 
     try {
       const response = await fetch(
-        `/api/inventory/almacenes/${id}`,
+        `/api/inventory/almacenes`,
         {
           method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
         }
       );
 
