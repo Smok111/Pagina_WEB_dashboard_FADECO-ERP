@@ -172,6 +172,7 @@ model Almacen {
 
   compras  Compra[]
   consumos ConsumoMateriaPrima[]
+  equipos  Equipo[]
 }
 
 model StockAlmacen {
@@ -388,11 +389,21 @@ model Lote {
 
 // --- MÓDULO MANTENIMIENTO ---
 model Equipo {
-  id             Int                   @id @default(autoincrement())
-  codigo         String                @unique
-  nombre         String
-  ubicacion      String?
-  estado         String                @default("OPERATIVO") // OPERATIVO, EN_MANTENIMIENTO, INACTIVO
+  id              Int                   @id @default(autoincrement())
+  codigo          String                @unique
+  nombre          String
+  descripcion     String?
+  ubicacion       String?
+  marca           String?
+  modelo          String?
+  serie           String?               @unique
+  anioAdquisicion Int?
+  costo           Decimal               @default(0)
+  estado          String                @default("OPERATIVO") // OPERATIVO, EN_MANTENIMIENTO, INACTIVO
+
+  almacenId      Int?
+  almacen        Almacen?              @relation(fields: [almacenId], references: [id])
+
   mantenimientos MantenimientoEquipo[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt

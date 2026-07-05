@@ -22,6 +22,7 @@ import {
   MoreVertical,
   Users,
   Wrench,
+  Cog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/providers/AccessibilityProvider";
@@ -51,6 +52,7 @@ export default function Sidebar() {
         { nombre: "Unidades", icono: Scale, ruta: "/inventario/unidades", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
         { nombre: "Productos", icono: Package, ruta: "/inventario/productos", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
         { nombre: "Almacenes", icono: Warehouse, ruta: "/inventario/almacenes", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
+        { nombre: "Maquinaria", icono: Cog, ruta: "/inventario/maquinaria", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
       ],
     },
     {

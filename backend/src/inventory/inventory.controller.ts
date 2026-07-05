@@ -374,6 +374,80 @@ export class InventoryController {
     });
   }
 
+  // --- MAQUINARIA ---
+  @Get('maquinaria')
+  async getMaquinaria() {
+    return this.prisma.equipo.findMany({
+      include: { almacen: true },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  @Post('maquinaria')
+  async createMaquinaria(@Body() data: any) {
+    const ultimo = await this.prisma.equipo.findFirst({
+      orderBy: { id: 'desc' },
+    });
+    const codigo =
+      data.codigo || `MAQ-${String((ultimo?.id || 0) + 1).padStart(4, '0')}`;
+
+    return this.prisma.equipo.create({
+      data: {
+        codigo,
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        ubicacion: data.ubicacion,
+        marca: data.marca,
+        modelo: data.modelo,
+        serie: data.serie || null,
+        anioAdquisicion: data.anioAdquisicion ? Number(data.anioAdquisicion) : null,
+        costo: Number(data.costo || 0),
+        estado: data.estado || 'OPERATIVO',
+        almacenId: data.almacenId ? Number(data.almacenId) : null,
+      },
+    });
+  }
+
+  @Put('maquinaria')
+  async updateMaquinaria(@Body() data: any) {
+    return this.prisma.equipo.update({
+      where: { id: Number(data.id) },
+      data: {
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        ubicacion: data.ubicacion,
+        marca: data.marca,
+        modelo: data.modelo,
+        serie: data.serie || null,
+        anioAdquisicion: data.anioAdquisicion ? Number(data.anioAdquisicion) : null,
+        costo: Number(data.costo || 0),
+        estado: data.estado,
+        almacenId: data.almacenId ? Number(data.almacenId) : null,
+      },
+    });
+  }
+
+  @Delete('maquinaria/:id')
+  async deleteMaquinaria(@Param('id') id: string) {
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.mantenimientoEquipo.deleteMany({ where: { equipoId: Number(id) } });
+        await tx.equipo.delete({ where: { id: Number(id) } });
+      });
+      return { ok: true };
+    } catch (error: any) {
+      throw new BadRequestException('No se puede eliminar la maquinaria.');
+    }
+  }
+
+  @Patch('maquinaria/:id')
+  async patchMaquinaria(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.equipo.update({
+      where: { id: Number(id) },
+      data: { estado: body.estado },
+    });
+  }
+
   // --- SINCRONIZAR STOCKS (producto = suma de almacenes) ---
   @Patch('sync-stocks')
   async syncStocks() {
