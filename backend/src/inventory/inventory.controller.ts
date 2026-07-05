@@ -105,7 +105,10 @@ export class InventoryController {
   async getAlmacen(@Param('id') idParam: string) {
     const almacen = await this.prisma.almacen.findUnique({
       where: { id: Number(idParam) },
-      include: { stocks: { include: { producto: true } } },
+      include: { 
+        stocks: { include: { producto: true } },
+        equipos: true
+      },
     });
     if (almacen && almacen.stocks) {
       almacen.stocks = almacen.stocks.map((s: any) => ({

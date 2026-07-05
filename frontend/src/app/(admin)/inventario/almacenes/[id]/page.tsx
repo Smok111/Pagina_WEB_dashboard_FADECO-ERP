@@ -118,6 +118,55 @@ export default function StockAlmacenPage() {
                 </tr>
               ))
             )}
+        </table>
+      </div>
+
+      {/* NUEVA SECCIÓN DE MAQUINARIA */}
+      <div className="bg-white rounded-2xl shadow-sm mt-8">
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-semibold">
+            Maquinaria y Equipos
+          </h2>
+        </div>
+
+        <table className="w-full">
+          <thead>
+            <tr className="bg-slate-50 border-b">
+              <th className="text-left p-4">Código</th>
+              <th className="text-left p-4">Nombre / Modelo</th>
+              <th className="text-left p-4">Estado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {(!almacen.equipos || almacen.equipos.length === 0) ? (
+              <tr>
+                <td colSpan={3} className="p-8 text-center text-slate-500">
+                  No hay maquinaria asignada a este almacén.
+                </td>
+              </tr>
+            ) : (
+              almacen.equipos.map((equipo: any) => (
+                <tr key={equipo.id} className="border-b">
+                  <td className="p-4 font-mono text-sm">
+                    {equipo.codigo}
+                  </td>
+                  <td className="p-4">
+                    <div className="font-medium">{equipo.nombre}</div>
+                    <div className="text-xs text-slate-500">{equipo.marca} {equipo.modelo}</div>
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      equipo.estado === "OPERATIVO" ? "bg-emerald-100 text-emerald-700" :
+                      equipo.estado === "EN_MANTENIMIENTO" ? "bg-amber-100 text-amber-700" :
+                      "bg-red-100 text-red-700"
+                    }`}>
+                      {equipo.estado === "EN_MANTENIMIENTO" ? "En Mtto." : equipo.estado}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
