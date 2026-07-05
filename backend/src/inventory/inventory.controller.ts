@@ -280,23 +280,29 @@ export class InventoryController {
     const unidadMap = new Map(unidades.map(u => [u.nombre.toUpperCase(), u.id]));
     const defaultUniId = unidades[0]?.id || 1;
 
-    for (const item of data) {
-      const codigo = item.CODIGO || item.codigo;
-      const nombre = item.PRODUCTO || item.nombre || item.NOMBRE || 'Producto Importado';
+    for (const rawItem of data) {
+      // Normalize keys to avoid issues with spaces or casing from Excel headers
+      const item: any = {};
+      for (const key in rawItem) {
+        item[key.trim().toUpperCase()] = rawItem[key];
+      }
+
+      const codigo = item.CODIGO || item.codigo || item.CÓDIGO;
+      const nombre = item.PRODUCTO || item.NOMBRE || item.nombre || 'Producto Importado';
       const marca = item.MARCA || item.marca || null;
       const color = item.COLOR || item.color || null;
-      const unidadNombre = item.UNIDAD || item.unidad || '';
+      const unidadNombre = item.UNIDAD || item.unidad || item.MEDIDA || '';
       
       let unidadId = defaultUniId;
       if (unidadNombre) {
-        const foundId = unidadMap.get(unidadNombre.toUpperCase());
+        const foundId = unidadMap.get(unidadNombre.toUpperCase().trim());
         if (foundId) unidadId = foundId;
       }
       
       const stockActual = Number(item.STOCK || item.stockActual || item.stock || 0);
-      const stockMinimo = Number(item.stockMinimo || 0);
-      const costo = Number(item.costo || 0);
-      const precioVenta = Number(item.precioVenta || 0);
+      const stockMinimo = Number(item.STOCKMINIMO || item.stockMinimo || 0);
+      const costo = Number(item.COSTO || item.costo || 0);
+      const precioVenta = Number(item.PRECIO || item.PRECIOVENTA || item.precioVenta || 0);
 
       if (codigo) {
         // Try to update existing
