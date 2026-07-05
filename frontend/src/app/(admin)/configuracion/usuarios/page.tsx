@@ -142,8 +142,8 @@ export default function UsuariosPage() {
           </div>
         </div>
 
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-left">
+        <div className="overflow-auto flex-1 w-full">
+          <table className="w-full text-left min-w-[800px]">
             <thead className="sticky top-0 bg-[#1A2235] z-10">
               <tr className="border-b border-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 <SortableTableHead label="Usuario" field="nombres" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
