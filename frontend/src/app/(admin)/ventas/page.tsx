@@ -188,16 +188,15 @@ export default function VentasPage() {
     
     // Add Logo
     try {
-      const img = new Image();
-      img.src = '/logo-fadeco.png';
-      await new Promise((resolve) => {
-        img.onload = resolve;
-        img.onerror = resolve; 
+      const response = await fetch('/logo-fadeco.png');
+      const blob = await response.blob();
+      const base64data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
       });
-      if (img.width > 0) {
-        // Center the logo in the top left
-        doc.addImage(img, 'PNG', 15, 12, 45, 30);
-      }
+      doc.addImage(base64data as string, 'PNG', 15, 12, 45, 30);
     } catch (e) {
       console.error("Error loading logo", e);
     }
@@ -239,10 +238,10 @@ export default function VentasPage() {
     
     // Marcar la X
     doc.setTextColor(0, 0, 0);
-    if (venta.tipoDocumento === "NOTA DE VENTA") {
-      doc.text("X", 189, 24);
-    } else {
+    if (venta.tipoDocumento === "PROFORMA") {
       doc.text("X", 189, 19);
+    } else {
+      doc.text("X", 189, 24);
     }
 
     // Código autogenerado en Rojo
