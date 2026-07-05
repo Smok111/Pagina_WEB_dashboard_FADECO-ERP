@@ -417,9 +417,9 @@ export default function NuevaCompraPage() {
       </div>
 
       {isNewProviderModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl relative">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white shrink-0">
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <Plus className="text-blue-500" /> Nuevo Proveedor
               </h3>
@@ -428,7 +428,7 @@ export default function NuevaCompraPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateProvider} className="p-6 space-y-4">
+            <form onSubmit={handleCreateProvider} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="mb-1.5 block">RUC *</Label>

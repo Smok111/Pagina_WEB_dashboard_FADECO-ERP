@@ -562,12 +562,12 @@ export default function ProduccionPage() {
       <AnimatePresence>
         {isNewOpOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><Settings className="text-orange-500"/> Crear Orden de Producción</h3>
                 <button onClick={() => setIsNewOpOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
-              <form onSubmit={handleCreateOP} className="p-6">
+              <form onSubmit={handleCreateOP} className="p-6 overflow-y-auto flex-1">
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Producto a Fabricar</label>
                   <select required value={productoFinalId} onChange={e => setProductoFinalId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
@@ -618,16 +618,16 @@ export default function ProduccionPage() {
       <AnimatePresence>
         {isConsumoOpen && activeOp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><Hammer className="text-blue-500"/> Consumo de Materia Prima</h3>
                 <button onClick={() => setIsConsumoOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
-              <div className="p-5 bg-blue-500/5 border-b border-white/5 flex gap-3 text-sm">
+              <div className="p-5 bg-blue-500/5 border-b border-white/5 flex gap-3 text-sm shrink-0">
                 <AlertCircle className="text-blue-400 shrink-0" size={18}/>
                 <p className="text-blue-200">El registro de este consumo descontará el inventario del Almacén Central inmediatamente.</p>
               </div>
-              <form onSubmit={handleAddConsumo} className="p-6">
+              <form onSubmit={handleAddConsumo} className="p-6 overflow-y-auto flex-1">
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Materia Prima / Insumo</label>
                   <select required value={insumoId} onChange={e => setInsumoId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50">
@@ -653,12 +653,14 @@ export default function ProduccionPage() {
       <AnimatePresence>
         {isFinishOpen && activeOp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><CheckCircle2 className="text-emerald-500"/> Finalizar Producción</h3>
                 <button onClick={() => setIsFinishOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
-              <form onSubmit={handleFinishOP} className="p-6">
+              <div className="p-5 bg-emerald-500/5 border-b border-white/5 flex gap-3 text-sm shrink-0">
+              </div>
+              <form onSubmit={handleFinishOP} className="p-6 overflow-y-auto flex-1">
                 <div className="text-center mb-6">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 mb-4">
                     <Package size={32} />
@@ -698,12 +700,12 @@ export default function ProduccionPage() {
       <AnimatePresence>
         {isUploadOpen && activeOp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><Upload className="text-purple-500"/> Adjuntar Archivo</h3>
                 <button onClick={() => { setIsUploadOpen(false); setSelectedFile(null); }} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
-              <form onSubmit={handleUploadFile} className="p-6">
+              <form onSubmit={handleUploadFile} className="p-6 overflow-y-auto flex-1">
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Seleccionar Archivo (Imagen o PDF)</label>
                   <input type="file" accept="image/*,application/pdf" required onChange={e => setSelectedFile(e.target.files?.[0] || null)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />

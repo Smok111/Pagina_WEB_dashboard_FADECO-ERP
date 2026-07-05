@@ -512,7 +512,7 @@ export default function ProductosPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editandoId ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
           </DialogHeader>
@@ -614,7 +614,7 @@ export default function ProductosPage() {
       </Dialog>
 
       <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="text-emerald-600" /> Importación Masiva</DialogTitle>
           </DialogHeader>
@@ -656,7 +656,7 @@ export default function ProductosPage() {
       </Dialog>
 
       <Dialog open={isKardexModalOpen} onOpenChange={setIsKardexModalOpen}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex justify-between items-center pr-6">
               <DialogTitle className="flex items-center gap-2">

@@ -290,12 +290,12 @@ export default function RrhhPage() {
 
         {isImportModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><FileSpreadsheet className="text-emerald-500"/> Importación Masiva</h3>
                 <button onClick={() => { setIsImportModalOpen(false); setSelectedFile(null); }} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div className="bg-[#0B0F19] p-4 rounded-xl border border-white/5 text-sm text-slate-300">
                   <p className="font-semibold text-white mb-2">Instrucciones:</p>
                   <ul className="list-disc pl-5 space-y-1">

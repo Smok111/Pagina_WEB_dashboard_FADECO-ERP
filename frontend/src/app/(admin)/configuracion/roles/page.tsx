@@ -161,9 +161,9 @@ export default function RolesPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-xl font-bold text-white">
                   {editingRol ? "Editar Rol" : "Nuevo Rol"}
                 </h3>
@@ -175,7 +175,7 @@ export default function RolesPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1">
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1.5">Nombre del Rol</label>
                   <input

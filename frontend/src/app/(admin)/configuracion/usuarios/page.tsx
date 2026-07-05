@@ -222,14 +222,14 @@ export default function UsuariosPage() {
 
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-xl my-8 overflow-hidden shadow-2xl relative"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-xl my-8 overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 bg-[#1A2235] z-10">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 bg-[#1A2235] z-10 shrink-0">
                 <h3 className="text-xl font-bold text-white">
                   {editingUser ? "Editar Usuario" : "Nuevo Usuario"}
                 </h3>
@@ -241,7 +241,7 @@ export default function UsuariosPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-400 mb-1.5">Nombres</label>

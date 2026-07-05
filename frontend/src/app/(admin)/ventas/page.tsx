@@ -665,14 +665,14 @@ export default function VentasPage() {
 
       <AnimatePresence>
         {isNewClientModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg my-8 overflow-hidden shadow-2xl relative"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#1A2235]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#1A2235] shrink-0">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                   <Plus className="text-emerald-500" /> Nuevo Cliente
                 </h3>
@@ -681,7 +681,7 @@ export default function VentasPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateClient} className="p-6 space-y-4">
+              <form onSubmit={handleCreateClient} className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">Tipo de Documento *</label>
