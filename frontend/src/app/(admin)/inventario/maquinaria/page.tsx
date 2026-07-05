@@ -298,8 +298,8 @@ export default function MaquinariaPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-auto w-full">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   {renderSortableHeader("codigo", "Código")}

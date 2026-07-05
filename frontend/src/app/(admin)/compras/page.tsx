@@ -34,6 +34,13 @@ export default function ComprasPage() {
   const [numeroDocumento, setNumeroDocumento] = useState("");
   const [cart, setCart] = useState<any[]>([]);
   const [isSearchingProvider, setIsSearchingProvider] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
+
+  const filteredProducts = productos.filter(p => 
+    p.nombre.toLowerCase().includes(productSearch.toLowerCase()) || 
+    (p.codigo && p.codigo.toLowerCase().includes(productSearch.toLowerCase()))
+  );
 
   useEffect(() => {
     fetchData();
@@ -187,8 +194,8 @@ export default function ComprasPage() {
       </div>
 
       <div className="bg-[#1A2235] rounded-2xl border border-white/5 overflow-hidden shadow-xl flex-1 flex flex-col">
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-left">
+        <div className="overflow-auto flex-1 w-full">
+          <table className="w-full text-left min-w-[800px]">
             <thead className="sticky top-0 bg-[#1A2235] z-10">
               <tr className="border-b border-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 <SortableTableHead label="Código" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
@@ -286,16 +293,54 @@ export default function ComprasPage() {
                   </div>
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-6 relative">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Agregar Productos</label>
-                  <select onChange={(e) => { addProductToCart(e.target.value); e.target.value = ""; }} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50">
-                    <option value="">+ Seleccionar producto para agregar al carrito...</option>
-                    {productos.map(p => <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>)}
-                  </select>
+                  <input
+                    type="text"
+                    placeholder="+ Buscar producto para agregar al carrito (por código o nombre)..."
+                    value={productSearch}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      setShowProductDropdown(true);
+                    }}
+                    onFocus={() => setShowProductDropdown(true)}
+                    className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50 text-sm"
+                  />
+                  
+                  {showProductDropdown && (
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowProductDropdown(false)}
+                    />
+                  )}
+
+                  {showProductDropdown && (
+                    <div className="absolute z-20 w-full mt-1 bg-[#1A2235] border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                      {filteredProducts.length === 0 ? (
+                        <div className="p-4 text-slate-400 text-sm text-center">No se encontraron productos</div>
+                      ) : (
+                        filteredProducts.map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            className="w-full text-left px-4 py-3 hover:bg-white/5 border-b border-white/5 text-slate-300 text-sm focus:bg-white/5 outline-none transition-colors flex justify-between items-center"
+                            onClick={() => {
+                              addProductToCart(String(p.id));
+                              setProductSearch("");
+                              setShowProductDropdown(false);
+                            }}
+                          >
+                            <span><span className="font-medium text-white">{p.codigo}</span> - {p.nombre}</span>
+                            <span className="text-blue-400 font-medium whitespace-nowrap ml-2">(Stock: {p.stockActual})</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="bg-[#0B0F19] rounded-xl border border-white/5 overflow-x-auto mb-8">
-                  <table className="w-full text-left text-sm">
+                <div className="bg-[#0B0F19] rounded-xl border border-white/5 overflow-auto mb-8 w-full">
+                  <table className="w-full text-left text-sm min-w-[600px]">
                     <thead className="border-b border-white/5 text-slate-400">
                       <tr>
                         <th className="px-4 py-3">Producto</th>

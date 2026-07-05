@@ -443,8 +443,8 @@ export default function ProductosPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-auto w-full">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   {renderSortableHeader("codigo", "Código")}
@@ -672,8 +672,8 @@ export default function ProductosPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="rounded-md border max-h-[400px] overflow-y-auto">
-              <Table>
+            <div className="rounded-md border max-h-[400px] overflow-auto w-full">
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow className="bg-slate-50 sticky top-0">
                     <TableHead>Fecha</TableHead>
