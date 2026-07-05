@@ -183,9 +183,25 @@ export default function VentasPage() {
     doc.save(`${venta.tipoDocumento}_${venta.numeroDocumento}_FADECO.pdf`);
   };
 
-  const descargarPDFFormatoFisico = (venta: any) => {
+  const descargarPDFFormatoFisico = async (venta: any) => {
     const doc = new jsPDF({ format: 'a4', unit: 'mm' });
     
+    // Add Logo
+    try {
+      const img = new Image();
+      img.src = '/logo-fadeco.png';
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve; 
+      });
+      if (img.width > 0) {
+        // Center the logo in the top left
+        doc.addImage(img, 'PNG', 15, 12, 45, 30);
+      }
+    } catch (e) {
+      console.error("Error loading logo", e);
+    }
+
     // Configurar fuentes
     doc.setFont("helvetica", "bold");
     
@@ -223,10 +239,10 @@ export default function VentasPage() {
     
     // Marcar la X
     doc.setTextColor(0, 0, 0);
-    if (venta.tipoDocumento === "PROFORMA") {
-      doc.text("X", 189, 19);
-    } else {
+    if (venta.tipoDocumento === "NOTA DE VENTA") {
       doc.text("X", 189, 24);
+    } else {
+      doc.text("X", 189, 19);
     }
 
     // Código autogenerado en Rojo
@@ -300,7 +316,8 @@ export default function VentasPage() {
     const detalles = venta.detalles || [];
     for (let i = 0; i < Math.min(detalles.length, rows - 1); i++) {
       const d = detalles[i];
-      const y = startY + rowHeight + (i * rowHeight) - 2.5;
+      // Calcular "y" correctamente para no superponer con la cabecera
+      const y = startY + ((i + 1) * rowHeight) + rowHeight - 2.5;
       
       doc.text(d.cantidad.toString(), 25, y, { align: "center" });
       const nombreItem = d.producto?.nombre || "N/A";
@@ -503,6 +520,7 @@ export default function VentasPage() {
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">N° Comprobante</label>
                     <div className="flex gap-2">
                       <select value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)} className="w-1/2 bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+                        <option value="NOTA DE VENTA">Nota de Venta</option>
                         <option value="BOLETA">Boleta</option>
                         <option value="FACTURA">Factura</option>
                         <option value="PROFORMA">Proforma (Sin descontar stock)</option>
