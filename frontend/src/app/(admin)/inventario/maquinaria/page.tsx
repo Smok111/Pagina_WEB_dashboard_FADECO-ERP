@@ -364,7 +364,7 @@ export default function MaquinariaPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editandoId ? "Editar Maquinaria" : "Nueva Maquinaria"}</DialogTitle>
           </DialogHeader>
