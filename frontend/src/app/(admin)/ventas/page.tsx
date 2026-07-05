@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Save, ArrowRight, Receipt, Plus, Download, ExternalLink, Trash2 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { Search, X, Save, ArrowRight, Receipt, Plus, Download, ExternalLink, Trash2, Printer } from "lucide-react";
+import { cn, formatCurrency, numeroALetras } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
 import jsPDF from "jspdf";
@@ -144,50 +144,7 @@ export default function VentasPage() {
   const igv = subtotal * 0.18;
   const total = subtotal + igv;
 
-  const generateProformaPDF = (vData: any, cData: any[], sub: number, i: number, tot: number) => {
-    const doc = new jsPDF();
-    const client = clientes.find(c => c.id === Number(clienteId));
-    const clientName = client ? (client.nombres || client.razonSocial) : "Cliente Final";
 
-    doc.setFontSize(22);
-    doc.setTextColor(15, 23, 42);
-    doc.text("FADECO", 14, 20);
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text("Proforma Comercial", 14, 26);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(15, 23, 42);
-    doc.text(`Proforma: ${vData.numeroDocumento}`, 14, 40);
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 46);
-    doc.text(`Cliente: ${clientName}`, 14, 52);
-
-    const tableColumn = ["Producto", "Cantidad", "P. Unit", "Subtotal"];
-    const tableRows = cData.map(c => [
-      c.nombre,
-      c.cantidad,
-      formatCurrency(c.precioUnitario),
-      formatCurrency(c.subtotal)
-    ]);
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 60,
-      theme: 'grid',
-      headStyles: { fillColor: [15, 23, 42] }
-    });
-
-    const finalY = (doc as any).lastAutoTable.finalY || 60;
-    doc.setFontSize(10);
-    doc.text(`Subtotal: ${formatCurrency(sub)}`, 130, finalY + 10);
-    doc.text(`IGV (18%): ${formatCurrency(i)}`, 130, finalY + 16);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`TOTAL: ${formatCurrency(tot)}`, 130, finalY + 24);
-
-    doc.save(`Proforma_${vData.numeroDocumento}_FADECO.pdf`);
-  };
 
   const descargarComprobante = (venta: any) => {
     const doc = new jsPDF();
@@ -226,6 +183,154 @@ export default function VentasPage() {
     doc.save(`${venta.tipoDocumento}_${venta.numeroDocumento}_FADECO.pdf`);
   };
 
+  const descargarPDFFormatoFisico = (venta: any) => {
+    const doc = new jsPDF({ format: 'a4', unit: 'mm' });
+    
+    // Configurar fuentes
+    doc.setFont("helvetica", "bold");
+    
+    // Cabecera Central
+    doc.setTextColor(80, 20, 100); // Morado oscuro
+    doc.setFontSize(16);
+    doc.text("FADECO SAN MARTIN EIRL", 105, 20, { align: "center" });
+    
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    doc.text("Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", 105, 25, { align: "center" });
+    doc.text("976 631 901 / 952 066 393 / 955445875", 105, 29, { align: "center" });
+    doc.text("fadecosanmartin123@hotmail.com", 105, 33, { align: "center" });
+    doc.text("https://www.fadecosanmartin.com.pe", 105, 37, { align: "center" });
+    
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(180, 100, 40);
+    doc.text("SANEAMIENTO CAJAMARCA", 105, 42, { align: "center" });
+
+    // Cajas Derecha (Proforma / Nota de Venta)
+    doc.setDrawColor(180, 100, 40); // Naranja borde
+    doc.setFillColor(240, 160, 80); // Naranja fondo cabecera derecha
+    doc.rect(140, 15, 60, 12, "FD");
+    
+    doc.setTextColor(100, 20, 20); // Marrón oscuro texto
+    doc.setFontSize(10);
+    doc.text("PROFORMA", 142, 20);
+    doc.text("NOTA DE VENTA", 142, 25);
+    
+    // Checkboxes
+    doc.setFillColor(255, 255, 255);
+    doc.rect(185, 16, 12, 4, "FD");
+    doc.rect(185, 21, 12, 4, "FD");
+    
+    // Marcar la X
+    doc.setTextColor(0, 0, 0);
+    if (venta.tipoDocumento === "PROFORMA") {
+      doc.text("X", 189, 19);
+    } else {
+      doc.text("X", 189, 24);
+    }
+
+    // Código autogenerado en Rojo
+    doc.setFontSize(16);
+    doc.setTextColor(220, 50, 50);
+    doc.text(venta.numeroDocumento || "0000000", 170, 35, { align: "center" });
+
+    // Fecha box
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.rect(140, 38, 60, 6);
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    const d = new Date(venta.fecha);
+    doc.text(`Fecha:   ${d.getDate().toString().padStart(2,'0')}   /   ${(d.getMonth()+1).toString().padStart(2,'0')}   /   ${d.getFullYear()}`, 142, 42.5);
+
+    // Datos Cliente
+    const clientName = venta.cliente ? (venta.cliente.nombres || venta.cliente.razonSocial) : "Cliente Final";
+    const rucDni = venta.cliente ? (venta.cliente.numeroDocumento) : "";
+    const direccion = venta.cliente ? (venta.cliente.direccion || "") : "";
+    const celular = venta.cliente ? (venta.cliente.telefono || "") : "";
+
+    doc.text("Cliente:", 15, 55);
+    doc.text(clientName, 30, 54.5);
+    doc.line(28, 55, 130, 55);
+
+    doc.text("RUC:", 135, 55);
+    doc.text(rucDni, 145, 54.5);
+    doc.line(144, 55, 195, 55);
+
+    doc.text("Dirección:", 15, 62);
+    doc.text(direccion, 33, 61.5);
+    doc.line(32, 62, 130, 62);
+
+    doc.text("Nº Cel.:", 135, 62);
+    doc.text(celular, 150, 61.5);
+    doc.line(148, 62, 195, 62);
+
+    // Tabla
+    const startY = 70;
+    const rowHeight = 7;
+    const rows = 18; 
+    
+    // Cabecera Tabla
+    doc.setFillColor(240, 160, 80);
+    doc.rect(15, startY, 180, rowHeight, "FD");
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("CANT.", 20, startY + 5);
+    doc.text("ARTÍCULO", 75, startY + 5);
+    doc.text("P. UNIT", 148, startY + 5);
+    doc.text("P. VENTA", 175, startY + 5);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    
+    // Lineas tabla
+    for (let i = 0; i <= rows; i++) {
+      const y = startY + (i * rowHeight);
+      doc.line(15, y, 195, y); 
+    }
+    const endY = startY + (rows * rowHeight);
+    doc.line(15, startY, 15, endY);
+    doc.line(35, startY, 35, endY);
+    doc.line(145, startY, 145, endY);
+    doc.line(170, startY, 170, endY);
+    doc.line(195, startY, 195, endY);
+
+    // Llenar datos
+    const detalles = venta.detalles || [];
+    for (let i = 0; i < Math.min(detalles.length, rows - 1); i++) {
+      const d = detalles[i];
+      const y = startY + rowHeight + (i * rowHeight) - 2.5;
+      
+      doc.text(d.cantidad.toString(), 25, y, { align: "center" });
+      const nombreItem = d.producto?.nombre || "N/A";
+      doc.text(nombreItem.substring(0, 55), 37, y);
+      doc.text(Number(d.precioUnitario).toFixed(2), 168, y, { align: "right" });
+      doc.text(Number(d.subtotal).toFixed(2), 193, y, { align: "right" });
+    }
+
+    // Pie
+    doc.setFont("helvetica", "bold");
+    doc.text("SON:", 17, endY + 6);
+    doc.setFont("helvetica", "normal");
+    doc.text(numeroALetras(Number(venta.total)), 28, endY + 6);
+    doc.setFont("helvetica", "bold");
+    doc.text("Soles", 183, endY + 6);
+    
+    // Total Caja
+    doc.text("TOTAL S/", 145, endY + 14);
+    doc.setLineWidth(0.5);
+    doc.rect(165, endY + 9, 30, 8);
+    doc.text(Number(venta.total).toFixed(2), 193, endY + 14.5, { align: "right" });
+
+    // Firma
+    doc.setLineWidth(0.3);
+    doc.line(70, endY + 40, 130, endY + 40);
+    doc.text("FIRMA", 100, endY + 44, { align: "center" });
+
+    doc.save(`Fisico_${venta.tipoDocumento}_${venta.numeroDocumento}.pdf`);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return alert("Agrega al menos un producto");
@@ -254,7 +359,8 @@ export default function VentasPage() {
 
       if (res.ok) {
         if (isProforma) {
-          generateProformaPDF(vData, cart, subtotal, igv, total);
+          const clientObj = clientes.find(c => c.id === Number(clienteId));
+          descargarPDFFormatoFisico({ ...vData, total, cliente: clientObj });
         }
         setIsModalOpen(false);
         setCart([]);
@@ -343,6 +449,9 @@ export default function VentasPage() {
                         <ExternalLink size={18} />
                       </a>
                     )}
+                    <button onClick={() => descargarPDFFormatoFisico(venta)} className="text-orange-400 hover:text-orange-300 transition-colors" title="Descargar Formato Físico">
+                      <Printer size={18} />
+                    </button>
                     <button onClick={() => descargarComprobante(venta)} className="text-emerald-400 hover:text-emerald-300 transition-colors" title={`Descargar ${venta.tipoDocumento}`}>
                       <Download size={18} />
                     </button>
