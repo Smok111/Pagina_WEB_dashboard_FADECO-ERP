@@ -204,22 +204,24 @@ export default function VentasPage() {
     // Configurar fuentes
     doc.setFont("helvetica", "bold");
     
-    // Cabecera Central
-    doc.setTextColor(80, 20, 100); // Morado oscuro
-    doc.setFontSize(16);
-    doc.text("FADECO SAN MARTIN EIRL", 105, 20, { align: "center" });
+    // Cabecera Central (Centrada entre el logo y el recuadro derecho)
+    const centerX = 98; 
     
-    doc.setFontSize(9);
+    doc.setTextColor(80, 20, 100); // Morado oscuro
+    doc.setFontSize(15);
+    doc.text("FADECO SAN MARTIN EIRL", centerX, 18, { align: "center" });
+    
+    doc.setFontSize(8.5);
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
-    doc.text("Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", 105, 25, { align: "center" });
-    doc.text("976 631 901 / 952 066 393 / 955445875", 105, 29, { align: "center" });
-    doc.text("fadecosanmartin123@hotmail.com", 105, 33, { align: "center" });
-    doc.text("https://www.fadecosanmartin.com.pe", 105, 37, { align: "center" });
+    doc.text("Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", centerX, 24, { align: "center" });
+    doc.text("976 631 901 / 952 066 393 / 955445875", centerX, 29, { align: "center" });
+    doc.text("fadecosanmartin123@hotmail.com", centerX, 34, { align: "center" });
+    doc.text("https://www.fadecosanmartin.com.pe", centerX, 39, { align: "center" });
     
     doc.setFont("helvetica", "bold");
     doc.setTextColor(180, 100, 40);
-    doc.text("SANEAMIENTO CAJAMARCA", 105, 42, { align: "center" });
+    doc.text("SANEAMIENTO CAJAMARCA", centerX, 45, { align: "center" });
 
     // Cajas Derecha (Proforma / Nota de Venta)
     doc.setDrawColor(180, 100, 40); // Naranja borde
