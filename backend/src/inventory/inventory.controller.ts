@@ -168,6 +168,36 @@ export class InventoryController {
     return productos.map((p: any) => ({ ...p, stockActual: Math.max(0, p.stockActual) }));
   }
 
+  @Get('productos/export')
+  async exportProductos() {
+    const productos = await this.prisma.producto.findMany({
+      include: {
+        unidadMedida: true,
+        MovimientoInventario: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+
+    return productos.map((p) => {
+      let entrada = 0;
+      let salida = 0;
+      p.MovimientoInventario.forEach((m) => {
+        if (m.tipo === 'INGRESO') entrada += Number(m.cantidad);
+        if (m.tipo === 'SALIDA') salida += Number(m.cantidad);
+      });
+      return {
+        CODIGO: p.codigo,
+        PRODUCTO: p.nombre,
+        MARCA: p.marca || '',
+        COLOR: p.color || '',
+        ENTRADA: entrada,
+        UNIDAD: p.unidadMedida?.nombre || '',
+        SALIDA: salida,
+        STOCK: Number(p.stockActual)
+      };
+    });
+  }
+
   @Post('productos')
   async createProducto(@Body() data: any) {
     const ultimo = await this.prisma.producto.findFirst({
@@ -182,6 +212,8 @@ export class InventoryController {
       codigo: codigoSistema,
       nombre: data.nombre,
       descripcion: data.descripcion,
+      marca: data.marca,
+      color: data.color,
       categoriaId: Number(data.categoriaId),
       unidadMedidaId: Number(data.unidadMedidaId),
       stockActual: stockActual,
@@ -238,39 +270,71 @@ export class InventoryController {
 
   @Post('productos/import')
   async importProductos(@Body() data: any[]) {
-    const ultimo = await this.prisma.producto.findFirst({
-      orderBy: { id: 'desc' },
-    });
-    let lastId = ultimo?.id || 0;
-
     const firstCat = await this.prisma.categoria.findFirst();
-    const firstUni = await this.prisma.unidadMedida.findFirst();
     const defaultCatId = firstCat?.id || 1;
-    const defaultUniId = firstUni?.id || 1;
+    let createdCount = 0;
+    let updatedCount = 0;
 
-    const productosAInsertar = data.map((item) => {
-      lastId++;
-      const codigoSistema = `PRO-${String(lastId).padStart(6, '0')}`;
-      return {
-        codigoSistema,
-        codigo: codigoSistema,
-        nombre: item.nombre || 'Producto Importado',
-        descripcion: item.descripcion || '',
-        categoriaId: Number(item.categoriaId) || defaultCatId,
-        unidadMedidaId: Number(item.unidadMedidaId) || defaultUniId,
-        stockActual: Number(item.stockActual || 0),
-        stockMinimo: Number(item.stockMinimo || 0),
-        costo: Number(item.costo || 0),
-        precioVenta: Number(item.precioVenta || 0),
-        estado: true,
-      };
-    });
+    // Get a map of unit names to IDs to resolve "UNIDAD" from Excel
+    const unidades = await this.prisma.unidadMedida.findMany();
+    const unidadMap = new Map(unidades.map(u => [u.nombre.toUpperCase(), u.id]));
+    const defaultUniId = unidades[0]?.id || 1;
 
-    await this.prisma.producto.createMany({
-      data: productosAInsertar,
-    });
+    for (const item of data) {
+      const codigo = item.CODIGO || item.codigo;
+      const nombre = item.PRODUCTO || item.nombre || item.NOMBRE || 'Producto Importado';
+      const marca = item.MARCA || item.marca || null;
+      const color = item.COLOR || item.color || null;
+      const unidadNombre = item.UNIDAD || item.unidad || '';
+      
+      let unidadId = defaultUniId;
+      if (unidadNombre) {
+        const foundId = unidadMap.get(unidadNombre.toUpperCase());
+        if (foundId) unidadId = foundId;
+      }
+      
+      const stockActual = Number(item.STOCK || item.stockActual || item.stock || 0);
+      const stockMinimo = Number(item.stockMinimo || 0);
+      const costo = Number(item.costo || 0);
+      const precioVenta = Number(item.precioVenta || 0);
 
-    return { ok: true, count: productosAInsertar.length };
+      if (codigo) {
+        // Try to update existing
+        const existing = await this.prisma.producto.findUnique({ where: { codigo } });
+        if (existing) {
+          await this.prisma.producto.update({
+            where: { id: existing.id },
+            data: { nombre, marca, color, unidadMedidaId: unidadId, stockActual, stockMinimo, costo, precioVenta }
+          });
+          updatedCount++;
+          continue;
+        }
+      }
+
+      // Create new
+      const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
+      const newCodigo = codigo || `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
+      
+      await this.prisma.producto.create({
+        data: {
+          codigoSistema: newCodigo,
+          codigo: newCodigo,
+          nombre,
+          marca,
+          color,
+          categoriaId: defaultCatId,
+          unidadMedidaId: unidadId,
+          stockActual,
+          stockMinimo,
+          costo,
+          precioVenta,
+          estado: true
+        }
+      });
+      createdCount++;
+    }
+
+    return { ok: true, created: createdCount, updated: updatedCount };
   }
 
   @Put('productos')
@@ -283,6 +347,8 @@ export class InventoryController {
       data: {
         nombre: data.nombre,
         descripcion: data.descripcion,
+        marca: data.marca,
+        color: data.color,
         categoriaId: Number(data.categoriaId),
         unidadMedidaId: Number(data.unidadMedidaId),
         stockActual: stockActual,

@@ -123,6 +123,8 @@ model Producto {
   codigo        String  @unique
   nombre        String
   descripcion   String?
+  marca         String?
+  color         String?
   imagen        String?
 
   categoriaId Int

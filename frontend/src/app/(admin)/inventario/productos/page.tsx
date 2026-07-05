@@ -57,8 +57,10 @@ interface Producto {
   costo: number;
   precioVenta: number;
   estado: boolean;
+  marca?: string;
+  color?: string;
   categoria: { nombre: string };
-  unidadMedida: { codigo: string };
+  unidadMedida: { codigo: string; nombre?: string };
   createdAt?: string;
 }
 
@@ -85,6 +87,8 @@ export default function ProductosPage() {
   // Form State
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [marca, setMarca] = useState("");
+  const [color, setColor] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
   const [unidadMedidaId, setUnidadMedidaId] = useState("");
   const [almacenId, setAlmacenId] = useState("");
@@ -146,6 +150,8 @@ export default function ProductosPage() {
       setEditandoId(producto.id);
       setNombre(producto.nombre);
       setDescripcion(producto.descripcion || "");
+      setMarca(producto.marca || "");
+      setColor(producto.color || "");
       setCategoriaId(String(producto.categoriaId));
       setUnidadMedidaId(String(producto.unidadMedidaId));
       setAlmacenId(""); // Para edición de stock se usa Movimientos
@@ -158,6 +164,8 @@ export default function ProductosPage() {
       setEditandoId(null);
       setNombre("");
       setDescripcion("");
+      setMarca("");
+      setColor("");
       setCategoriaId("");
       setUnidadMedidaId("");
       setAlmacenId("");
@@ -181,6 +189,8 @@ export default function ProductosPage() {
         id: editandoId,
         nombre,
         descripcion,
+        marca,
+        color,
         categoriaId,
         unidadMedidaId,
         almacenId,
@@ -265,29 +275,39 @@ export default function ProductosPage() {
   const procesarImportacion = async () => {
     if (importData.length === 0) return toast.error("El archivo está vacío");
     try {
-      const payload = importData.map(row => ({
-        nombre: row["Nombre"] || row["nombre"] || row["NOMBRE"] || "Sin nombre",
-        descripcion: row["Descripción"] || row["descripcion"] || row["DESCRIPCION"] || "",
-        stockActual: row["Stock"] || row["stock"] || row["STOCK"] || 0,
-        stockMinimo: row["StockMinimo"] || row["stockMinimo"] || 0,
-        costo: row["Costo"] || row["costo"] || row["COSTO"] || 0,
-        precioVenta: row["Precio"] || row["precio"] || row["PRECIO"] || 0,
-      }));
-
       const res = await fetch("/api/inventory/productos/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(importData)
       });
       if (!res.ok) throw new Error();
 
-      toast.success(`${importData.length} productos importados correctamente`);
+      const result = await res.json();
+      toast.success(`${result.created || 0} creados, ${result.updated || 0} actualizados correctamente`);
       setIsImportModalOpen(false);
       setImportData([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       await cargarProductos();
     } catch (e) {
       toast.error("Error al procesar la importación masiva en el servidor");
+    }
+  };
+
+  const exportarAExcel = async () => {
+    try {
+      const response = await fetch("/api/inventory/productos/export");
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      
+      if (data.length === 0) return toast.warning("No hay productos para exportar");
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Productos");
+      XLSX.writeFile(workbook, "Productos_Inventario.xlsx");
+      toast.success("Excel generado exitosamente");
+    } catch (e) {
+      toast.error("Error al exportar los productos");
     }
   };
 
@@ -392,8 +412,11 @@ export default function ProductosPage() {
           <p className="text-sm text-slate-500">Gestión de maestro de artículos y stock</p>
         </div>
         <div className="flex gap-3">
+          <Button onClick={exportarAExcel} variant="outline" className="bg-white hover:bg-slate-50 border-slate-200">
+            <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" /> Exportar Excel
+          </Button>
           <Button onClick={() => setIsImportModalOpen(true)} variant="outline" className="bg-white hover:bg-slate-50 border-slate-200">
-            <Upload className="mr-2 h-4 w-4 text-emerald-600" /> Importar Excel
+            <Upload className="mr-2 h-4 w-4 text-blue-600" /> Importar Excel
           </Button>
           <Button onClick={() => abrirModal()} className="bg-slate-900 hover:bg-slate-800">
             <Plus className="mr-2 h-4 w-4" /> Nuevo Producto
@@ -427,6 +450,8 @@ export default function ProductosPage() {
                   {renderSortableHeader("codigo", "Código")}
                   {renderSortableHeader("nombre", "Nombre")}
                   {renderSortableHeader("categoria", "Categoría")}
+                  <TableHead>Marca</TableHead>
+                  <TableHead>Color</TableHead>
                   <TableHead>Unidad</TableHead>
                   {renderSortableHeader("stockActual", "Stock", "right")}
                   {renderSortableHeader("precioVenta", "Precio", "right")}
@@ -447,6 +472,8 @@ export default function ProductosPage() {
                       <TableCell className="font-mono text-xs">{producto.codigo}</TableCell>
                       <TableCell className="font-medium">{producto.nombre}</TableCell>
                       <TableCell>{producto.categoria.nombre}</TableCell>
+                      <TableCell>{producto.marca || "-"}</TableCell>
+                      <TableCell>{producto.color || "-"}</TableCell>
                       <TableCell>{producto.unidadMedida.codigo}</TableCell>
                       <TableCell className="text-right font-medium">
                         <span className={producto.stockActual <= producto.stockMinimo ? "text-red-600" : "text-green-600"}>
@@ -497,6 +524,14 @@ export default function ProductosPage() {
             <div className="col-span-2 space-y-2">
               <Label>Descripción</Label>
               <Input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Detalles del producto" />
+            </div>
+            <div className="space-y-2">
+              <Label>Marca</Label>
+              <Input value={marca} onChange={(e) => setMarca(e.target.value)} placeholder="Opcional" />
+            </div>
+            <div className="space-y-2">
+              <Label>Color</Label>
+              <Input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Opcional" />
             </div>
 
             <div className="space-y-2">
