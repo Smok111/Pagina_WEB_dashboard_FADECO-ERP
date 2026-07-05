@@ -213,12 +213,12 @@ export default function RrhhPage() {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-white/5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2"><Users className="text-fuchsia-500"/> Registrar Trabajador</h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
-              <form onSubmit={handleSubmit} className="p-6">
+              <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-5 mb-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-400 mb-2">Nombres</label>

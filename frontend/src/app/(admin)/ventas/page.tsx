@@ -494,12 +494,12 @@ export default function VentasPage() {
 
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-5xl my-8 overflow-hidden shadow-2xl flex flex-col md:flex-row relative"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-5xl overflow-y-auto shadow-2xl flex flex-col md:flex-row relative max-h-[100dvh] md:max-h-[90vh]"
             >
               <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-30 bg-[#1A2235]/80 p-1 rounded-full backdrop-blur-md">
                 <X size={24} />
