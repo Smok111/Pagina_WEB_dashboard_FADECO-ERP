@@ -103,7 +103,7 @@ export default function Sidebar() {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] shrink-0 border border-blue-900/50 overflow-hidden p-1.5"
                 >
-                  <Image src="/logo-fadeco.png" alt="FADECO" width={48} height={48} className="w-full h-full object-contain" />
+                  <Image src="/logo-fadeco-new.png" alt="FADECO" width={48} height={48} className="w-full h-full object-contain" />
                 </motion.div>
                 <div className="whitespace-nowrap">
                   <h2 className="font-bold text-white text-base tracking-tight">FADECO ERP</h2>
@@ -119,7 +119,7 @@ export default function Sidebar() {
                 transition={{ y: { duration: 3, repeat: Infinity, ease: "easeInOut" } }}
                 className="w-12 h-12 mx-auto rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] shrink-0 border border-blue-900/50 overflow-hidden p-1.5"
               >
-                <Image src="/logo-fadeco.png" alt="FADECO" width={48} height={48} className="w-full h-full object-contain" />
+                <Image src="/logo-fadeco-new.png" alt="FADECO" width={48} height={48} className="w-full h-full object-contain" />
               </motion.div>
             )}
           </AnimatePresence>

@@ -188,7 +188,7 @@ export default function VentasPage() {
     
     // Add Logo
     try {
-      const response = await fetch('/logo-fadeco.png');
+      const response = await fetch('/logo-fadeco-new.png');
       const blob = await response.blob();
       const base64data = await new Promise((resolve, reject) => {
         const reader = new FileReader();

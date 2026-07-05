@@ -66,7 +66,7 @@ export default function LoginPage() {
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="w-28 h-28 bg-white rounded-3xl shadow-[0_10px_40px_rgba(59,130,246,0.3)] border border-blue-100 flex items-center justify-center overflow-hidden p-3"
               >
-                <Image src="/logo-fadeco.png" alt="FADECO" width={100} height={100} className="w-full h-full object-contain drop-shadow-sm" />
+                <Image src="/logo-fadeco-new.png" alt="FADECO" width={100} height={100} className="w-full h-full object-contain drop-shadow-sm" />
               </motion.div>
             </motion.div>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 mb-2">Bienvenido de nuevo</h1>
