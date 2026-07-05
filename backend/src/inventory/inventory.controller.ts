@@ -295,8 +295,29 @@ export class InventoryController {
       
       let unidadId = defaultUniId;
       if (unidadNombre) {
-        const foundId = unidadMap.get(unidadNombre.toUpperCase().trim());
-        if (foundId) unidadId = foundId;
+        const normalizedUnidad = unidadNombre.toUpperCase().trim();
+        let foundId = unidadMap.get(normalizedUnidad);
+        
+        // Also try matching by codigo
+        if (!foundId) {
+          const foundByCode = unidades.find(u => u.codigo.toUpperCase() === normalizedUnidad);
+          if (foundByCode) foundId = foundByCode.id;
+        }
+
+        if (foundId) {
+          unidadId = foundId;
+        } else {
+          // Create missing unit dynamically
+          const newUnit = await this.prisma.unidadMedida.create({
+            data: {
+              codigo: normalizedUnidad,
+              nombre: normalizedUnidad,
+            }
+          });
+          unidades.push(newUnit);
+          unidadMap.set(normalizedUnidad, newUnit.id);
+          unidadId = newUnit.id;
+        }
       }
       
       const stockActual = Number(item.STOCK || item.stockActual || item.stock || 0);

@@ -474,7 +474,7 @@ export default function ProductosPage() {
                       <TableCell>{producto.categoria.nombre}</TableCell>
                       <TableCell>{producto.marca || "-"}</TableCell>
                       <TableCell>{producto.color || "-"}</TableCell>
-                      <TableCell>{producto.unidadMedida.codigo}</TableCell>
+                      <TableCell>{producto.unidadMedida.nombre}</TableCell>
                       <TableCell className="text-right font-medium">
                         <span className={producto.stockActual <= producto.stockMinimo ? "text-red-600" : "text-green-600"}>
                           {producto.stockActual}
