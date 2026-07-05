@@ -424,7 +424,7 @@ export default function MaquinariaPage() {
 
             <div className="space-y-2">
               <Label>Estado</Label>
-              <Select value={estado} onValueChange={(val) => setEstado(val)}>
+              <Select value={estado} onValueChange={(val) => setEstado(val || "OPERATIVO")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
