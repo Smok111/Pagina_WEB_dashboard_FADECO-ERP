@@ -436,8 +436,8 @@ export default function VentasPage() {
       </div>
 
       <div className="bg-[#1A2235] rounded-2xl border border-white/5 overflow-hidden shadow-xl flex-1 flex flex-col">
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-left">
+        <div className="overflow-auto flex-1">
+          <table className="w-full text-left min-w-[800px]">
             <thead className="sticky top-0 bg-[#1A2235] z-10">
               <tr className="border-b border-white/5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 <SortableTableHead label="Código" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
@@ -506,7 +506,7 @@ export default function VentasPage() {
               </button>
 
               {/* Lado Izquierdo: Formulario de Venta y Carrito */}
-              <div className="w-full md:w-2/3 p-4 md:p-6 flex flex-col border-b md:border-b-0 md:border-r border-white/5">
+              <div className="w-full md:w-2/3 p-4 md:p-6 flex flex-col border-b md:border-b-0 md:border-r border-white/5 min-w-0">
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <Receipt className="text-emerald-500" /> Registro de Venta
                 </h3>
@@ -584,8 +584,8 @@ export default function VentasPage() {
                   )}
                 </div>
 
-                <div className="bg-[#0B0F19] rounded-xl border border-white/5 overflow-x-auto flex-1 min-h-[200px]">
-                  <table className="w-full text-left text-sm min-w-[500px]">
+                <div className="bg-[#0B0F19] rounded-xl border border-white/5 overflow-auto flex-1 min-h-[200px] w-full">
+                  <table className="w-full text-left text-sm min-w-[600px]">
                     <thead className="border-b border-white/5 text-slate-400 sticky top-0 bg-[#0B0F19] z-10">
                       <tr>
                         <th className="px-4 py-3">Producto</th>
