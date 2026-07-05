@@ -118,6 +118,7 @@ export default function StockAlmacenPage() {
                 </tr>
               ))
             )}
+          </tbody>
         </table>
       </div>
 
