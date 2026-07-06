@@ -425,6 +425,15 @@ export default function ProduccionPage() {
                   </div>
                 </div>
                 <h4 className="text-white font-medium mb-1">{op.productoFinal.nombre}</h4>
+                {op.destino && op.destino !== "STOCK" && (
+                  <div className="mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider font-medium">
+                      {op.destino === "PEDIDO_CLIENTE_CREDITO" ? "Pedido a Crédito" : 
+                       op.destino === "PEDIDO_CLIENTE_PROYECTO" ? "Pedido por Proyecto" : 
+                       op.destino.replace("_", " ")}
+                    </span>
+                  </div>
+                )}
                 <p className="text-sm text-slate-400 flex items-center gap-2"><Package size={14}/> Esperado: {Number(op.cantidadEsperada)}</p>
                 {op.trabajadores?.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-white/5 text-xs text-blue-400 flex items-center gap-1">
@@ -485,6 +494,15 @@ export default function ProduccionPage() {
                   </div>
                 </div>
                 <h4 className="text-white font-medium mb-1">{op.productoFinal.nombre}</h4>
+                {op.destino && op.destino !== "STOCK" && (
+                  <div className="mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider font-medium">
+                      {op.destino === "PEDIDO_CLIENTE_CREDITO" ? "Pedido a Crédito" : 
+                       op.destino === "PEDIDO_CLIENTE_PROYECTO" ? "Pedido por Proyecto" : 
+                       op.destino.replace("_", " ")}
+                    </span>
+                  </div>
+                )}
                 <div className="mt-3 pt-3 border-t border-white/5">
                   <p className="text-xs text-slate-400 mb-2">Materias Primas Consumidas:</p>
                   <div className="space-y-1">
@@ -558,6 +576,15 @@ export default function ProduccionPage() {
                   </button>
                 </div>
                 <h4 className="text-white font-medium mb-1">{op.productoFinal.nombre}</h4>
+                {op.destino && op.destino !== "STOCK" && (
+                  <div className="mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider font-medium">
+                      {op.destino === "PEDIDO_CLIENTE_CREDITO" ? "Pedido a Crédito" : 
+                       op.destino === "PEDIDO_CLIENTE_PROYECTO" ? "Pedido por Proyecto" : 
+                       op.destino.replace("_", " ")}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between mt-3 text-sm">
                   <span className="text-slate-400">Logrado: <strong className="text-emerald-400">{Number(op.cantidadReal)}</strong></span>
                   <span className="text-emerald-400 font-mono text-xs bg-emerald-500/10 px-2 py-0.5 rounded">{op.lotes?.[0]?.numeroLote}</span>
