@@ -138,15 +138,34 @@ export class ProductionService {
 
   async addConsumo(opId: number, data: any) {
     return this.prisma.$transaction(async (tx: any) => {
+      // Find "Almacén de Producción"
+      const almacenProd = await tx.almacen.findFirst({
+        where: { nombre: { contains: 'Producción', mode: 'insensitive' } }
+      });
+      // Fallback to Almacen Principal (1) if not found, or use the one provided
+      const targetAlmacenId = almacenProd ? almacenProd.id : Number(data.almacenId || 1);
+
       // Validar stock antes de consumir
       const prod = await tx.producto.findUnique({ where: { id: Number(data.productoId) } });
       if (!prod) throw new NotFoundException('Producto no encontrado');
-      const stockDisponible = Math.max(0, prod.stockActual);
+      
+      // Get stock specifically from this warehouse
+      const stockAlmacen = await tx.stockAlmacen.findUnique({
+        where: {
+          productoId_almacenId: {
+            productoId: Number(data.productoId),
+            almacenId: targetAlmacenId,
+          },
+        },
+      });
+
+      const stockDisponible = stockAlmacen ? Math.max(0, Number(stockAlmacen.stockActual)) : 0;
+      
       if (stockDisponible < Number(data.cantidad)) {
         throw new BadRequestException(
           stockDisponible === 0
-            ? `Sin stock para: ${prod.nombre}. No se puede consumir.`
-            : `Stock insuficiente para: ${prod.nombre}. Disponible: ${stockDisponible}`
+            ? `Sin stock en Almacén de Producción para: ${prod.nombre}.`
+            : `Stock insuficiente en Almacén de Producción para: ${prod.nombre}. Disponible: ${stockDisponible}`
         );
       }
 
@@ -155,7 +174,7 @@ export class ProductionService {
           ordenProduccionId: opId,
           productoId: Number(data.productoId),
           cantidad: Number(data.cantidad),
-          almacenId: Number(data.almacenId || 1),
+          almacenId: targetAlmacenId,
         },
       });
 
@@ -170,20 +189,11 @@ export class ProductionService {
         },
       });
 
-      // Descontar stock del almacén, nunca dejar negativo
-      const stock = await tx.stockAlmacen.findUnique({
-        where: {
-          productoId_almacenId: {
-            productoId: consumo.productoId,
-            almacenId: consumo.almacenId,
-          },
-        },
-      });
-
-      if (stock) {
-        const nuevoStock = Math.max(0, Number(stock.stockActual) - Number(consumo.cantidad));
+      // Descontar stock del almacén
+      if (stockAlmacen) {
+        const nuevoStock = Math.max(0, Number(stockAlmacen.stockActual) - Number(consumo.cantidad));
         await tx.stockAlmacen.update({
-          where: { id: stock.id },
+          where: { id: stockAlmacen.id },
           data: { stockActual: nuevoStock },
         });
       }
@@ -314,20 +324,25 @@ export class ProductionService {
         },
       });
 
-      const almacenId = 1;
+      // Find "Almacén de Producción"
+      const almacenProd = await tx.almacen.findFirst({
+        where: { nombre: { contains: 'Producción', mode: 'insensitive' } }
+      });
+      const targetAlmacenId = almacenProd ? almacenProd.id : 1;
+
       await tx.movimientoInventario.create({
         data: {
           tipo: 'INGRESO',
           cantidad: cantidadReal,
           observacion: `Producción finalizada ${op.codigoOP} (Lote: ${numeroLote}) - Destino: ${op.destino}`,
           productoId: op.productoFinalId,
-          almacenId,
+          almacenId: targetAlmacenId,
         },
       });
 
       const stock = await tx.stockAlmacen.findUnique({
         where: {
-          productoId_almacenId: { productoId: op.productoFinalId, almacenId },
+          productoId_almacenId: { productoId: op.productoFinalId, almacenId: targetAlmacenId },
         },
       });
 
@@ -340,7 +355,7 @@ export class ProductionService {
         await tx.stockAlmacen.create({
           data: {
             productoId: op.productoFinalId,
-            almacenId,
+            almacenId: targetAlmacenId,
             stockActual: cantidadReal,
           },
         });

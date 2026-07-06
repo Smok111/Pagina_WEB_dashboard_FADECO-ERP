@@ -75,10 +75,26 @@ export default function ProduccionPage() {
         fetch("/api/rrhh/trabajadores"),
         fetch("/api/rrhh/areas-produccion")
       ]);
+      
+      let almacenesData = [];
       if (resProd.ok) setProductos(await resProd.json());
-      if (resAlm.ok) setAlmacenes(await resAlm.json());
+      if (resAlm.ok) {
+        almacenesData = await resAlm.json();
+        setAlmacenes(almacenesData);
+      }
       if (resTrab.ok) setTrabajadores(await resTrab.json());
       if (resAreas.ok) setAreasProduccion(await resAreas.json());
+
+      // Find Almacen de Produccion and fetch its specific stocks
+      const prodAlmacen = almacenesData.find((a: any) => a.nombre.toLowerCase().includes("producci"));
+      if (prodAlmacen) {
+        const resStocks = await fetch(`/api/inventory/almacenes/${prodAlmacen.id}`);
+        if (resStocks.ok) {
+          const detail = await resStocks.json();
+          // Merge specific stock info into almacenes list for frontend use
+          setAlmacenes(almacenesData.map((a: any) => a.id === prodAlmacen.id ? detail : a));
+        }
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
