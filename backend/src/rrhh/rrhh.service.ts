@@ -61,7 +61,7 @@ export class RrhhService {
       await tx.asistencia.deleteMany({ where: { trabajadorId: id } });
       await tx.vacaciones.deleteMany({ where: { trabajadorId: id } });
       await tx.kardexProduccion.deleteMany({ where: { trabajadorId: id } });
-      await tx.controlCalidad.deleteMany({ where: { trabajadorId: id } });
+      await tx.controlCalidad.deleteMany({ where: { inspectorId: id } });
       await tx.incidenciaProduccion.deleteMany({ where: { trabajadorId: id } });
       
       await tx.ordenProduccion.updateMany({
