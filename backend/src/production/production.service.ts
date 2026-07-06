@@ -324,11 +324,19 @@ export class ProductionService {
         },
       });
 
-      // Find "Almacén de Producción"
-      const almacenProd = await tx.almacen.findFirst({
-        where: { nombre: { contains: 'Producción', mode: 'insensitive' } }
-      });
-      const targetAlmacenId = almacenProd ? almacenProd.id : 1;
+      let targetAlmacenId = 1;
+      
+      if (op.destino && op.destino.startsWith('PEDIDO_CLIENTE')) {
+        const almacenPedidos = await tx.almacen.findFirst({
+          where: { nombre: { contains: 'Pedidos', mode: 'insensitive' } }
+        });
+        targetAlmacenId = almacenPedidos ? almacenPedidos.id : 1;
+      } else {
+        const almacenProd = await tx.almacen.findFirst({
+          where: { nombre: { contains: 'Producción', mode: 'insensitive' } }
+        });
+        targetAlmacenId = almacenProd ? almacenProd.id : 1;
+      }
 
       await tx.movimientoInventario.create({
         data: {

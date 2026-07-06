@@ -102,18 +102,22 @@ export default function ProduccionPage() {
     }
   };
 
+  const [tipoPedido, setTipoPedido] = useState("CREDITO"); // CREDITO, PROYECTO
+
   const handleCreateOP = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalDestino = destino === "PEDIDO_CLIENTE" ? `PEDIDO_CLIENTE_${tipoPedido}` : destino;
     const res = await fetch("/api/production", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino, areaProduccionId, responsableId }),
+      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino: finalDestino, areaProduccionId, responsableId }),
     });
     if (res.ok) {
       setIsNewOpOpen(false);
       setProductoFinalId("");
       setAreaProduccionId("");
       setResponsableId("");
+      setTipoPedido("CREDITO");
       refreshOrdenes();
     }
   };
@@ -602,6 +606,15 @@ export default function ProduccionPage() {
                     <option value="PEDIDO_CLIENTE">Pedido de Cliente</option>
                   </select>
                 </div>
+                {destino === "PEDIDO_CLIENTE" && (
+                  <div className="mb-5">
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Tipo de Pedido</label>
+                    <select required value={tipoPedido} onChange={e => setTipoPedido(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
+                      <option value="CREDITO">A Crédito</option>
+                      <option value="PROYECTO">Por Proyecto</option>
+                    </select>
+                  </div>
+                )}
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Área de Producción</label>
                   <select required value={areaProduccionId} onChange={e => { setAreaProduccionId(e.target.value); setResponsableId(""); }} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
