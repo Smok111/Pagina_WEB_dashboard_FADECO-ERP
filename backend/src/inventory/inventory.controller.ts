@@ -269,11 +269,12 @@ export class InventoryController {
   }
 
   @Post('productos/import')
-  async importProductos(@Body() data: any[]) {
+  async importProductos(@Body() data: any[], @Query('almacenId') queryAlmacenId?: string) {
     const firstCat = await this.prisma.categoria.findFirst();
     const defaultCatId = firstCat?.id || 1;
     let createdCount = 0;
     let updatedCount = 0;
+    const targetAlmacenId = queryAlmacenId ? Number(queryAlmacenId) : 1; // Default to 1 if not specified
 
     // Get a map of unit names to IDs to resolve "UNIDAD" from Excel
     const unidades = await this.prisma.unidadMedida.findMany();
@@ -325,6 +326,8 @@ export class InventoryController {
       const costo = Number(item.COSTO || item.costo || 0);
       const precioVenta = Number(item.PRECIO || item.PRECIOVENTA || item.precioVenta || 0);
 
+      let productoId = null;
+
       if (codigo) {
         // Try to update existing
         const existing = await this.prisma.producto.findUnique({ where: { codigo } });
@@ -333,32 +336,69 @@ export class InventoryController {
             where: { id: existing.id },
             data: { nombre, marca, color, unidadMedidaId: unidadId, stockActual, stockMinimo, costo, precioVenta }
           });
+          productoId = existing.id;
           updatedCount++;
-          continue;
         }
       }
 
-      // Create new
-      const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
-      const newCodigo = codigo || `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
+      if (!productoId) {
+        // Create new
+        const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
+        const newCodigo = codigo || `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
 
-      await this.prisma.producto.create({
-        data: {
-          codigoSistema: newCodigo,
-          codigo: newCodigo,
-          nombre,
-          marca,
-          color,
-          categoriaId: defaultCatId,
-          unidadMedidaId: unidadId,
-          stockActual,
-          stockMinimo,
-          costo,
-          precioVenta,
-          estado: true
+        const newProd = await this.prisma.producto.create({
+          data: {
+            codigoSistema: newCodigo,
+            codigo: newCodigo,
+            nombre,
+            marca,
+            color,
+            categoriaId: defaultCatId,
+            unidadMedidaId: unidadId,
+            stockActual,
+            stockMinimo,
+            costo,
+            precioVenta,
+            estado: true
+          }
+        });
+        productoId = newProd.id;
+        createdCount++;
+      }
+
+      // Add StockAlmacen relation if stock is greater than 0, or ensure it exists if imported with 0 stock
+      if (productoId) {
+        const existingStock = await this.prisma.stockAlmacen.findUnique({
+          where: { productoId_almacenId: { productoId, almacenId: targetAlmacenId } }
+        });
+        
+        if (existingStock) {
+           await this.prisma.stockAlmacen.update({
+             where: { id: existingStock.id },
+             data: { stockActual: stockActual } // Set stock to whatever came from Excel
+           });
+        } else {
+           await this.prisma.stockAlmacen.create({
+             data: {
+               productoId,
+               almacenId: targetAlmacenId,
+               stockActual
+             }
+           });
         }
-      });
-      createdCount++;
+        
+        if (stockActual > 0) {
+          await this.prisma.movimientoInventario.create({
+             data: {
+               productoId,
+               almacenId: targetAlmacenId,
+               tipo: 'INGRESO',
+               cantidad: stockActual,
+               observacion: 'Importación masiva (Stock Inicial / Ajuste)'
+             }
+          });
+        }
+      }
     }
 
     return { ok: true, created: createdCount, updated: updatedCount };

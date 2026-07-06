@@ -81,6 +81,7 @@ export default function ProductosPage() {
   const [kardexData, setKardexData] = useState<any[]>([]);
   const [kardexProducto, setKardexProducto] = useState<Producto | null>(null);
   const [importData, setImportData] = useState<any[]>([]);
+  const [importAlmacenId, setImportAlmacenId] = useState("");
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -274,8 +275,9 @@ export default function ProductosPage() {
 
   const procesarImportacion = async () => {
     if (importData.length === 0) return toast.error("El archivo está vacío");
+    if (!importAlmacenId) return toast.warning("Seleccione un almacén de destino");
     try {
-      const res = await fetch("/api/inventory/productos/import", {
+      const res = await fetch(`/api/inventory/productos/import?almacenId=${importAlmacenId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(importData)
@@ -286,6 +288,7 @@ export default function ProductosPage() {
       toast.success(`${result.created || 0} creados, ${result.updated || 0} actualizados correctamente`);
       setIsImportModalOpen(false);
       setImportData([]);
+      setImportAlmacenId("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       await cargarProductos();
     } catch (e) {
@@ -626,6 +629,18 @@ export default function ProductosPage() {
                 <li>Las columnas recomendadas son: <strong>Nombre, Descripcion, Stock, Costo, Precio</strong></li>
                 <li>El sistema autogenerará los códigos correlativos.</li>
               </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Almacén de Destino para Stock Inicial *</Label>
+              <Select value={importAlmacenId} onValueChange={(val) => setImportAlmacenId(val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccione almacén..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {almacenes.map(a => <SelectItem key={a.id} value={String(a.id)}>{a.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
