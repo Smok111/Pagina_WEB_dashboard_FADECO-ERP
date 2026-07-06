@@ -633,7 +633,7 @@ export default function ProductosPage() {
 
             <div className="space-y-2">
               <Label>Almacén de Destino para Stock Inicial *</Label>
-              <Select value={importAlmacenId} onValueChange={(val) => setImportAlmacenId(val)}>
+              <Select value={importAlmacenId} onValueChange={(val) => setImportAlmacenId(val || "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccione almacén..." />
                 </SelectTrigger>
