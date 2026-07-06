@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -36,23 +36,31 @@ export class RrhhService {
   }
 
   async createTrabajador(data: any) {
-    return this.prisma.trabajador.create({
-      data: {
-        codigoInterno: data.codigoInterno,
-        dni: data.dni,
-        nombres: data.nombres,
-        apellidos: data.apellidos,
-        telefono: data.telefono,
-        correo: data.correo,
-        direccion: data.direccion,
-        fechaIngreso: new Date(data.fechaIngreso),
-        areaId: Number(data.areaId),
-        cargoId: Number(data.cargoId),
-        areaProduccionId: data.areaProduccionId ? Number(data.areaProduccionId) : null,
-        usuarioId: data.usuarioId ? Number(data.usuarioId) : null,
-        salarioBase: Number(data.salarioBase || 0),
-      },
-    });
+    try {
+      return await this.prisma.trabajador.create({
+        data: {
+          codigoInterno: data.codigoInterno?.trim() || null,
+          dni: data.dni,
+          nombres: data.nombres,
+          apellidos: data.apellidos,
+          telefono: data.telefono || null,
+          correo: data.correo?.trim() || null,
+          direccion: data.direccion || null,
+          fechaIngreso: new Date(data.fechaIngreso),
+          areaId: Number(data.areaId),
+          cargoId: Number(data.cargoId),
+          areaProduccionId: data.areaProduccionId ? Number(data.areaProduccionId) : null,
+          usuarioId: data.usuarioId ? Number(data.usuarioId) : null,
+          salarioBase: Number(data.salarioBase || 0),
+        },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        const field = error.meta?.target?.[0] || 'campo';
+        throw new BadRequestException(`Ya existe un trabajador con ese ${field}. Verifique DNI o Código Interno.`);
+      }
+      throw error;
+    }
   }
 
   async deleteTrabajador(id: number) {
