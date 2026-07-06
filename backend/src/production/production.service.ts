@@ -62,9 +62,13 @@ export class ProductionService {
         destino: data.destino || 'STOCK',
         observaciones: data.observaciones,
         areaProduccionId: data.areaProduccionId ? Number(data.areaProduccionId) : null,
-        responsableId: data.responsableId ? Number(data.responsableId) : null,
+        responsableId: (data.responsableIds && Array.isArray(data.responsableIds) && data.responsableIds.length > 0) ? Number(data.responsableIds[0]) : (data.responsableId ? Number(data.responsableId) : null),
         ventaId: data.ventaId ? Number(data.ventaId) : null,
-        ...(data.responsableId ? {
+        ...(data.responsableIds && Array.isArray(data.responsableIds) && data.responsableIds.length > 0 ? {
+          trabajadores: {
+            create: data.responsableIds.map((id: any) => ({ trabajadorId: Number(id) }))
+          }
+        } : data.responsableId ? {
           trabajadores: {
             create: [
               { trabajadorId: Number(data.responsableId) }

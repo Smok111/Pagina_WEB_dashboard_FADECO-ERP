@@ -106,17 +106,22 @@ export default function ProduccionPage() {
 
   const handleCreateOP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedTrabajadores.length === 0) {
+      alert("Seleccione al menos un operario.");
+      return;
+    }
     const finalDestino = destino === "PEDIDO_CLIENTE" ? `PEDIDO_CLIENTE_${tipoPedido}` : destino;
     const res = await fetch("/api/production", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino: finalDestino, areaProduccionId, responsableId }),
+      body: JSON.stringify({ productoFinalId, cantidadEsperada, destino: finalDestino, areaProduccionId, responsableIds: selectedTrabajadores }),
     });
     if (res.ok) {
       setIsNewOpOpen(false);
       setProductoFinalId("");
       setAreaProduccionId("");
       setResponsableId("");
+      setSelectedTrabajadores([]);
       setTipoPedido("CREDITO");
       refreshOrdenes();
     }
@@ -624,16 +629,35 @@ export default function ProduccionPage() {
                 </div>
                 {areaProduccionId && (
                   <div className="mb-5">
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Responsable / Encargado</label>
-                    <select required value={responsableId} onChange={e => setResponsableId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
-                      <option value="" disabled>Seleccione el responsable...</option>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Operarios</label>
+                    <div className="w-full bg-[#0B0F19] border border-white/10 rounded-xl p-3 text-white max-h-48 overflow-y-auto space-y-2">
                       {trabajadores.filter(t => {
                         const multifaceticoId = areasProduccion.find((a: any) => a.nombre.toLowerCase() === 'multifacetico')?.id;
                         return t.areaProduccionId === Number(areaProduccionId) || (multifaceticoId && t.areaProduccionId === multifaceticoId);
                       }).map(t => (
-                        <option key={t.id} value={t.id}>{t.nombres} {t.apellidos} - {t.cargo?.nombre}</option>
+                        <label key={t.id} className="flex items-center gap-3 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-white/20 bg-transparent text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                            checked={selectedTrabajadores.includes(t.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedTrabajadores([...selectedTrabajadores, t.id]);
+                              } else {
+                                setSelectedTrabajadores(selectedTrabajadores.filter(id => id !== t.id));
+                              }
+                            }}
+                          />
+                          <span>{t.nombres} {t.apellidos} <span className="text-slate-400 text-xs ml-2">- {t.cargo?.nombre}</span></span>
+                        </label>
                       ))}
-                    </select>
+                      {trabajadores.filter(t => {
+                        const multifaceticoId = areasProduccion.find((a: any) => a.nombre.toLowerCase() === 'multifacetico')?.id;
+                        return t.areaProduccionId === Number(areaProduccionId) || (multifaceticoId && t.areaProduccionId === multifaceticoId);
+                      }).length === 0 && (
+                        <p className="text-slate-500 text-sm italic p-2">No hay operarios disponibles en esta área.</p>
+                      )}
+                    </div>
                   </div>
                 )}
                 <div className="mb-8">
