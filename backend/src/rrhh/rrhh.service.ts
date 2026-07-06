@@ -56,8 +56,20 @@ export class RrhhService {
   }
 
   async deleteTrabajador(id: number) {
-    return this.prisma.trabajador.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.ordenProduccionTrabajador.deleteMany({ where: { trabajadorId: id } });
+      await tx.asistencia.deleteMany({ where: { trabajadorId: id } });
+      await tx.vacaciones.deleteMany({ where: { trabajadorId: id } });
+      await tx.kardexProduccion.deleteMany({ where: { trabajadorId: id } });
+      await tx.controlCalidad.deleteMany({ where: { trabajadorId: id } });
+      await tx.incidenciaProduccion.deleteMany({ where: { trabajadorId: id } });
+      
+      await tx.ordenProduccion.updateMany({
+        where: { responsableId: id },
+        data: { responsableId: null }
+      });
+
+      return tx.trabajador.delete({ where: { id } });
     });
   }
 
