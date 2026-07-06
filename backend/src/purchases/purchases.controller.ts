@@ -1,9 +1,14 @@
-import { Controller, Get, Post, Body, Delete, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, BadRequestException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 
 @Controller('api/purchases')
 export class PurchasesController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService,
+  ) {}
 
   @Get()
   async getPurchases() {
@@ -186,5 +191,27 @@ export class PurchasesController {
     } catch (error: any) {
       throw new BadRequestException(error.message || 'No se pudo eliminar la compra');
     }
+  }
+
+  @Post(':id/archivo')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+    const compra = await this.prisma.compra.findUnique({ where: { id: Number(id) } });
+    if (!compra) throw new BadRequestException('Compra no encontrada');
+
+    const timestamp = Date.now();
+    const filePath = `compras/${compra.codigoSistema}/${timestamp}_${file.originalname.replace(/\s+/g, '_')}`;
+    
+    // Asumimos que usa Supabase como los demas modulos
+    const bucketName = process.env.SUPABASE_BUCKET_NAME || 'produccion';
+    const url = await this.storageService.uploadFile(bucketName, filePath, file);
+
+    return this.prisma.compra.update({
+      where: { id: Number(id) },
+      data: { archivoAdjunto: url },
+    });
   }
 }

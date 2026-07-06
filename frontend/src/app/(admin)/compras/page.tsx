@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen, Trash2, RefreshCcw } from "lucide-react";
+import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen, Trash2, RefreshCcw, FileText } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
@@ -17,6 +17,8 @@ export default function ComprasPage() {
   const [productos, setProductos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [isNewProviderModalOpen, setIsNewProviderModalOpen] = useState(false);
   const [newProvider, setNewProvider] = useState({
     ruc: "",
@@ -148,9 +150,28 @@ export default function ComprasPage() {
       });
 
       if (res.ok) {
+        const compraCreada = await res.json();
+
+        if (selectedFile) {
+          setUploading(true);
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+          try {
+            await fetch(`/api/purchases/${compraCreada.id}/archivo`, {
+              method: "POST",
+              body: formData,
+            });
+          } catch (e) {
+            console.error("Error subiendo archivo:", e);
+          } finally {
+            setUploading(false);
+          }
+        }
+
         setIsModalOpen(false);
         setCart([]);
         setNumeroDocumento("");
+        setSelectedFile(null);
         fetchData();
       }
     } catch (error) {
@@ -239,9 +260,16 @@ export default function ComprasPage() {
                     {formatCurrency(compra.total)}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button onClick={() => handleDelete(compra.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Anular Compra">
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex justify-center items-center gap-3">
+                      {compra.archivoAdjunto && (
+                        <a href={compra.archivoAdjunto} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors" title="Ver Comprobante">
+                          <FileText size={18} />
+                        </a>
+                      )}
+                      <button onClick={() => handleDelete(compra.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Anular Compra">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -300,6 +328,16 @@ export default function ComprasPage() {
                     <label className="block text-sm font-medium text-slate-400 mb-2">N° Documento</label>
                     <input type="text" required value={numeroDocumento} onChange={e => setNumeroDocumento(e.target.value)} placeholder="F001-000234" className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50" />
                   </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Adjuntar Comprobante (PDF/Imagen)</label>
+                  <input 
+                    type="file" 
+                    accept=".pdf,image/*" 
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20" 
+                  />
                 </div>
 
                 <div className="mb-6 relative">
@@ -417,8 +455,8 @@ export default function ComprasPage() {
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium w-full sm:w-auto">
                     Cancelar
                   </button>
-                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/25 w-full sm:w-auto">
-                    <Save size={18} /> Procesar Compra e Ingresar
+                  <button type="submit" disabled={uploading} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/25 w-full sm:w-auto disabled:opacity-50">
+                    <Save size={18} /> {uploading ? "Subiendo..." : "Procesar Compra e Ingresar"}
                   </button>
                 </div>
               </form>
