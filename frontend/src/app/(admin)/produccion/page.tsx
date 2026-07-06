@@ -588,7 +588,11 @@ export default function ProduccionPage() {
                   <label className="block text-sm font-medium text-slate-400 mb-2">Producto a Fabricar</label>
                   <select required value={productoFinalId} onChange={e => setProductoFinalId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
                     <option value="" disabled>Seleccione producto final...</option>
-                    {productos.map(p => <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>)}
+                    {productos.filter(p => {
+                      const prodAlmacen = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"));
+                      if (!prodAlmacen || !prodAlmacen.stocks) return true;
+                      return prodAlmacen.stocks.some((s: any) => s.productoId === p.id);
+                    }).map(p => <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>)}
                   </select>
                 </div>
                 <div className="mb-5">
@@ -641,14 +645,22 @@ export default function ProduccionPage() {
               </div>
               <div className="p-5 bg-blue-500/5 border-b border-white/5 flex gap-3 text-sm shrink-0">
                 <AlertCircle className="text-blue-400 shrink-0" size={18}/>
-                <p className="text-blue-200">El registro de este consumo descontará el inventario del Almacén Central inmediatamente.</p>
+                <p className="text-blue-200">El registro de este consumo descontará el inventario del Almacén de Producción inmediatamente.</p>
               </div>
               <form onSubmit={handleAddConsumo} className="p-6 overflow-y-auto flex-1">
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Materia Prima / Insumo</label>
                   <select required value={insumoId} onChange={e => setInsumoId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50">
                     <option value="" disabled>Buscar insumo...</option>
-                    {productos.filter(p => Number(p.stockActual) > 0).map(p => <option key={p.id} value={p.id}>{p.codigo} - {p.nombre} (Stock: {p.stockActual})</option>)}
+                    {productos.filter(p => {
+                      const prodAlmacen = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"));
+                      if (!prodAlmacen || !prodAlmacen.stocks) return false;
+                      const stockInfo = prodAlmacen.stocks.find((s: any) => s.productoId === p.id);
+                      return stockInfo && Number(stockInfo.stockActual) > 0;
+                    }).map(p => {
+                      const stockInfo = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"))?.stocks?.find((s: any) => s.productoId === p.id);
+                      return <option key={p.id} value={p.id}>{p.codigo} - {p.nombre} (Stock en Producción: {stockInfo?.stockActual || 0})</option>
+                    })}
                   </select>
                 </div>
                 <div className="mb-8">
