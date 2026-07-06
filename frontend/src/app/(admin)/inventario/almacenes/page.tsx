@@ -256,117 +256,119 @@ export default function AlmacenesPage() {
           </h2>
         </div>
 
-        <table className="w-full">
-          <thead>
-            <tr className="bg-slate-50 border-b">
-              <SortableTableHead label="Código Sistema" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
-              <SortableTableHead label="Nombre" field="nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
-              <SortableTableHead label="Ubicación" field="ubicacion" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
-              <SortableTableHead label="Responsable" field="responsable" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
-              <SortableTableHead label="Estado" field="estado" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-slate-50 border-b">
+                <SortableTableHead label="Código Sistema" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+                <SortableTableHead label="Nombre" field="nombre" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+                <SortableTableHead label="Ubicación" field="ubicacion" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+                <SortableTableHead label="Responsable" field="responsable" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
+                <SortableTableHead label="Estado" field="estado" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="p-4" />
 
-              <th className="text-left p-4">
-                Acciones
-              </th>
-            </tr>
-          </thead>
+                <th className="text-left p-4">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {almacenesOrdenados.map(
-              (almacen) => (
-                <tr
-                  key={almacen.id}
-                  className="border-b"
-                >
-                  <td className="p-4 font-mono">
-                    {
-                      almacen.codigoSistema
-                    }
-                  </td>
-
-                  <td className="p-4">
-                    {almacen.nombre}
-                  </td>
-
-                  <td className="p-4">
-                    {
-                      almacen.ubicacion
-                    }
-                  </td>
-
-                  <td className="p-4">
-                    {
-                      almacen.responsable
-                    }
-                  </td>
-
-                  <td className="p-4">
-                    {almacen.estado ? (
-                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                        Activo
-                      </span>
-                    ) : (
-                      <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                        Inactivo
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-4 flex gap-2">
-                    <button
-                      onClick={() =>
-                        editarAlmacen(
-                          almacen
-                        )
+            <tbody>
+              {almacenesOrdenados.map(
+                (almacen) => (
+                  <tr
+                    key={almacen.id}
+                    className="border-b"
+                  >
+                    <td className="p-4 font-mono">
+                      {
+                        almacen.codigoSistema
                       }
-                      className="btn btn-secondary px-3 py-1"
-                    >
-                      ✏️
-                    </button>
+                    </td>
 
-                    <button
-                      onClick={() =>
-                        cambiarEstado(
-                          almacen.id,
+                    <td className="p-4">
+                      {almacen.nombre}
+                    </td>
+
+                    <td className="p-4">
+                      {
+                        almacen.ubicacion
+                      }
+                    </td>
+
+                    <td className="p-4">
+                      {
+                        almacen.responsable
+                      }
+                    </td>
+
+                    <td className="p-4">
+                      {almacen.estado ? (
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                          Activo
+                        </span>
+                      ) : (
+                        <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
+                          Inactivo
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="p-4 flex gap-2">
+                      <button
+                        onClick={() =>
+                          editarAlmacen(
+                            almacen
+                          )
+                        }
+                        className="btn btn-secondary px-3 py-1"
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          cambiarEstado(
+                            almacen.id,
+                            almacen.estado
+                          )
+                        }
+                        className={
                           almacen.estado
-                        )
-                      }
-                      className={
-                        almacen.estado
-                          ? "btn btn-secondary px-3 py-1"
-                          : "btn btn-primary px-3 py-1"
-                      }
-                    >
-                      {almacen.estado
-                        ? "🚫"
-                        : "✅"}
-                    </button>
+                            ? "btn btn-secondary px-3 py-1"
+                            : "btn btn-primary px-3 py-1"
+                        }
+                      >
+                        {almacen.estado
+                          ? "🚫"
+                          : "✅"}
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        eliminarAlmacen(
-                          almacen.id
-                        )
-                      }
-                      className="btn btn-secondary px-3 py-1"
-                    >
-                      🗑️
-                    </button>
-                    <button
-                      onClick={() =>
-                        window.location.href =
-                          `/inventario/almacenes/${almacen.id}`
-                      }
-                      className="btn btn-primary px-3 py-1"
-                    >
-                      📦
-                    </button>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
+                      <button
+                        onClick={() =>
+                          eliminarAlmacen(
+                            almacen.id
+                          )
+                        }
+                        className="btn btn-secondary px-3 py-1"
+                      >
+                        🗑️
+                      </button>
+                      <button
+                        onClick={() =>
+                          window.location.href =
+                            `/inventario/almacenes/${almacen.id}`
+                        }
+                        className="btn btn-primary px-3 py-1"
+                      >
+                        📦
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   );

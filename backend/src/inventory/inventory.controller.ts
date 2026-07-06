@@ -105,7 +105,7 @@ export class InventoryController {
   async getAlmacen(@Param('id') idParam: string) {
     const almacen = await this.prisma.almacen.findUnique({
       where: { id: Number(idParam) },
-      include: { 
+      include: {
         stocks: { include: { producto: true } },
         equipos: true
       },
@@ -292,12 +292,12 @@ export class InventoryController {
       const marca = item.MARCA || item.marca || null;
       const color = item.COLOR || item.color || null;
       const unidadNombre = item.UNIDAD || item.unidad || item.MEDIDA || '';
-      
+
       let unidadId = defaultUniId;
       if (unidadNombre) {
         const normalizedUnidad = unidadNombre.toUpperCase().trim();
         let foundId = unidadMap.get(normalizedUnidad);
-        
+
         // Also try matching by codigo
         if (!foundId) {
           const foundByCode = unidades.find(u => u.codigo.toUpperCase() === normalizedUnidad);
@@ -319,7 +319,7 @@ export class InventoryController {
           unidadId = newUnit.id;
         }
       }
-      
+
       const stockActual = Number(item.STOCK || item.stockActual || item.stock || 0);
       const stockMinimo = Number(item.STOCKMINIMO || item.stockMinimo || 0);
       const costo = Number(item.COSTO || item.costo || 0);
@@ -341,7 +341,7 @@ export class InventoryController {
       // Create new
       const ultimo = await this.prisma.producto.findFirst({ orderBy: { id: 'desc' } });
       const newCodigo = codigo || `PRO-${String((ultimo?.id || 0) + 1).padStart(6, '0')}`;
-      
+
       await this.prisma.producto.create({
         data: {
           codigoSistema: newCodigo,
