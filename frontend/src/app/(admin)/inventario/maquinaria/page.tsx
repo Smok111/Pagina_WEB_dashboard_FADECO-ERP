@@ -297,11 +297,10 @@ export default function MaquinariaPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-auto w-full">
-            <Table className="min-w-[800px]">
-              <TableHeader>
-                <TableRow className="bg-slate-50">
+        <CardContent className="min-w-0 p-0 sm:p-6">
+          <Table className="min-w-[800px]" containerClassName="rounded-md border max-h-[70vh] w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+              <TableRow>
                   {renderSortableHeader("codigo", "Código")}
                   {renderSortableHeader("nombre", "Nombre")}
                   {renderSortableHeader("marca", "Marca")}
@@ -359,7 +358,6 @@ export default function MaquinariaPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
         </CardContent>
       </Card>
 

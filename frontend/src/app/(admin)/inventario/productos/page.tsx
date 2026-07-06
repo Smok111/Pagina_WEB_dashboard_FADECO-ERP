@@ -445,11 +445,10 @@ export default function ProductosPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="min-w-0 overflow-hidden w-full">
-          <div className="rounded-md border overflow-x-auto overflow-y-auto max-h-[70vh] w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <Table className="min-w-[800px] w-full">
-              <TableHeader>
-                <TableRow className="bg-slate-50">
+        <CardContent className="min-w-0 p-0 sm:p-6">
+          <Table className="min-w-[800px]" containerClassName="rounded-md border max-h-[70vh] w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
+              <TableRow>
                   {renderSortableHeader("codigo", "Código")}
                   {renderSortableHeader("nombre", "Nombre")}
                   {renderSortableHeader("categoria", "Categoría")}
@@ -510,7 +509,6 @@ export default function ProductosPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
         </CardContent>
       </Card>
 
