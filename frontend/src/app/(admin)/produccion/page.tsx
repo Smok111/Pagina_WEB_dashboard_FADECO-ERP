@@ -619,7 +619,7 @@ export default function ProduccionPage() {
                   <label className="block text-sm font-medium text-slate-400 mb-2">Área de Producción</label>
                   <select required value={areaProduccionId} onChange={e => { setAreaProduccionId(e.target.value); setResponsableId(""); }} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
                     <option value="" disabled>Seleccione el área...</option>
-                    {areasProduccion.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                    {areasProduccion.filter(a => a.nombre.toLowerCase() !== 'multifacetico').map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
                   </select>
                 </div>
                 {areaProduccionId && (
@@ -627,7 +627,10 @@ export default function ProduccionPage() {
                     <label className="block text-sm font-medium text-slate-400 mb-2">Responsable / Encargado</label>
                     <select required value={responsableId} onChange={e => setResponsableId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
                       <option value="" disabled>Seleccione el responsable...</option>
-                      {trabajadores.filter(t => t.areaProduccionId === Number(areaProduccionId)).map(t => (
+                      {trabajadores.filter(t => {
+                        const multifaceticoId = areasProduccion.find((a: any) => a.nombre.toLowerCase() === 'multifacetico')?.id;
+                        return t.areaProduccionId === Number(areaProduccionId) || (multifaceticoId && t.areaProduccionId === multifaceticoId);
+                      }).map(t => (
                         <option key={t.id} value={t.id}>{t.nombres} {t.apellidos} - {t.cargo?.nombre}</option>
                       ))}
                     </select>
