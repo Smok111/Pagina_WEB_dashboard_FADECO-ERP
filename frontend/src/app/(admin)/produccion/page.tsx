@@ -60,6 +60,15 @@ export default function ProduccionPage() {
     }
   };
 
+  const refreshProductos = async () => {
+    try {
+      const res = await fetch("/api/inventory/productos");
+      if (res.ok) setProductos(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Carga inicial completa
   const fetchData = async () => {
     try {
@@ -630,7 +639,18 @@ export default function ProduccionPage() {
               </div>
               <form onSubmit={handleCreateOP} className="p-6 overflow-y-auto flex-1">
                 <div className="mb-5 relative">
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Producto a Fabricar</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-slate-400">Producto a Fabricar</label>
+                    <div className="flex gap-4">
+                      <button type="button" onClick={refreshProductos} className="text-xs text-slate-400 hover:text-slate-300 font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        Actualizar
+                      </button>
+                      <a href="/inventario/productos" target="_blank" className="text-xs text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1 tooltip-trigger" title="Se abrirá en una pestaña nueva">
+                        <Plus size={12}/> Nuevo Producto
+                      </a>
+                    </div>
+                  </div>
                   <input
                     type="text"
                     placeholder="Buscar producto (por código o nombre)..."
