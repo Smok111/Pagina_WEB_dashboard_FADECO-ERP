@@ -103,6 +103,8 @@ export default function ProduccionPage() {
   };
 
   const [tipoPedido, setTipoPedido] = useState("CREDITO"); // CREDITO, PROYECTO
+  const [productSearch, setProductSearch] = useState("");
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
 
   const handleCreateOP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -627,16 +629,66 @@ export default function ProduccionPage() {
                 <button onClick={() => setIsNewOpOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
               </div>
               <form onSubmit={handleCreateOP} className="p-6 overflow-y-auto flex-1">
-                <div className="mb-5">
+                <div className="mb-5 relative">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Producto a Fabricar</label>
-                  <select required value={productoFinalId} onChange={e => setProductoFinalId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50">
-                    <option value="" disabled>Seleccione producto final...</option>
-                    {productos.filter(p => {
-                      const prodAlmacen = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"));
-                      if (!prodAlmacen || !prodAlmacen.stocks) return true;
-                      return prodAlmacen.stocks.some((s: any) => s.productoId === p.id);
-                    }).map(p => <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>)}
-                  </select>
+                  <input
+                    type="text"
+                    placeholder="Buscar producto (por código o nombre)..."
+                    value={productSearch || (productos.find(p => p.id === Number(productoFinalId))?.nombre || "")}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      if (productoFinalId) setProductoFinalId("");
+                      setShowProductDropdown(true);
+                    }}
+                    onFocus={() => {
+                      setProductSearch("");
+                      setShowProductDropdown(true);
+                    }}
+                    className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50"
+                    required={!productoFinalId}
+                  />
+                  
+                  {showProductDropdown && (
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowProductDropdown(false)}
+                    />
+                  )}
+
+                  {showProductDropdown && (
+                    <div className="absolute z-20 w-full mt-1 bg-[#1A2235] border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                      {(() => {
+                        const produccionProducts = productos.filter(p => {
+                          const prodAlmacen = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"));
+                          if (!prodAlmacen || !prodAlmacen.stocks) return true;
+                          return prodAlmacen.stocks.some((s: any) => s.productoId === p.id);
+                        });
+                        const filtered = produccionProducts.filter(p => 
+                          p.nombre.toLowerCase().includes(productSearch.toLowerCase()) || 
+                          (p.codigo && p.codigo.toLowerCase().includes(productSearch.toLowerCase()))
+                        );
+                        
+                        if (filtered.length === 0) {
+                          return <div className="p-4 text-slate-400 text-sm text-center">No se encontraron productos</div>;
+                        }
+                        
+                        return filtered.map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            className="w-full text-left px-4 py-3 hover:bg-white/5 border-b border-white/5 text-slate-300 text-sm focus:bg-white/5 outline-none transition-colors flex justify-between items-center"
+                            onClick={() => {
+                              setProductoFinalId(String(p.id));
+                              setProductSearch(p.nombre);
+                              setShowProductDropdown(false);
+                            }}
+                          >
+                            <span><span className="font-medium text-white">{p.codigo}</span> - {p.nombre}</span>
+                          </button>
+                        ));
+                      })()}
+                    </div>
+                  )}
                 </div>
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-400 mb-2">Destino de Producción</label>
