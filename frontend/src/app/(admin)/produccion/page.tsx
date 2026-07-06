@@ -692,12 +692,7 @@ export default function ProduccionPage() {
                   <label className="block text-sm font-medium text-slate-400 mb-2">Materia Prima / Insumo</label>
                   <select required value={insumoId} onChange={e => setInsumoId(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50">
                     <option value="" disabled>Buscar insumo...</option>
-                    {productos.filter(p => {
-                      const prodAlmacen = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"));
-                      if (!prodAlmacen || !prodAlmacen.stocks) return false;
-                      const stockInfo = prodAlmacen.stocks.find((s: any) => s.productoId === p.id);
-                      return stockInfo && Number(stockInfo.stockActual) > 0;
-                    }).map(p => {
+                    {productos.map(p => {
                       const stockInfo = almacenes.find((a: any) => a.nombre.toLowerCase().includes("producci"))?.stocks?.find((s: any) => s.productoId === p.id);
                       return <option key={p.id} value={p.id}>{p.codigo} - {p.nombre} (Stock en Producción: {stockInfo?.stockActual || 0})</option>
                     })}
