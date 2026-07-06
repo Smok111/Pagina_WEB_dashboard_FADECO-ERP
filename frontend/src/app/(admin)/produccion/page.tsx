@@ -163,6 +163,13 @@ export default function ProduccionPage() {
         ...activeOp,
         consumos: [...activeOp.consumos, { producto: productos.find(p => p.id === Number(insumoId)), cantidad: cantidadInsumo }]
       });
+    } else {
+      try {
+        const errorData = await res.json();
+        alert(errorData.message || "Error al registrar consumo.");
+      } catch {
+        alert("Error al registrar consumo. Verifique que haya stock suficiente en el Almacén de Producción.");
+      }
     }
   };
 
