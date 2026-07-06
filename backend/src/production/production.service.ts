@@ -146,32 +146,38 @@ export class ProductionService {
       const almacenProd = await tx.almacen.findFirst({
         where: { nombre: { contains: 'Producción', mode: 'insensitive' } }
       });
-      // Fallback to Almacen Principal (1) if not found, or use the one provided
-      const targetAlmacenId = almacenProd ? almacenProd.id : Number(data.almacenId || 1);
 
-      // Validar stock antes de consumir
+      // Validar producto
       const prod = await tx.producto.findUnique({ where: { id: Number(data.productoId) } });
       if (!prod) throw new NotFoundException('Producto no encontrado');
-      
-      // Get stock specifically from this warehouse
-      const stockAlmacen = await tx.stockAlmacen.findUnique({
-        where: {
-          productoId_almacenId: {
-            productoId: Number(data.productoId),
-            almacenId: targetAlmacenId,
-          },
-        },
+
+      // Buscar stock en todos los almacenes para este producto
+      const allStockRecords = await tx.stockAlmacen.findMany({
+        where: { productoId: Number(data.productoId), stockActual: { gt: 0 } },
+        include: { almacen: true },
+        orderBy: { stockActual: 'desc' },
       });
 
-      const stockDisponible = stockAlmacen ? Math.max(0, Number(stockAlmacen.stockActual)) : 0;
-      
-      if (stockDisponible < Number(data.cantidad)) {
+      // Priorizar Almacén de Producción si tiene stock
+      let stockAlmacen = almacenProd
+        ? allStockRecords.find((s: any) => s.almacenId === almacenProd.id)
+        : null;
+
+      // Si no hay stock en Producción, usar el primer almacén que tenga stock
+      if (!stockAlmacen || Number(stockAlmacen.stockActual) <= 0) {
+        stockAlmacen = allStockRecords.length > 0 ? allStockRecords[0] : null;
+      }
+
+      if (!stockAlmacen || Number(stockAlmacen.stockActual) < Number(data.cantidad)) {
+        const disponible = stockAlmacen ? Number(stockAlmacen.stockActual) : 0;
         throw new BadRequestException(
-          stockDisponible === 0
-            ? `Sin stock en Almacén de Producción para: ${prod.nombre}.`
-            : `Stock insuficiente en Almacén de Producción para: ${prod.nombre}. Disponible: ${stockDisponible}`
+          disponible === 0
+            ? `Sin stock disponible en ningún almacén para: ${prod.nombre}.`
+            : `Stock insuficiente para: ${prod.nombre}. Disponible: ${disponible} en ${stockAlmacen.almacen.nombre}`
         );
       }
+
+      const targetAlmacenId = stockAlmacen.almacenId;
 
       const consumo = await tx.consumoMateriaPrima.create({
         data: {
@@ -187,20 +193,18 @@ export class ProductionService {
         data: {
           tipo: 'SALIDA',
           cantidad: consumo.cantidad,
-          observacion: `Consumo para OP-${opId}`,
+          observacion: `Consumo para OP-${opId} desde ${stockAlmacen.almacen.nombre}`,
           productoId: consumo.productoId,
           almacenId: consumo.almacenId,
         },
       });
 
       // Descontar stock del almacén
-      if (stockAlmacen) {
-        const nuevoStock = Math.max(0, Number(stockAlmacen.stockActual) - Number(consumo.cantidad));
-        await tx.stockAlmacen.update({
-          where: { id: stockAlmacen.id },
-          data: { stockActual: nuevoStock },
-        });
-      }
+      const nuevoStock = Math.max(0, Number(stockAlmacen.stockActual) - Number(consumo.cantidad));
+      await tx.stockAlmacen.update({
+        where: { id: stockAlmacen.id },
+        data: { stockActual: nuevoStock },
+      });
 
       // Recalcular producto.stockActual = SUM(stockAlmacen)
       const allStocks = await tx.stockAlmacen.findMany({
