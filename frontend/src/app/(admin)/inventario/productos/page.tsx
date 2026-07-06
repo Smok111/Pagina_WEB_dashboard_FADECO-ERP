@@ -446,7 +446,7 @@ export default function ProductosPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-auto w-full">
+          <div className="rounded-md border overflow-x-auto overflow-y-auto max-h-[70vh] w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
             <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow className="bg-slate-50">
