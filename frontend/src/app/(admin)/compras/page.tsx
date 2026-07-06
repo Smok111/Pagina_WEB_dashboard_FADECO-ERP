@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen, Trash2 } from "lucide-react";
+import { Plus, Search, ShoppingCart, X, Save, ArrowRight, PackageOpen, Trash2, RefreshCcw } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useSort } from "@/hooks/useSort";
 import { SortableTableHead } from "@/components/ui/SortableTableHead";
@@ -158,6 +158,15 @@ export default function ComprasPage() {
     }
   };
 
+  const refreshProductos = async () => {
+    try {
+      const res = await fetch("/api/inventory/productos");
+      if (res.ok) setProductos(await res.json());
+    } catch (e) {
+      console.error("Error refreshing productos:", e);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm("¿Está seguro de anular esta compra? Se revertirá el stock ingresado al almacén.")) return;
     try {
@@ -294,7 +303,17 @@ export default function ComprasPage() {
                 </div>
 
                 <div className="mb-6 relative">
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Agregar Productos</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-slate-400">Agregar Productos</label>
+                    <div className="flex gap-4">
+                      <button type="button" onClick={refreshProductos} className="text-xs text-slate-400 hover:text-slate-300 font-medium flex items-center gap-1">
+                        <RefreshCcw size={12}/> Actualizar
+                      </button>
+                      <a href="/inventario/productos" target="_blank" className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 tooltip-trigger" title="Se abrirá en una pestaña nueva">
+                        <Plus size={12}/> Nuevo Producto
+                      </a>
+                    </div>
+                  </div>
                   <input
                     type="text"
                     placeholder="+ Buscar producto para agregar al carrito (por código o nombre)..."
