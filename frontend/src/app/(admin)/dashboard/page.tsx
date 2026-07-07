@@ -11,6 +11,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar 
 } from "recharts";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas-pro";
 import { motion } from "framer-motion";
 import { useTranslations } from "@/providers/AccessibilityProvider";
@@ -89,6 +90,36 @@ export default function DashboardPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const descargarPDFStockBajo = () => {
+    if (!metrics || !metrics.alertasStock || metrics.alertasStock.length === 0) return;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Lista de Productos para Reabastecimiento", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 28);
+    doc.text(`Total de productos con stock bajo: ${metrics.alertasStock.length}`, 14, 34);
+
+    const tableColumn = ["Código", "Producto", "Stock Actual", "Stock Mínimo", "Cantidad Faltante"];
+    const tableRows = metrics.alertasStock.map((prod: any) => [
+      prod.codigo,
+      prod.nombre,
+      Number(prod.stockActual),
+      Number(prod.stockMinimo),
+      Math.max(0, Number(prod.stockMinimo) - Number(prod.stockActual))
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: 'grid',
+      headStyles: { fillColor: [220, 38, 38] },
+      styles: { fontSize: 10 },
+    });
+
+    doc.save("Lista_Reabastecimiento.pdf");
   };
 
   if (loading) return <div className="p-8 text-slate-500 animate-pulse flex items-center justify-center h-full">{t("Cargando Mega Centro de Mando V3...")}</div>;
@@ -365,6 +396,14 @@ export default function DashboardPage() {
             <div>
               <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                 <PackageOpen size={16}/> {t("Stock Crítico")}
+                {metrics.alertasStock?.length > 0 && (
+                  <button
+                    onClick={descargarPDFStockBajo}
+                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-all shadow-sm hover:shadow-md normal-case tracking-normal"
+                  >
+                    <Download size={14} /> Descargar Lista de Compra (PDF)
+                  </button>
+                )}
               </h3>
               <div className="space-y-3">
                 {metrics.alertasStock?.length === 0 && <p className="text-sm text-emerald-600 font-medium">Todo el stock está en niveles óptimos.</p>}

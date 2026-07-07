@@ -55,4 +55,21 @@ export class RrhhController {
   createAreaProduccion(@Body() data: any) {
     return this.rrhhService.createAreaProduccion(data);
   }
+
+  // --- ENTREGAS EPP ---
+  @Get('entregas-epp')
+  getEntregasEPP() {
+    return this.rrhhService.getEntregasEPP();
+  }
+
+  @Get('entregas-epp/trabajador/:id')
+  getEntregasEPPByTrabajador(@Param('id') id: string) {
+    return this.rrhhService.getEntregasEPPByTrabajador(Number(id));
+  }
+
+  @Post('entregas-epp')
+  createEntregaEPP(@Body() data: any) {
+    return this.rrhhService.createEntregaEPP(data);
+  }
 }
+

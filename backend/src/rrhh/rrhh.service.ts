@@ -145,4 +145,93 @@ export class RrhhService {
     }
     return { success: true, imported: count };
   }
+
+  // --- ENTREGAS EPP ---
+  async getEntregasEPP() {
+    return this.prisma.entregaEPP.findMany({
+      include: {
+        trabajador: { select: { id: true, nombres: true, apellidos: true, dni: true } },
+        producto: { select: { id: true, codigo: true, nombre: true } },
+        almacen: { select: { id: true, nombre: true } },
+      },
+      orderBy: { fecha: 'desc' },
+    });
+  }
+
+  async getEntregasEPPByTrabajador(trabajadorId: number) {
+    return this.prisma.entregaEPP.findMany({
+      where: { trabajadorId },
+      include: {
+        producto: { select: { id: true, codigo: true, nombre: true } },
+        almacen: { select: { id: true, nombre: true } },
+      },
+      orderBy: { fecha: 'desc' },
+    });
+  }
+
+  async createEntregaEPP(data: any) {
+    const trabajadorId = Number(data.trabajadorId);
+    const productoId = Number(data.productoId);
+    const almacenId = Number(data.almacenId);
+    const cantidad = Number(data.cantidad || 1);
+    const fecha = data.fecha ? new Date(data.fecha) : new Date();
+    const observacion = data.observacion || null;
+
+    // Obtener el nombre del trabajador para la observación del movimiento
+    const trabajador = await this.prisma.trabajador.findUnique({
+      where: { id: trabajadorId },
+      select: { nombres: true, apellidos: true },
+    });
+    if (!trabajador) throw new BadRequestException('Trabajador no encontrado');
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Crear el registro de entrega EPP
+      const entrega = await tx.entregaEPP.create({
+        data: {
+          fecha,
+          trabajadorId,
+          productoId,
+          almacenId,
+          cantidad,
+          observacion,
+        },
+        include: {
+          trabajador: { select: { id: true, nombres: true, apellidos: true } },
+          producto: { select: { id: true, codigo: true, nombre: true } },
+          almacen: { select: { id: true, nombre: true } },
+        },
+      });
+
+      // 2. Descontar stock del almacén
+      const stockAlmacen = await tx.stockAlmacen.findUnique({
+        where: { productoId_almacenId: { productoId, almacenId } },
+      });
+      if (stockAlmacen) {
+        await tx.stockAlmacen.update({
+          where: { id: stockAlmacen.id },
+          data: { stockActual: { decrement: cantidad } },
+        });
+      }
+
+      // 3. Descontar stock global del producto
+      await tx.producto.update({
+        where: { id: productoId },
+        data: { stockActual: { decrement: cantidad } },
+      });
+
+      // 4. Registrar movimiento de inventario (SALIDA)
+      await tx.movimientoInventario.create({
+        data: {
+          productoId,
+          almacenId,
+          tipo: 'SALIDA',
+          cantidad,
+          observacion: `Entrega EPP a ${trabajador.nombres} ${trabajador.apellidos}`,
+        },
+      });
+
+      return entrega;
+    });
+  }
 }
+

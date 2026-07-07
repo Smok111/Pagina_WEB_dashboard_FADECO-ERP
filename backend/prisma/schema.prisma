@@ -152,6 +152,7 @@ model Producto {
   ordenesProduccion    OrdenProduccion[]
   consumosMateriaPrima ConsumoMateriaPrima[] @relation("MateriaPrima")
   kardexProduccion     KardexProduccion[]
+  entregasEPP          EntregaEPP[]
 }
 
 model Almacen {
@@ -172,9 +173,10 @@ model Almacen {
   stocks      StockAlmacen[]
   movimientos MovimientoInventario[]
 
-  compras  Compra[]
-  consumos ConsumoMateriaPrima[]
-  equipos  Equipo[]
+  compras     Compra[]
+  consumos    ConsumoMateriaPrima[]
+  equipos     Equipo[]
+  entregasEPP EntregaEPP[]
 }
 
 model StockAlmacen {
@@ -471,6 +473,7 @@ model Trabajador {
   kardex             KardexProduccion[]
   controlesCalidad   ControlCalidad[]
   incidencias        IncidenciaProduccion[]
+  entregasEPP        EntregaEPP[]
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -626,4 +629,24 @@ model ArchivoProduccion {
   tipoArchivo       String? // image/jpeg, application/pdf, etc.
   
   fechaSubida       DateTime @default(now())
+}
+
+// --- MÓDULO RRHH: ENTREGA EPP ---
+model EntregaEPP {
+  id            Int        @id @default(autoincrement())
+  fecha         DateTime   @default(now())
+
+  trabajadorId  Int
+  trabajador    Trabajador @relation(fields: [trabajadorId], references: [id])
+
+  productoId    Int
+  producto      Producto   @relation(fields: [productoId], references: [id])
+
+  almacenId     Int
+  almacen       Almacen    @relation(fields: [almacenId], references: [id])
+
+  cantidad      Int        @default(1)
+  observacion   String?
+
+  createdAt     DateTime   @default(now())
 }
