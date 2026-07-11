@@ -42,40 +42,40 @@ export default function Sidebar() {
     {
       label: "General",
       items: [
-        { nombre: "Dashboard", icono: LayoutDashboard, ruta: "/dashboard", roles: ["SUPERADMIN", "ADMIN"] },
+        { nombre: "Dashboard", idPermiso: "dashboard", icono: LayoutDashboard, ruta: "/dashboard", roles: ["SUPERADMIN", "ADMIN"] },
       ],
     },
     {
       label: "Inventario",
       items: [
-        { nombre: "Categorías", icono: FolderTree, ruta: "/inventario/categorias", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
-        { nombre: "Unidades", icono: Scale, ruta: "/inventario/unidades", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
-        { nombre: "Productos", icono: Package, ruta: "/inventario/productos", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
-        { nombre: "Almacenes", icono: Warehouse, ruta: "/inventario/almacenes", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
-        { nombre: "Maquinaria", icono: Cog, ruta: "/inventario/maquinaria", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
+        { nombre: "Categorías", idPermiso: "inventario", icono: FolderTree, ruta: "/inventario/categorias", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
+        { nombre: "Unidades", idPermiso: "inventario", icono: Scale, ruta: "/inventario/unidades", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
+        { nombre: "Productos", idPermiso: "inventario", icono: Package, ruta: "/inventario/productos", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
+        { nombre: "Almacenes", idPermiso: "inventario", icono: Warehouse, ruta: "/inventario/almacenes", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
+        { nombre: "Maquinaria", idPermiso: "inventario", icono: Cog, ruta: "/inventario/maquinaria", roles: ["SUPERADMIN", "ADMIN", "ALMACEN"] },
       ],
     },
     {
       label: "Operaciones",
       items: [
-        { nombre: "Compras", icono: ShoppingCart, ruta: "/compras", roles: ["SUPERADMIN", "ADMIN", "COMPRAS"] },
-        { nombre: "Ventas", icono: Receipt, ruta: "/ventas", roles: ["SUPERADMIN", "ADMIN", "VENTAS"] },
-        { nombre: "Producción", icono: Building2, ruta: "/produccion", roles: ["SUPERADMIN", "ADMIN", "PRODUCCION", "OPERARIO"] },
+        { nombre: "Compras", idPermiso: "compras", icono: ShoppingCart, ruta: "/compras", roles: ["SUPERADMIN", "ADMIN", "COMPRAS"] },
+        { nombre: "Ventas", idPermiso: "ventas", icono: Receipt, ruta: "/ventas", roles: ["SUPERADMIN", "ADMIN", "VENTAS"] },
+        { nombre: "Producción", idPermiso: "produccion", icono: Building2, ruta: "/produccion", roles: ["SUPERADMIN", "ADMIN", "PRODUCCION", "OPERARIO"] },
       ],
     },
     {
       label: "Administración",
       items: [
-        { nombre: "Mantenimiento", icono: Wrench, ruta: "/mantenimiento", roles: ["SUPERADMIN", "ADMIN"] },
-        { nombre: "RRHH", icono: Users, ruta: "/rrhh", roles: ["SUPERADMIN", "ADMIN", "RRHH"] },
+        { nombre: "Mantenimiento", idPermiso: "mantenimiento", icono: Wrench, ruta: "/mantenimiento", roles: ["SUPERADMIN", "ADMIN"] },
+        { nombre: "RRHH", idPermiso: "rrhh", icono: Users, ruta: "/rrhh", roles: ["SUPERADMIN", "ADMIN", "RRHH"] },
       ],
     },
     {
       label: "Configuración",
       items: [
-        { nombre: "Empresa", icono: Building2, ruta: "/configuracion/empresa", roles: ["SUPERADMIN", "ADMIN"] },
-        { nombre: "Usuarios", icono: Users, ruta: "/configuracion/usuarios", roles: ["SUPERADMIN", "ADMIN"] },
-        { nombre: "Roles", icono: Settings, ruta: "/configuracion/roles", roles: ["SUPERADMIN", "ADMIN"] },
+        { nombre: "Empresa", idPermiso: "configuracion", icono: Building2, ruta: "/configuracion/empresa", roles: ["SUPERADMIN", "ADMIN"] },
+        { nombre: "Usuarios", idPermiso: "configuracion", icono: Users, ruta: "/configuracion/usuarios", roles: ["SUPERADMIN", "ADMIN"] },
+        { nombre: "Roles", idPermiso: "configuracion", icono: Settings, ruta: "/configuracion/roles", roles: ["SUPERADMIN", "ADMIN"] },
       ],
     },
   ];
@@ -134,7 +134,19 @@ export default function Sidebar() {
                 </p>
               )}
               <ul className="space-y-1">
-                {group.items.filter(item => !item.roles || item.roles.includes((session?.user as any)?.role || "ADMIN") || (session?.user as any)?.role === "ADMINISTRADOR" || (session?.user as any)?.role === "SUPERADMIN").map((item) => {
+                {group.items.filter(item => {
+                  const user = session?.user as any;
+                  const role = user?.role?.toUpperCase() || "ADMIN";
+                  if (role === "SUPERADMIN" || role === "ADMINISTRADOR" || role === "ADMIN") return true;
+                  
+                  let parsedPerms = user?.permisos || [];
+                  if (typeof parsedPerms === 'string') {
+                    try { parsedPerms = JSON.parse(parsedPerms); } catch (e) { parsedPerms = []; }
+                  }
+                  if (Array.isArray(parsedPerms) && parsedPerms.includes(item.idPermiso)) return true;
+                  
+                  return !item.roles || item.roles.includes(role);
+                }).map((item) => {
                   const isActive = pathname === item.ruta || pathname.startsWith(`${item.ruta}/`);
                   const Icon = item.icono;
 
