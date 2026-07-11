@@ -423,6 +423,21 @@ export default function VentasPage() {
 
   return (
     <div className="p-6 h-full flex flex-col">
+      <div className="flex flex-wrap gap-3 mb-6">
+        {["Vendedor 1", "Vendedor 2", "Vendedor 3"].map((v) => (
+          <button
+            key={v}
+            onClick={() => {
+              setVendedor(v);
+              setIsModalOpen(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-blue-500/30 uppercase tracking-wide transition-all active:scale-95"
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
@@ -431,7 +446,10 @@ export default function VentasPage() {
           <p className="text-slate-600">Punto de venta y registro de salidas</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setVendedor(""); // Reset to empty if using generic button
+            setIsModalOpen(true);
+          }}
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
         >
           <Plus size={18} />
