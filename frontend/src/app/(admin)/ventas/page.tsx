@@ -36,6 +36,10 @@ export default function VentasPage() {
   const [vendedor, setVendedor] = useState("");
   const [cart, setCart] = useState<any[]>([]);
   const [isSearchingClient, setIsSearchingClient] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
+
+  // Sellers State
   const defaultSellers = ["Vendedor 1", "Vendedor 2", "Vendedor 3"];
   const [sellers, setSellers] = useState<string[]>(defaultSellers);
   const [isEditSellersModalOpen, setIsEditSellersModalOpen] = useState(false);
