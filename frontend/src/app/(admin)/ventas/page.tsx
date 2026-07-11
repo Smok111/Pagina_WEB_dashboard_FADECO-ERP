@@ -36,14 +36,11 @@ export default function VentasPage() {
   const [vendedor, setVendedor] = useState("");
   const [cart, setCart] = useState<any[]>([]);
   const [isSearchingClient, setIsSearchingClient] = useState(false);
-  const [productSearch, setProductSearch] = useState("");
-  const [showProductDropdown, setShowProductDropdown] = useState(false);
-
-  // Sellers State
   const defaultSellers = ["Vendedor 1", "Vendedor 2", "Vendedor 3"];
   const [sellers, setSellers] = useState<string[]>(defaultSellers);
   const [isEditSellersModalOpen, setIsEditSellersModalOpen] = useState(false);
   const [editingSellers, setEditingSellers] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("TODOS");
 
   const filteredProducts = productos.filter(p => 
     Number(p.stockActual) > 0 && 
@@ -440,52 +437,71 @@ export default function VentasPage() {
       console.error("Error deleting sale:", error);
       toast.error("Ocurrió un error al intentar anular la venta");
     }
-  };
+  const ventasFiltradas = ventasOrdenadas.filter(venta => {
+    if (activeTab === "TODOS") return true;
+    const vendedorDeVenta = venta.observacion?.startsWith('Vendedor: ') ? venta.observacion.replace('Vendedor: ', '') : '';
+    return vendedorDeVenta === activeTab;
+  });
 
   return (
     <div className="p-6 h-full flex flex-col">
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {sellers.map((v) => (
+      <div className="flex flex-col gap-6 mb-8 shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
+              <Receipt className="text-emerald-500" /> {activeTab === "TODOS" ? "Ventas (POS)" : `Ventas de ${activeTab}`}
+            </h1>
+            <p className="text-slate-600">Punto de venta y registro de salidas</p>
+          </div>
           <button
-            key={v}
             onClick={() => {
-              setVendedor(v);
+              setVendedor(activeTab === "TODOS" ? "" : activeTab);
               setIsModalOpen(true);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-blue-500/30 uppercase tracking-wide transition-all active:scale-95"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
           >
-            {v}
+            <Plus size={18} />
+            Nueva Venta {activeTab !== "TODOS" && `(${activeTab})`}
           </button>
-        ))}
-        <button
-          onClick={() => {
-            setEditingSellers([...sellers]);
-            setIsEditSellersModalOpen(true);
-          }}
-          className="text-slate-400 hover:text-white border border-white/10 hover:bg-white/5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-          title="Modificar Vendedores"
-        >
-          ⚙️ Editar Vendedores
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between mb-8 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
-            <Receipt className="text-emerald-500" /> Ventas (POS)
-          </h1>
-          <p className="text-slate-600">Punto de venta y registro de salidas</p>
         </div>
-        <button
-          onClick={() => {
-            setVendedor(""); // Reset to empty if using generic button
-            setIsModalOpen(true);
-          }}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
-        >
-          <Plus size={18} />
-          Nueva Venta
-        </button>
+
+        <div className="flex flex-wrap items-center gap-2 bg-[#1A2235] p-2 rounded-xl border border-white/5">
+          <button
+            onClick={() => setActiveTab("TODOS")}
+            className={`px-6 py-2.5 rounded-lg font-bold uppercase tracking-wide transition-all ${
+              activeTab === "TODOS" 
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30" 
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            TODOS
+          </button>
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          {sellers.map((v) => (
+            <button
+              key={v}
+              onClick={() => setActiveTab(v)}
+              className={`px-6 py-2.5 rounded-lg font-bold uppercase tracking-wide transition-all ${
+                activeTab === v 
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+          <div className="flex-1"></div>
+          <button
+            onClick={() => {
+              setEditingSellers([...sellers]);
+              setIsEditSellersModalOpen(true);
+            }}
+            className="text-slate-400 hover:text-white border border-white/10 hover:bg-white/5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            title="Modificar Vendedores"
+          >
+            ⚙️ Editar Vendedores
+          </button>
+        </div>
       </div>
 
       <div className="bg-[#1A2235] rounded-2xl border border-white/5 overflow-hidden shadow-xl flex-1 flex flex-col">
@@ -504,9 +520,15 @@ export default function VentasPage() {
             <tbody className="divide-y divide-white/5 text-sm text-slate-300">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Cargando ventas...</td>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Cargando ventas...</td>
                 </tr>
-              ) : ventasOrdenadas.map((venta) => (
+              ) : ventasFiltradas.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                    {activeTab === "TODOS" ? "No hay ventas registradas" : `No hay ventas registradas para ${activeTab}`}
+                  </td>
+                </tr>
+              ) : ventasFiltradas.map((venta) => (
                 <tr key={venta.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4 font-medium text-white">{venta.codigoSistema}</td>
                   <td className="px-6 py-4">{new Date(venta.fecha).toLocaleDateString()}</td>
