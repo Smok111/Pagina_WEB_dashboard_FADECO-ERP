@@ -39,14 +39,35 @@ export default function VentasPage() {
   const [productSearch, setProductSearch] = useState("");
   const [showProductDropdown, setShowProductDropdown] = useState(false);
 
+  // Sellers State
+  const defaultSellers = ["Vendedor 1", "Vendedor 2", "Vendedor 3"];
+  const [sellers, setSellers] = useState<string[]>(defaultSellers);
+  const [isEditSellersModalOpen, setIsEditSellersModalOpen] = useState(false);
+  const [editingSellers, setEditingSellers] = useState<string[]>([]);
+
   const filteredProducts = productos.filter(p => 
     Number(p.stockActual) > 0 && 
     (p.nombre.toLowerCase().includes(productSearch.toLowerCase()) || 
      p.codigo.toLowerCase().includes(productSearch.toLowerCase()))
   );
   useEffect(() => {
+    const saved = localStorage.getItem('vendedores_pos');
+    if (saved) {
+      try {
+        setSellers(JSON.parse(saved));
+      } catch (e) {}
+    }
     fetchData();
   }, []);
+
+  const handleSaveSellers = (e: React.FormEvent) => {
+    e.preventDefault();
+    const filtered = editingSellers.map(s => s.trim()).filter(s => s);
+    const finalSellers = filtered.length > 0 ? filtered : defaultSellers;
+    setSellers(finalSellers);
+    localStorage.setItem('vendedores_pos', JSON.stringify(finalSellers));
+    setIsEditSellersModalOpen(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -423,8 +444,8 @@ export default function VentasPage() {
 
   return (
     <div className="p-6 h-full flex flex-col">
-      <div className="flex flex-wrap gap-3 mb-6">
-        {["Vendedor 1", "Vendedor 2", "Vendedor 3"].map((v) => (
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        {sellers.map((v) => (
           <button
             key={v}
             onClick={() => {
@@ -436,6 +457,16 @@ export default function VentasPage() {
             {v}
           </button>
         ))}
+        <button
+          onClick={() => {
+            setEditingSellers([...sellers]);
+            setIsEditSellersModalOpen(true);
+          }}
+          className="text-slate-400 hover:text-white border border-white/10 hover:bg-white/5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          title="Modificar Vendedores"
+        >
+          ⚙️ Editar Vendedores
+        </button>
       </div>
 
       <div className="flex items-center justify-between mb-8 shrink-0">
@@ -465,6 +496,7 @@ export default function VentasPage() {
                 <SortableTableHead label="Código" field="codigoSistema" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <SortableTableHead label="Fecha" field="fecha" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <SortableTableHead label="Cliente" field="cliente.nombres" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
+                <SortableTableHead label="Vendedor" field="observacion" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <SortableTableHead label="Comprobante" field="tipoDocumento" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} className="px-6 py-4" />
                 <SortableTableHead label="Total" field="total" currentSortField={sortField} currentSortOrder={sortOrder} onSort={handleSort} align="right" className="px-6 py-4" />
               </tr>
@@ -479,6 +511,7 @@ export default function VentasPage() {
                   <td className="px-6 py-4 font-medium text-white">{venta.codigoSistema}</td>
                   <td className="px-6 py-4">{new Date(venta.fecha).toLocaleDateString()}</td>
                   <td className="px-6 py-4">{venta.cliente?.nombres || venta.cliente?.razonSocial || "Cliente Final"}</td>
+                  <td className="px-6 py-4 text-emerald-300 font-medium">{venta.observacion?.startsWith('Vendedor: ') ? venta.observacion.replace('Vendedor: ', '') : '-'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs font-bold ${venta.tipoDocumento === 'PROFORMA' ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-slate-300'}`}>
                       {venta.tipoDocumento} {venta.numeroDocumento}
@@ -552,9 +585,7 @@ export default function VentasPage() {
                     </div>
                     <select required value={vendedor} onChange={e => setVendedor(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
                       <option value="" disabled>Seleccione vendedor...</option>
-                      <option value="Vendedor 1">Vendedor 1</option>
-                      <option value="Vendedor 2">Vendedor 2</option>
-                      <option value="Vendedor 3">Vendedor 3</option>
+                      {sellers.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div>
@@ -771,6 +802,63 @@ export default function VentasPage() {
                   </button>
                   <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25 text-sm">
                     <Save size={16} /> Guardar Cliente
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isEditSellersModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl relative flex flex-col"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#1A2235]">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  ⚙️ Modificar Vendedores
+                </h3>
+                <button onClick={() => setIsEditSellersModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSellers} className="p-6 space-y-4">
+                {editingSellers.map((v, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={v}
+                      onChange={(e) => {
+                        const copy = [...editingSellers];
+                        copy[i] = e.target.value;
+                        setEditingSellers(copy);
+                      }}
+                      className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500/50"
+                      placeholder={`Vendedor ${i + 1}`}
+                    />
+                    <button type="button" onClick={() => setEditingSellers(editingSellers.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-300 px-2 bg-white/5 rounded-xl transition-colors">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))}
+                
+                <button type="button" onClick={() => setEditingSellers([...editingSellers, ""])} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium flex items-center gap-1 mt-2">
+                  <Plus size={14} /> Añadir otro vendedor
+                </button>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/5 mt-6">
+                  <button type="button" onClick={() => setIsEditSellersModalOpen(false)} className="px-5 py-2.5 text-slate-300 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg text-sm">
+                    <Save size={16} /> Guardar
                   </button>
                 </div>
               </form>
