@@ -43,6 +43,7 @@ model Rol {
   id          Int     @id @default(autoincrement())
   nombre      String  @unique
   descripcion String?
+  permisos    Json?   @default("[]")
 
   usuarios Usuario[]
 }

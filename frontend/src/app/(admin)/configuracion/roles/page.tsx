@@ -9,6 +9,7 @@ interface Rol {
   id: number;
   nombre: string;
   descripcion: string;
+  permisos?: any;
   usuarios?: any[];
 }
 
@@ -17,7 +18,18 @@ export default function RolesPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRol, setEditingRol] = useState<Rol | null>(null);
-  const [formData, setFormData] = useState({ nombre: "", descripcion: "" });
+  const [formData, setFormData] = useState({ nombre: "", descripcion: "", permisos: [] as string[] });
+
+  const PERMISOS_DISPONIBLES = [
+    { id: "dashboard", nombre: "Dashboard General" },
+    { id: "ventas", nombre: "Ventas (POS)" },
+    { id: "compras", nombre: "Compras" },
+    { id: "inventario", nombre: "Inventario y Almacenes" },
+    { id: "produccion", nombre: "Producción" },
+    { id: "mantenimiento", nombre: "Mantenimiento" },
+    { id: "rrhh", nombre: "Recursos Humanos" },
+    { id: "configuracion", nombre: "Configuración y Ajustes" },
+  ];
 
   useEffect(() => {
     fetchRoles();
@@ -67,10 +79,18 @@ export default function RolesPage() {
   const openModal = (rol?: Rol) => {
     if (rol) {
       setEditingRol(rol);
-      setFormData({ nombre: rol.nombre, descripcion: rol.descripcion || "" });
+      let parsedPermisos: string[] = [];
+      if (rol.permisos) {
+        if (typeof rol.permisos === 'string') {
+          try { parsedPermisos = JSON.parse(rol.permisos); } catch(e) {}
+        } else if (Array.isArray(rol.permisos)) {
+          parsedPermisos = rol.permisos;
+        }
+      }
+      setFormData({ nombre: rol.nombre, descripcion: rol.descripcion || "", permisos: parsedPermisos });
     } else {
       setEditingRol(null);
-      setFormData({ nombre: "", descripcion: "" });
+      setFormData({ nombre: "", descripcion: "", permisos: [] });
     }
     setIsModalOpen(true);
   };
@@ -161,7 +181,7 @@ export default function RolesPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="bg-[#1A2235] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
               <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
                 <h3 className="text-xl font-bold text-white">
@@ -192,12 +212,35 @@ export default function RolesPage() {
                   <textarea
                     value={formData.descripcion}
                     onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                    className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50 transition-colors min-h-[100px]"
-                    placeholder="Breve descripción de los permisos..."
+                    className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50 transition-colors min-h-[60px]"
+                    placeholder="Breve descripción del rol..."
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                <div className="pt-2 border-t border-white/5">
+                  <label className="block text-sm font-medium text-slate-400 mb-3">Permisos de Acceso</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                    {PERMISOS_DISPONIBLES.map(permiso => (
+                      <label key={permiso.id} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${formData.permisos.includes(permiso.id) ? 'bg-red-500/10 border-red-500/30' : 'bg-[#0B0F19] border-white/5 hover:border-red-500/30 hover:bg-white/5'}`}>
+                        <input
+                          type="checkbox"
+                          checked={formData.permisos.includes(permiso.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({ ...formData, permisos: [...formData.permisos, permiso.id] });
+                            } else {
+                              setFormData({ ...formData, permisos: formData.permisos.filter(p => p !== permiso.id) });
+                            }
+                          }}
+                          className="w-4 h-4 rounded text-red-500 focus:ring-red-500 bg-[#1A2235] border-white/20"
+                        />
+                        <span className={`text-sm font-medium ${formData.permisos.includes(permiso.id) ? 'text-red-400' : 'text-slate-300'}`}>{permiso.nombre}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/5 mt-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}

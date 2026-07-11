@@ -15,11 +15,11 @@ export class RolesService {
     return this.prisma.rol.findUnique({ where: { id } });
   }
 
-  async create(data: { nombre: string; descripcion?: string }) {
+  async create(data: { nombre: string; descripcion?: string; permisos?: any }) {
     return this.prisma.rol.create({ data });
   }
 
-  async update(id: number, data: { nombre?: string; descripcion?: string }) {
+  async update(id: number, data: { nombre?: string; descripcion?: string; permisos?: any }) {
     return this.prisma.rol.update({ where: { id }, data });
   }
 
