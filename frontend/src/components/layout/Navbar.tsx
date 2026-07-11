@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "@/providers/AuthProvider";
 import { usePathname } from "next/navigation";
-import { Search, Bell, Calendar as CalendarIcon, AlertCircle, PackageOpen, Wrench, X } from "lucide-react";
+import { Search, Bell, Calendar as CalendarIcon, AlertCircle, PackageOpen, Wrench, X, FileText } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +66,33 @@ export default function Navbar() {
       day: 'numeric'
     }));
   }, []);
+
+  const exportarReporteStock = () => {
+    const stockAlerts = notifs.filter(n => n.type === 'stock');
+    if (stockAlerts.length === 0) return;
+
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Reporte de Productos Sin Stock / Stock Crítico", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    const tableData = stockAlerts.map(alert => [
+      alert.title.replace('Stock Crítico: ', ''),
+      alert.message.replace('Quedan solo ', '').replace(' unidades.', '')
+    ]);
+
+    autoTable(doc, {
+      startY: 36,
+      head: [['Producto', 'Stock Actual']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68] },
+    });
+
+    doc.save("reporte_stock_critico.pdf");
+  };
 
   return (
     <header className="h-[72px] bg-background/80 backdrop-blur-xl border-b border-border sticky top-0 z-40 flex items-center justify-between px-6 lg:px-10 transition-all duration-200">
@@ -172,7 +201,15 @@ export default function Navbar() {
                     )}
                   </div>
                   {notifs.length > 0 && (
-                    <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+                    <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex flex-col gap-2">
+                      {notifs.some(n => n.type === 'stock') && (
+                        <button
+                          onClick={exportarReporteStock}
+                          className="w-full flex items-center justify-center gap-2 text-center text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg py-2 transition-colors shadow-sm"
+                        >
+                          <FileText size={14} /> Exportar Reporte de Stock
+                        </button>
+                      )}
                       <button 
                         onClick={() => setNotifs([])}
                         className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-1"
