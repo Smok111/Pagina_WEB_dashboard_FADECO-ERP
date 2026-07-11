@@ -33,6 +33,7 @@ export default function VentasPage() {
   const [clienteId, setClienteId] = useState("");
   const [tipoDocumento, setTipoDocumento] = useState("BOLETA");
   const [numeroDocumento, setNumeroDocumento] = useState("");
+  const [vendedor, setVendedor] = useState("");
   const [cart, setCart] = useState<any[]>([]);
   const [isSearchingClient, setIsSearchingClient] = useState(false);
   const [productSearch, setProductSearch] = useState("");
@@ -359,6 +360,7 @@ export default function VentasPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return alert("Agrega al menos un producto");
+    if (!vendedor) return alert("Por favor, selecciona un vendedor responsable");
 
     const isProforma = tipoDocumento === "PROFORMA";
     const estado = isProforma ? "PENDIENTE" : "COMPLETADA";
@@ -367,6 +369,7 @@ export default function VentasPage() {
       clienteId, tipoDocumento, numeroDocumento,
       subtotal, igv, total,
       estado,
+      observacion: `Vendedor: ${vendedor}`,
       detalles: cart.map(c => ({
         productoId: c.productoId,
         cantidad: c.cantidad,
@@ -387,10 +390,11 @@ export default function VentasPage() {
           const clientObj = clientes.find(c => c.id === Number(clienteId));
           descargarPDFFormatoFisico({ ...vData, total, cliente: clientObj });
         }
-        setIsModalOpen(false);
-        setCart([]);
-        setNumeroDocumento("");
-        fetchData();
+          setIsModalOpen(false);
+          setCart([]);
+          setNumeroDocumento("");
+          setVendedor("");
+          fetchData();
       } else {
         const errorData = await res.json();
         alert(`Error: ${errorData.message || 'No se pudo completar la venta'}`);
@@ -511,9 +515,9 @@ export default function VentasPage() {
                   <Receipt className="text-emerald-500" /> Registro de Venta
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div>
-                    <div className="flex justify-between items-center mb-1.5">
+                    <div className="flex justify-between items-center mb-1.5 h-[18px]">
                       <label className="block text-xs font-medium text-slate-400">Cliente</label>
                       <button type="button" onClick={() => setIsNewClientModalOpen(true)} className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1">
                         <Plus size={12}/> Nuevo Cliente
@@ -525,7 +529,20 @@ export default function VentasPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1.5">N° Comprobante</label>
+                    <div className="flex items-center mb-1.5 h-[18px]">
+                      <label className="block text-xs font-medium text-slate-400">Vendedor Responsable</label>
+                    </div>
+                    <select required value={vendedor} onChange={e => setVendedor(e.target.value)} className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
+                      <option value="" disabled>Seleccione vendedor...</option>
+                      <option value="Vendedor 1">Vendedor 1</option>
+                      <option value="Vendedor 2">Vendedor 2</option>
+                      <option value="Vendedor 3">Vendedor 3</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div className="flex items-center mb-1.5 h-[18px]">
+                      <label className="block text-xs font-medium text-slate-400">N° Comprobante</label>
+                    </div>
                     <div className="flex gap-2">
                       <select value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)} className="w-1/2 bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500/50">
                         <option value="NOTA DE VENTA">Nota de Venta</option>
