@@ -437,6 +437,8 @@ export default function VentasPage() {
       console.error("Error deleting sale:", error);
       toast.error("Ocurrió un error al intentar anular la venta");
     }
+  };
+
   const ventasFiltradas = ventasOrdenadas.filter(venta => {
     if (activeTab === "TODOS") return true;
     const vendedorDeVenta = venta.observacion?.startsWith('Vendedor: ') ? venta.observacion.replace('Vendedor: ', '') : '';
