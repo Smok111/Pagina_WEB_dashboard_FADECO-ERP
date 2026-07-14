@@ -379,6 +379,114 @@ export default function VentasPage() {
     doc.save(`Fisico_${venta.tipoDocumento}_${venta.numeroDocumento}.pdf`);
   };
 
+  const imprimirTicket80mm = (venta: any) => {
+    // 1. Calcular la altura dinámica del rollo térmico (80mm de ancho)
+    const tempDoc = new jsPDF();
+    let dynamicHeight = 85; // Base para cabecera, datos del cliente, totales y pie
+    if (venta.cliente?.numeroDocumento) {
+      dynamicHeight += 5;
+    }
+    const detalles = venta.detalles || [];
+    detalles.forEach((d: any) => {
+      const prodName = d.producto?.nombre || "N/A";
+      const lines = tempDoc.splitTextToSize(prodName, 70);
+      dynamicHeight += (lines.length * 4.5) + 6; // 4.5mm por línea + 6mm para cantidades y precios
+    });
+
+    // 2. Crear documento final de 80mm de ancho y altura autocalculada
+    const doc = new jsPDF({
+      unit: "mm",
+      format: [80, Math.max(100, dynamicHeight)]
+    });
+
+    // Borde izquierdo: 5mm. Ancho útil: 70mm. Centro: 40mm. Borde derecho: 75mm.
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("FADECO SAN MARTIN EIRL", 40, 10, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("RUC: 20609387413", 40, 15, { align: "center" });
+    doc.text("Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", 40, 19, { align: "center" });
+    doc.text("Telf: 976 631 901 / 952 066 393", 40, 23, { align: "center" });
+    doc.text("--------------------------------------------------", 40, 27, { align: "center" });
+
+    // Datos del Comprobante
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text(`${venta.tipoDocumento} - ${venta.numeroDocumento || "000000"}`, 5, 33);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(`Fecha: ${new Date(venta.fecha).toLocaleString()}`, 5, 38);
+    const vendedorDeVenta = venta.observacion?.startsWith('Vendedor: ') ? venta.observacion.replace('Vendedor: ', '') : '-';
+    doc.text(`Vendedor: ${vendedorDeVenta}`, 5, 43);
+
+    const clientName = venta.cliente ? (venta.cliente.nombres || venta.cliente.razonSocial || "Cliente Final") : "Cliente Final";
+    const clientDoc = venta.cliente ? (venta.cliente.numeroDocumento || "") : "";
+    doc.text(`Cliente: ${clientName}`, 5, 48);
+    if (clientDoc) {
+      doc.text(`Doc: ${clientDoc}`, 5, 53);
+    }
+
+    const separatorY = clientDoc ? 57 : 53;
+    doc.text("--------------------------------------------------", 40, separatorY, { align: "center" });
+
+    // Lista de Artículos
+    let y = separatorY + 5;
+    detalles.forEach((d: any) => {
+      doc.setFont("helvetica", "bold");
+      const prodName = d.producto?.nombre || "N/A";
+      const splitName = doc.splitTextToSize(prodName, 70);
+      splitName.forEach((line: string) => {
+        doc.text(line, 5, y);
+        y += 4.5;
+      });
+
+      doc.setFont("helvetica", "normal");
+      const cant = Number(d.cantidad);
+      const pu = Number(d.precioUnitario).toFixed(2);
+      const sub = Number(d.subtotal).toFixed(2);
+      doc.text(`${cant} x S/ ${pu}`, 8, y);
+      doc.text(`S/ ${sub}`, 75, y, { align: "right" });
+      y += 6;
+    });
+
+    doc.text("--------------------------------------------------", 40, y, { align: "center" });
+    y += 5;
+
+    // Totales
+    doc.setFont("helvetica", "normal");
+    doc.text(`Subtotal:`, 5, y);
+    doc.text(`S/ ${Number(venta.subtotal).toFixed(2)}`, 75, y, { align: "right" });
+    y += 4.5;
+
+    doc.text(`IGV (18%):`, 5, y);
+    doc.text(`S/ ${Number(venta.igv).toFixed(2)}`, 75, y, { align: "right" });
+    y += 4.5;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text(`TOTAL:`, 5, y);
+    doc.text(`S/ ${Number(venta.total).toFixed(2)}`, 75, y, { align: "right" });
+    y += 6;
+
+    // Pie
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("--------------------------------------------------", 40, y, { align: "center" });
+    y += 5;
+    doc.text("¡Gracias por su compra!", 40, y, { align: "center" });
+    y += 4.5;
+    doc.text("FADECO SAN MARTIN EIRL", 40, y, { align: "center" });
+
+    // Lanzar impresión
+    doc.autoPrint();
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return alert("Agrega al menos un producto");
@@ -408,15 +516,34 @@ export default function VentasPage() {
       });
 
       if (res.ok) {
+        const createdSale = await res.json();
+        const clientObj = clientes.find(c => c.id === Number(clienteId));
+        
+        const saleWithDetails = {
+          ...createdSale,
+          cliente: clientObj,
+          detalles: (createdSale.detalles || []).map((d: any) => {
+            const cartItem = cart.find(c => c.productoId === d.productoId);
+            return {
+              ...d,
+              producto: {
+                nombre: cartItem ? cartItem.nombre : "N/A"
+              }
+            };
+          })
+        };
+
         if (isProforma) {
-          const clientObj = clientes.find(c => c.id === Number(clienteId));
-          descargarPDFFormatoFisico({ ...vData, total, cliente: clientObj });
+          descargarPDFFormatoFisico(saleWithDetails);
+        } else {
+          imprimirTicket80mm(saleWithDetails);
         }
-          setIsModalOpen(false);
-          setCart([]);
-          setNumeroDocumento("");
-          setVendedor("");
-          fetchData();
+
+        setIsModalOpen(false);
+        setCart([]);
+        setNumeroDocumento("");
+        setVendedor("");
+        fetchData();
       } else {
         const errorData = await res.json();
         alert(`Error: ${errorData.message || 'No se pudo completar la venta'}`);
@@ -557,6 +684,9 @@ export default function VentasPage() {
                         <ExternalLink size={18} />
                       </a>
                     )}
+                    <button onClick={() => imprimirTicket80mm(venta)} className="text-sky-400 hover:text-sky-300 transition-colors" title="Imprimir Ticket (80mm)">
+                      <Receipt size={18} />
+                    </button>
                     <button onClick={() => descargarPDFFormatoFisico(venta)} className="text-orange-400 hover:text-orange-300 transition-colors" title="Descargar Formato Físico">
                       <Printer size={18} />
                     </button>
