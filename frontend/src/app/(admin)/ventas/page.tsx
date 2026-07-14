@@ -15,6 +15,7 @@ export default function VentasPage() {
   const { sortedItems: ventasOrdenadas, sortField, sortOrder, handleSort } = useSort(ventas, "fecha", "desc");
   const [clientes, setClientes] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
+  const [empresaData, setEmpresaData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
@@ -72,14 +73,16 @@ export default function VentasPage() {
 
   const fetchData = async () => {
     try {
-      const [resV, resC, resProd] = await Promise.all([
+      const [resV, resC, resProd, resEmpresa] = await Promise.all([
         fetch("/api/sales"),
         fetch("/api/sales/clientes"),
-        fetch("/api/inventory/productos")
+        fetch("/api/inventory/productos"),
+        fetch("/api/empresa")
       ]);
       if (resV.ok) setVentas(await resV.json());
       if (resC.ok) setClientes(await resC.json());
       if (resProd.ok) setProductos(await resProd.json());
+      if (resEmpresa.ok) setEmpresaData(await resEmpresa.json());
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -183,7 +186,7 @@ export default function VentasPage() {
     const prefijo = venta.tipoDocumento === "PROFORMA" ? "Proforma" : venta.tipoDocumento;
 
     doc.setFontSize(22);
-    doc.text("FADECO", 14, 20);
+    doc.text(empresaData?.razonSocial || "FADECO", 14, 20);
     doc.setFontSize(10);
     doc.text(tituloDoc, 14, 26);
     
@@ -239,14 +242,16 @@ export default function VentasPage() {
     
     doc.setTextColor(80, 20, 100); // Morado oscuro
     doc.setFontSize(15);
-    doc.text("FADECO SAN MARTIN EIRL", centerX, 18, { align: "center" });
+    const rs = doc.splitTextToSize(empresaData?.razonSocial || "FADECO SAN MARTIN EIRL", 70);
+    doc.text(rs[0] || "", centerX, 18, { align: "center" });
     
     doc.setFontSize(8.5);
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
-    doc.text("Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", centerX, 24, { align: "center" });
-    doc.text("976 631 901 / 952 066 393 / 955445875", centerX, 29, { align: "center" });
-    doc.text("fadecosanmartin123@hotmail.com", centerX, 34, { align: "center" });
+    const dir = doc.splitTextToSize(empresaData?.direccion || "Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", 70);
+    doc.text(dir[0] || "", centerX, 24, { align: "center" });
+    doc.text(empresaData?.telefono || "976 631 901 / 952 066 393 / 955445875", centerX, 29, { align: "center" });
+    doc.text(empresaData?.correo || "fadecosanmartin123@hotmail.com", centerX, 34, { align: "center" });
     doc.text("https://www.fadecosanmartin.com.pe", centerX, 39, { align: "center" });
     
     doc.setFont("helvetica", "bold");
@@ -402,13 +407,15 @@ export default function VentasPage() {
     // Borde izquierdo: 5mm. Ancho útil: 70mm. Centro: 40mm. Borde derecho: 75mm.
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text("FADECO SAN MARTIN EIRL", 40, 10, { align: "center" });
+    const rs2 = doc.splitTextToSize(empresaData?.razonSocial || "FADECO SAN MARTIN EIRL", 75);
+    doc.text(rs2[0] || "", 40, 10, { align: "center" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text("RUC: 20609387413", 40, 15, { align: "center" });
-    doc.text("Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", 40, 19, { align: "center" });
-    doc.text("Telf: 976 631 901 / 952 066 393", 40, 23, { align: "center" });
+    doc.text(`RUC: ${empresaData?.ruc || "20609387413"}`, 40, 15, { align: "center" });
+    const dir2 = doc.splitTextToSize(empresaData?.direccion || "Jr. Alfonso Ugarte y Héroes del Cenepa N° 2097", 75);
+    doc.text(dir2[0] || "", 40, 19, { align: "center" });
+    doc.text(`Telf: ${empresaData?.telefono || "976 631 901"}`, 40, 23, { align: "center" });
     doc.text("--------------------------------------------------", 40, 27, { align: "center" });
 
     // Datos del Comprobante
@@ -478,7 +485,8 @@ export default function VentasPage() {
     y += 5;
     doc.text("¡Gracias por su compra!", 40, y, { align: "center" });
     y += 4.5;
-    doc.text("FADECO SAN MARTIN EIRL", 40, y, { align: "center" });
+    const rsFooter = doc.splitTextToSize(empresaData?.razonSocial || "FADECO SAN MARTIN EIRL", 75);
+    doc.text(rsFooter[0] || "", 40, y, { align: "center" });
 
     // Lanzar impresión
     doc.autoPrint();

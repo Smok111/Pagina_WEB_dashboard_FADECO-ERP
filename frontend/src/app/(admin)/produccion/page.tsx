@@ -14,6 +14,7 @@ export default function ProduccionPage() {
   const [almacenes, setAlmacenes] = useState<any[]>([]);
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
   const [areasProduccion, setAreasProduccion] = useState<any[]>([]);
+  const [empresaData, setEmpresaData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -78,11 +79,12 @@ export default function ProduccionPage() {
       setLoading(false);
       
       // Datos secundarios en paralelo (no bloquean la UI)
-      const [resProd, resAlm, resTrab, resAreas] = await Promise.all([
+      const [resProd, resAlm, resTrab, resAreas, resEmpresa] = await Promise.all([
         fetch("/api/inventory/productos"),
         fetch("/api/inventory/almacenes"),
         fetch("/api/rrhh/trabajadores"),
-        fetch("/api/rrhh/areas-produccion")
+        fetch("/api/rrhh/areas-produccion"),
+        fetch("/api/empresa")
       ]);
       
       let almacenesData = [];
@@ -93,6 +95,7 @@ export default function ProduccionPage() {
       }
       if (resTrab.ok) setTrabajadores(await resTrab.json());
       if (resAreas.ok) setAreasProduccion(await resAreas.json());
+      if (resEmpresa.ok) setEmpresaData(await resEmpresa.json());
 
       // Find Almacen de Produccion and fetch its specific stocks
       const prodAlmacen = almacenesData.find((a: any) => a.nombre.toLowerCase().includes("producci"));
@@ -255,7 +258,7 @@ export default function ProduccionPage() {
     const doc = new jsPDF();
     doc.setFontSize(22);
     doc.setTextColor(15, 23, 42);
-    doc.text("FADECO", 14, 20);
+    doc.text(empresaData?.razonSocial || "FADECO", 14, 20);
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
     doc.text("Orden de Producción Finalizada", 14, 26);
