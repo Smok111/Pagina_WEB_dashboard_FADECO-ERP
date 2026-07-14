@@ -104,20 +104,46 @@ export class InventoryController {
 
   @Get('almacenes/:id')
   async getAlmacen(@Param('id') idParam: string) {
+    const id = Number(idParam);
     const almacen = await this.prisma.almacen.findUnique({
-      where: { id: Number(idParam) },
+      where: { id },
       include: {
-        stocks: { include: { producto: true } },
-        equipos: true
+        equipos: true,
       },
     });
-    if (almacen && almacen.stocks) {
-      almacen.stocks = almacen.stocks.map((s: any) => ({
-        ...s,
-        stockActual: Math.max(0, s.stockActual),
-      }));
+
+    if (!almacen) {
+      return null;
     }
-    return almacen;
+
+    // Obtener todos los productos en el sistema
+    const productos = await this.prisma.producto.findMany({
+      include: { categoria: true, unidadMedida: true },
+      orderBy: { nombre: 'asc' },
+    });
+
+    // Obtener los stocks reales asignados a este almacén
+    const stocksReales = await this.prisma.stockAlmacen.findMany({
+      where: { almacenId: id },
+      include: { producto: true },
+    });
+
+    // Mapear cada producto a su stock correspondiente (o retornar 0 si no tiene stock asignado)
+    const stocksMapped = productos.map((prod) => {
+      const stockExistente = stocksReales.find((s) => s.productoId === prod.id);
+      return {
+        id: stockExistente ? stockExistente.id : `temp-${prod.id}`,
+        productoId: prod.id,
+        almacenId: id,
+        stockActual: stockExistente ? Math.max(0, Number(stockExistente.stockActual)) : 0,
+        producto: prod,
+      };
+    });
+
+    return {
+      ...almacen,
+      stocks: stocksMapped,
+    };
   }
 
   @Post('almacenes')

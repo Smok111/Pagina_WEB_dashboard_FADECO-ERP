@@ -446,7 +446,7 @@ export default function ProductosPage() {
           </div>
         </CardHeader>
         <CardContent className="min-w-0 p-0 sm:p-6">
-          <Table className="min-w-[800px]" containerClassName="rounded-md border max-h-[calc(100vh-280px)] w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <Table className="min-w-[800px]" containerClassName="rounded-md border max-h-[calc(100vh-280px)] overflow-y-auto w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
             <TableHeader className="sticky top-0 bg-slate-50 z-10 shadow-sm">
               <TableRow>
                   {renderSortableHeader("codigo", "Código")}
