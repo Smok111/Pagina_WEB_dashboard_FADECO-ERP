@@ -28,6 +28,7 @@ describe('InventoryController', () => {
 
     controller = module.get<InventoryController>(InventoryController);
     prisma = module.get<PrismaService>(PrismaService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -42,44 +43,55 @@ describe('InventoryController', () => {
       expect(result).toBeNull();
     });
 
-    it('should return warehouse details and map all products (with stocks mapped or defaulting to 0)', async () => {
+    it('should return empty stocks for Maquinaria warehouse', async () => {
       const mockAlmacen = {
-        id: 1,
-        codigo: 'ALM-001',
-        nombre: 'Almacén Central',
-        equipos: [{ id: 10, nombre: 'Máquina A', almacenId: 1 }],
+        id: 3,
+        codigo: 'ALM-003',
+        nombre: 'Almacén de Maquinaria',
+        equipos: [{ id: 10, nombre: 'Tractor Test A', almacenId: 3 }],
       };
 
-      const mockProductos = [
-        { id: 101, nombre: 'Producto A', codigo: 'PROD-A' },
-        { id: 102, nombre: 'Producto B', codigo: 'PROD-B' },
-      ];
+      mockPrismaService.almacen.findUnique.mockResolvedValue(mockAlmacen);
+
+      const result = await controller.getAlmacen('3');
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(3);
+      expect(result.stocks).toHaveLength(0);
+      expect(result.equipos).toHaveLength(1);
+      // No debe consultar stockAlmacen para almacén de maquinaria
+      expect(mockPrismaService.stockAlmacen.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should return only products with stock records for non-maquinaria warehouses', async () => {
+      const mockAlmacen = {
+        id: 2,
+        codigo: 'ALM-001',
+        nombre: 'Almacén de Producción',
+        equipos: [],
+      };
 
       const mockStocksReales = [
-        { id: 501, productoId: 101, almacenId: 1, stockActual: 15 },
+        {
+          id: 501,
+          productoId: 101,
+          almacenId: 2,
+          stockActual: 15,
+          producto: { id: 101, nombre: 'Producto A', codigo: 'PROD-A', categoria: null, unidadMedida: null },
+        },
       ];
 
       mockPrismaService.almacen.findUnique.mockResolvedValue(mockAlmacen);
-      mockPrismaService.producto.findMany.mockResolvedValue(mockProductos);
       mockPrismaService.stockAlmacen.findMany.mockResolvedValue(mockStocksReales);
 
-      const result = await controller.getAlmacen('1');
+      const result = await controller.getAlmacen('2');
 
       expect(result).toBeDefined();
-      expect(result.id).toBe(1);
-      expect(result.stocks).toHaveLength(2);
-
-      // Product A has a real stock record
-      const stockA = result.stocks.find((s: any) => s.productoId === 101);
-      expect(stockA).toBeDefined();
-      expect(stockA.stockActual).toBe(15);
-      expect(stockA.id).toBe(501);
-
-      // Product B does not have a real stock record and should default to 0
-      const stockB = result.stocks.find((s: any) => s.productoId === 102);
-      expect(stockB).toBeDefined();
-      expect(stockB.stockActual).toBe(0);
-      expect(stockB.id).toBe('temp-102');
+      expect(result.id).toBe(2);
+      // Solo debe devolver 1 producto (el que tiene stock), no todos los del sistema
+      expect(result.stocks).toHaveLength(1);
+      expect(result.stocks[0].productoId).toBe(101);
+      expect(result.stocks[0].stockActual).toBe(15);
     });
   });
 });

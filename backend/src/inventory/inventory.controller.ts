@@ -116,29 +116,36 @@ export class InventoryController {
       return null;
     }
 
-    // Obtener todos los productos en el sistema
-    const productos = await this.prisma.producto.findMany({
-      include: { categoria: true, unidadMedida: true },
-      orderBy: { nombre: 'asc' },
-    });
+    // Detectar tipo de almacén por nombre
+    const nombreLower = almacen.nombre.toLowerCase();
+    const esMaquinaria = nombreLower.includes('maquinaria');
 
-    // Obtener los stocks reales asignados a este almacén
+    // Si es almacén de maquinaria, solo devolver equipos (sin productos)
+    if (esMaquinaria) {
+      return {
+        ...almacen,
+        stocks: [],
+      };
+    }
+
+    // Para cualquier otro almacén: devolver solo productos que tienen stock asignado a este almacén
     const stocksReales = await this.prisma.stockAlmacen.findMany({
       where: { almacenId: id },
-      include: { producto: true },
+      include: {
+        producto: {
+          include: { categoria: true, unidadMedida: true },
+        },
+      },
+      orderBy: { producto: { nombre: 'asc' } },
     });
 
-    // Mapear cada producto a su stock correspondiente (o retornar 0 si no tiene stock asignado)
-    const stocksMapped = productos.map((prod) => {
-      const stockExistente = stocksReales.find((s) => s.productoId === prod.id);
-      return {
-        id: stockExistente ? stockExistente.id : `temp-${prod.id}`,
-        productoId: prod.id,
-        almacenId: id,
-        stockActual: stockExistente ? Math.max(0, Number(stockExistente.stockActual)) : 0,
-        producto: prod,
-      };
-    });
+    const stocksMapped = stocksReales.map((s) => ({
+      id: s.id,
+      productoId: s.productoId,
+      almacenId: id,
+      stockActual: Math.max(0, Number(s.stockActual)),
+      producto: s.producto,
+    }));
 
     return {
       ...almacen,
@@ -250,21 +257,23 @@ export class InventoryController {
       estado: true,
     };
 
-    if (stockActual > 0 && almacenId) {
+    if (almacenId) {
       productoData.StockAlmacen = {
         create: {
           almacenId: almacenId,
           stockActual: stockActual
         }
       };
-      productoData.MovimientoInventario = {
-        create: {
-          almacenId: almacenId,
-          tipo: 'INGRESO',
-          cantidad: stockActual,
-          observacion: 'Inventario inicial'
-        }
-      };
+      if (stockActual > 0) {
+        productoData.MovimientoInventario = {
+          create: {
+            almacenId: almacenId,
+            tipo: 'INGRESO',
+            cantidad: stockActual,
+            observacion: 'Inventario inicial'
+          }
+        };
+      }
     }
 
     return this.prisma.producto.create({

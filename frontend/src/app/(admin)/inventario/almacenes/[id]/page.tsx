@@ -75,6 +75,8 @@ export default function StockAlmacenPage() {
         </div>
       </div>
 
+      {/* SECCIÓN DE PRODUCTOS - Solo si NO es almacén de maquinaria */}
+      {!almacen.nombre?.toLowerCase().includes('maquinaria') && (
       <div className="bg-white rounded-2xl shadow-sm mt-8">
         <div className="p-6 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h2 className="text-xl font-semibold">
@@ -153,8 +155,9 @@ export default function StockAlmacenPage() {
           </table>
         </div>
       </div>
+      )}
 
-      {/* NUEVA SECCIÓN DE MAQUINARIA */}
+      {/* SECCIÓN DE MAQUINARIA Y EQUIPOS */}
       {almacen.equipos && almacen.equipos.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm mt-8">
           <div className="p-6 border-b">
