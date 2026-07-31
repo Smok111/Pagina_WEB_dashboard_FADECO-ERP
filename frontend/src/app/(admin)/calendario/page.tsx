@@ -3,13 +3,17 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import listPlugin from "@fullcalendar/list";
-import esLocale from "@fullcalendar/core/locales/es";
 import { CalendarDays } from "lucide-react";
+
+// Dynamically import the wrapper with ssr: false so none of the FullCalendar plugins load on the server
+const CalendarWrapper = dynamic(() => import("./CalendarWrapper"), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center text-slate-400">
+      <span className="animate-pulse">Cargando calendario interactivo...</span>
+    </div>
+  )
+});
 
 export default function CalendarioPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -117,28 +121,7 @@ export default function CalendarioPage() {
              <span className="animate-pulse">Cargando eventos...</span>
            </div>
         ) : (
-          <FullCalendar
-            // @ts-ignore - Type mismatch in FullCalendar plugins definitions
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-            initialView="dayGridMonth"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-            }}
-            locales={[esLocale]}
-            locale="es"
-            events={events}
-            eventClick={handleEventClick}
-            height="100%"
-            dayMaxEvents={true}
-            eventTimeFormat={{
-              hour: '2-digit',
-              minute: '2-digit',
-              meridiem: false,
-              hour12: false
-            }}
-          />
+          <CalendarWrapper events={events} handleEventClick={handleEventClick} />
         )}
       </div>
       
