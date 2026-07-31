@@ -23,6 +23,7 @@ import {
   Users,
   Wrench,
   Cog,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/providers/AccessibilityProvider";
@@ -61,6 +62,7 @@ export default function Sidebar() {
         { nombre: "Compras", idPermiso: "compras", icono: ShoppingCart, ruta: "/compras", roles: ["SUPERADMIN", "ADMIN", "COMPRAS"] },
         { nombre: "Ventas", idPermiso: "ventas", icono: Receipt, ruta: "/ventas", roles: ["SUPERADMIN", "ADMIN", "VENTAS"] },
         { nombre: "Producción", idPermiso: "produccion", icono: Building2, ruta: "/produccion", roles: ["SUPERADMIN", "ADMIN", "PRODUCCION", "OPERARIO"] },
+        { nombre: "Calendario", idPermiso: "dashboard", icono: CalendarDays, ruta: "/calendario", roles: ["SUPERADMIN", "ADMIN"] },
       ],
     },
     {
