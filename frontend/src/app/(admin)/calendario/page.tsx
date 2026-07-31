@@ -116,6 +116,7 @@ export default function CalendarioPage() {
            </div>
         ) : (
           <FullCalendar
+            // @ts-ignore - Type mismatch in FullCalendar plugins definitions
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
             initialView="dayGridMonth"
             headerToolbar={{
