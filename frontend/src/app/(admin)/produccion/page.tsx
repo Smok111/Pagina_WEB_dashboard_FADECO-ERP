@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users, Upload, FileText, Trash2, Image as ImageIcon, Download } from "lucide-react";
+import { Plus, X, Settings, Package, Hammer, CheckCircle2, Play, AlertCircle, Users, Upload, FileText, Trash2, Image as ImageIcon, Download, Search, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -29,6 +29,13 @@ export default function ProduccionPage() {
   const [uploading, setUploading] = useState(false);
 
   const { sortedItems: ordenesOrdenadas, sortField, sortOrder, setSortField, setSortOrder } = useSort(ordenes, "codigoOP", "desc");
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredOrdenes = ordenesOrdenadas.filter(o => 
+    o.codigoOP?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    o.productoFinal?.nombre?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Form states
   const [productoFinalId, setProductoFinalId] = useState("");
@@ -380,7 +387,17 @@ export default function ProduccionPage() {
           </h1>
           <p className="text-slate-600">Órdenes de producción, consumos y lotes.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Buscar OP o producto..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-[#0B0F19] text-white text-sm rounded-xl pl-10 pr-4 py-2 border border-white/10 focus:outline-none focus:border-orange-500/50 min-w-[200px]"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-600">Ordenar:</span>
             <select 
@@ -415,12 +432,22 @@ export default function ProduccionPage() {
             <div className="w-2.5 h-2.5 rounded-full bg-slate-500"></div>
             <h3 className="font-semibold text-slate-300">Pendientes</h3>
             <span className="ml-auto bg-white/5 text-slate-400 text-xs px-2 py-1 rounded-full">
-              {ordenes.filter(o => o.estado === 'PENDIENTE').length}
+              {filteredOrdenes.filter(o => o.estado === 'PENDIENTE').length}
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {ordenesOrdenadas.filter(o => o.estado === 'PENDIENTE').map(op => (
-              <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-white/5 hover:border-slate-500/50 transition-colors">
+            {filteredOrdenes.filter(o => o.estado === 'PENDIENTE').length === 0 && (
+              <div className="flex flex-col items-center justify-center h-48 text-center p-6 border-2 border-dashed border-white/5 rounded-2xl opacity-80">
+                <FolderOpen className="text-slate-500 mb-3" size={32} />
+                <p className="text-slate-300 text-sm font-medium mb-1">No hay órdenes pendientes</p>
+                <p className="text-slate-500 text-xs mb-4">Las nuevas órdenes aparecerán aquí.</p>
+                <button onClick={() => setIsNewOpOpen(true)} className="text-orange-400 text-xs font-medium bg-orange-500/10 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition-colors">
+                  Crear OP
+                </button>
+              </div>
+            )}
+            {filteredOrdenes.filter(o => o.estado === 'PENDIENTE').map(op => (
+              <div key={op.id} className="bg-[#0B0F19]/80 backdrop-blur-sm p-4 rounded-xl border border-white/5 hover:border-slate-500/50 hover:bg-[#0B0F19] hover:shadow-lg hover:shadow-slate-500/10 hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-slate-400">{op.codigoOP}</span>
                   <div className="flex gap-1">
@@ -450,8 +477,20 @@ export default function ProduccionPage() {
                 )}
                 <p className="text-sm text-slate-400 flex items-center gap-2"><Package size={14}/> Esperado: {Number(op.cantidadEsperada)}</p>
                 {op.trabajadores?.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-white/5 text-xs text-blue-400 flex items-center gap-1">
-                    <Users size={12}/> {op.trabajadores.length} operarios
+                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-xs text-slate-500">Operarios asignados:</span>
+                    <div className="flex -space-x-2">
+                      {op.trabajadores.slice(0, 3).map((t:any, i:number) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-blue-500/20 border border-[#0B0F19] flex items-center justify-center text-[10px] text-blue-300 font-bold" title={`${t.trabajador.nombres} ${t.trabajador.apellidos}`}>
+                          {t.trabajador.nombres.charAt(0)}{t.trabajador.apellidos ? t.trabajador.apellidos.charAt(0) : ''}
+                        </div>
+                      ))}
+                      {op.trabajadores.length > 3 && (
+                        <div className="w-6 h-6 rounded-full bg-slate-800 border border-[#0B0F19] flex items-center justify-center text-[10px] text-slate-300 font-bold">
+                          +{op.trabajadores.length - 3}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
                 {op.archivos?.length > 0 && (
@@ -487,12 +526,20 @@ export default function ProduccionPage() {
             <div className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></div>
             <h3 className="font-semibold text-orange-400">En Proceso</h3>
             <span className="ml-auto bg-orange-500/10 text-orange-400 text-xs px-2 py-1 rounded-full">
-              {ordenes.filter(o => o.estado === 'EN_PROCESO').length}
+              {filteredOrdenes.filter(o => o.estado === 'EN_PROCESO').length}
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {ordenesOrdenadas.filter(o => o.estado === 'EN_PROCESO').map(op => (
-              <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-orange-500/20 hover:border-orange-500/50 transition-colors">
+            {filteredOrdenes.filter(o => o.estado === 'EN_PROCESO').length === 0 && (
+              <div className="flex flex-col items-center justify-center h-48 text-center p-6 border-2 border-dashed border-orange-500/10 rounded-2xl opacity-80">
+                <Settings className="text-orange-500/50 mb-3" size={32} />
+                <p className="text-slate-300 text-sm font-medium mb-1">Nada en proceso</p>
+                <p className="text-slate-500 text-xs">Mueve una orden para iniciarla.</p>
+              </div>
+            )}
+            {filteredOrdenes.filter(o => o.estado === 'EN_PROCESO').map(op => (
+              <div key={op.id} className="bg-[#0B0F19]/80 backdrop-blur-sm p-4 rounded-xl border border-orange-500/20 hover:border-orange-500/50 hover:bg-[#0B0F19] hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-600 to-orange-400 opacity-80"></div>
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-mono text-orange-400">{op.codigoOP}</span>
                   <div className="flex gap-1">
@@ -534,8 +581,20 @@ export default function ProduccionPage() {
                     ))}
                   </div>
                   {op.trabajadores?.length > 0 && (
-                    <div className="mt-2 text-xs text-blue-400 flex items-center gap-1">
-                      <Users size={12}/> {op.trabajadores.map((t:any) => t.trabajador.nombres.split(' ')[0]).join(', ')}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-xs text-slate-500">Operarios:</span>
+                      <div className="flex -space-x-2">
+                        {op.trabajadores.slice(0, 3).map((t:any, i:number) => (
+                          <div key={i} className="w-6 h-6 rounded-full bg-orange-500/20 border border-[#0B0F19] flex items-center justify-center text-[10px] text-orange-300 font-bold" title={`${t.trabajador.nombres} ${t.trabajador.apellidos}`}>
+                            {t.trabajador.nombres.charAt(0)}{t.trabajador.apellidos ? t.trabajador.apellidos.charAt(0) : ''}
+                          </div>
+                        ))}
+                        {op.trabajadores.length > 3 && (
+                          <div className="w-6 h-6 rounded-full bg-slate-800 border border-[#0B0F19] flex items-center justify-center text-[10px] text-slate-300 font-bold">
+                            +{op.trabajadores.length - 3}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                   {op.archivos?.length > 0 && (
@@ -572,12 +631,20 @@ export default function ProduccionPage() {
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
             <h3 className="font-semibold text-emerald-400">Finalizadas</h3>
             <span className="ml-auto bg-emerald-500/10 text-emerald-400 text-xs px-2 py-1 rounded-full">
-              {ordenes.filter(o => o.estado === 'FINALIZADA').length}
+              {filteredOrdenes.filter(o => o.estado === 'FINALIZADA').length}
             </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {ordenesOrdenadas.filter(o => o.estado === 'FINALIZADA').map(op => (
-              <div key={op.id} className="bg-[#0B0F19] p-4 rounded-xl border border-emerald-500/20 opacity-80">
+            {filteredOrdenes.filter(o => o.estado === 'FINALIZADA').length === 0 && (
+              <div className="flex flex-col items-center justify-center h-48 text-center p-6 border-2 border-dashed border-emerald-500/10 rounded-2xl opacity-80">
+                <CheckCircle2 className="text-emerald-500/50 mb-3" size={32} />
+                <p className="text-slate-300 text-sm font-medium mb-1">Sin finalizar</p>
+                <p className="text-slate-500 text-xs">Las órdenes completadas estarán aquí.</p>
+              </div>
+            )}
+            {filteredOrdenes.filter(o => o.estado === 'FINALIZADA').map(op => (
+              <div key={op.id} className="bg-[#0B0F19]/60 backdrop-blur-sm p-4 rounded-xl border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-[#0B0F19]/80 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-0.5 transition-all duration-300 opacity-90 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-emerald-400 opacity-50"></div>
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex flex-col">
                     <span className="text-xs font-mono text-emerald-400 flex items-center gap-2">
